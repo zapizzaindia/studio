@@ -1,19 +1,23 @@
 "use client";
 
-import { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MENU_ITEMS, CATEGORIES } from '@/lib/data';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, Category } from '@/lib/types';
 import Image from 'next/image';
-import { placeholderImages } from '@/lib/data';
+import { placeholderImageMap } from '@/lib/placeholder-images';
 import { Plus, Trash2, Edit } from 'lucide-react';
+import { useCollection } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FranchiseMenuPage() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(MENU_ITEMS);
+  const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
+  const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
+
+  const isLoading = menuItemsLoading || categoriesLoading;
+  const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
 
   return (
     <div className="container mx-auto p-0">
@@ -25,7 +29,14 @@ export default function FranchiseMenuPage() {
         <Button><Plus /> Add New Item</Button>
       </div>
 
-      {CATEGORIES.map(category => (
+      {isLoading ? (
+        Array.from({length: 3}).map((_, i) => (
+          <div key={i} className="mb-8">
+            <Skeleton className="h-8 w-48 mb-4" />
+            <Card><CardContent className="p-0"><Skeleton className="w-full h-64" /></CardContent></Card>
+          </div>
+        ))
+      ) : sortedCategories.map(category => (
         <div key={category.id} className="mb-8">
             <h2 className="font-headline text-2xl font-bold mb-4">{category.name}</h2>
             <Card>
@@ -37,15 +48,16 @@ export default function FranchiseMenuPage() {
                                 <TableHead>Item</TableHead>
                                 <TableHead>Price</TableHead>
                                 <TableHead>Veg?</TableHead>
+                                <TableHead>Global Availability</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {menuItems.filter(item => item.category === category.id).map(item => (
+                            {menuItems?.filter(item => item.category === category.id).map(item => (
                                 <TableRow key={item.id}>
                                     <TableCell>
                                       <Image
-                                        src={placeholderImages[item.imageId].url}
+                                        src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
                                         alt={item.name}
                                         width={56}
                                         height={56}
@@ -64,6 +76,9 @@ export default function FranchiseMenuPage() {
                                     </TableCell>
                                      <TableCell>
                                         <Checkbox checked={item.isVeg} />
+                                    </TableCell>
+                                     <TableCell>
+                                        <Checkbox checked={item.isAvailableGlobally} />
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex gap-2 justify-end">

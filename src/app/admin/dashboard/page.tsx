@@ -1,15 +1,33 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DollarSign, ShoppingBag, List, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ORDERS } from '@/lib/data';
-import { format } from "date-fns";
+import { useCollection, useUser, useDoc } from "@/firebase";
+import type { Order, UserProfile, OutletMenuAvailability } from "@/lib/types";
 
 export default function AdminDashboardPage() {
+    const { user } = useUser();
+    const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+    const outletId = userProfile?.outletId;
+    
+    const { data: allOrders, loading: ordersLoading } = useCollection<Order>('orders');
+    
+    const { data: menuAvailability, loading: availabilityLoading } = useCollection<OutletMenuAvailability>(`outlets/${outletId}/menuAvailability`);
+
+
+    if (ordersLoading || availabilityLoading) {
+        return <p>Loading dashboard data...</p>;
+    }
+    
+    const outletOrders = allOrders?.filter(o => o.outletId === outletId) || [];
+
     const today = new Date();
-    const todaysOrders = ORDERS.filter(o => new Date(o.createdAt).toDateString() === today.toDateString());
+    const todaysOrders = outletOrders.filter(o => o.createdAt.toDate().toDateString() === today.toDateString());
     const todaysRevenue = todaysOrders.reduce((sum, order) => order.status === 'Completed' ? sum + order.total : sum, 0);
-    const newOrders = ORDERS.filter(o => o.status === 'New');
+    const newOrders = outletOrders.filter(o => o.status === 'New');
+    const itemsOutOfStock = menuAvailability?.filter(item => !item.isAvailable).length || 0;
 
     return (
         <div className="container mx-auto p-0">
@@ -26,7 +44,7 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">₹{todaysRevenue.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">+5% from yesterday</p>
+                        <p className="text-xs text-muted-foreground">For completed orders</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -36,7 +54,7 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">+{todaysOrders.length}</div>
-                        <p className="text-xs text-muted-foreground">+10% from yesterday</p>
+                        <p className="text-xs text-muted-foreground">Total orders today</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -55,7 +73,7 @@ export default function AdminDashboardPage() {
                         <AlertCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">3</div>
+                        <div className="text-2xl font-bold">{itemsOutOfStock}</div>
                         <p className="text-xs text-muted-foreground">Check menu availability</p>
                     </CardContent>
                 </Card>
@@ -78,12 +96,12 @@ export default function AdminDashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {ORDERS.slice(0, 5).map((order) => (
+                            {outletOrders.slice(0, 5).map((order) => (
                                 <TableRow key={order.id}>
-                                    <TableCell className="font-medium">{order.id}</TableCell>
+                                    <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
                                     <TableCell>{order.customerName}</TableCell>
                                     <TableCell>₹{order.total.toFixed(2)}</TableCell>
-                                    <TableCell>{format(new Date(order.createdAt), 'p')}</TableCell>
+                                    <TableCell>{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
                                     <TableCell>
                                         <Badge variant={order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
                                             {order.status}

@@ -1,23 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { CITIES, OUTLETS } from '@/lib/data';
-import type { Outlet } from '@/lib/types';
+import type { City, Outlet } from '@/lib/types';
 import { Plus } from 'lucide-react';
+import { useCollection, useFirestore } from "@/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FranchiseOutletsPage() {
-  const [outlets, setOutlets] = useState<Outlet[]>(OUTLETS);
+  const { data: outlets, loading: outletsLoading } = useCollection<Outlet>('outlets');
+  const { data: cities, loading: citiesLoading } = useCollection<City>('cities');
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const isLoading = outletsLoading || citiesLoading;
 
-  const handleToggleStatus = (outletId: string) => {
-    setOutlets(prevOutlets => 
-      prevOutlets.map(o => 
-        o.id === outletId ? { ...o, isOpen: !o.isOpen } : o
-      )
-    );
+  const handleToggleStatus = (outletId: string, currentStatus: boolean) => {
+    if (!firestore) return;
+    const outletRef = doc(firestore, 'outlets', outletId);
+    
+    updateDoc(outletRef, { isOpen: !currentStatus })
+      .then(() => {
+        toast({ title: 'Success', description: 'Outlet status updated.'});
+      })
+      .catch(error => {
+        const permissionError = new FirestorePermissionError({
+          path: outletRef.path,
+          operation: 'update',
+          requestResourceData: { isOpen: !currentStatus }
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
   };
 
   return (
@@ -33,9 +52,20 @@ export default function FranchiseOutletsPage() {
         </div>
       </div>
 
-      {CITIES.map(city => {
-          const cityOutlets = outlets.filter(o => o.cityId === city.id);
-          if (cityOutlets.length === 0) return null;
+      {isLoading ? (
+        Array.from({length: 2}).map((_, i) => (
+            <div key={i} className="mb-8">
+                <Skeleton className="h-8 w-32 mb-4" />
+                <Card>
+                    <CardContent className="p-0">
+                        <Skeleton className="w-full h-48" />
+                    </CardContent>
+                </Card>
+            </div>
+        ))
+      ) : cities?.map(city => {
+          const cityOutlets = outlets?.filter(o => o.cityId === city.id);
+          if (!cityOutlets || cityOutlets.length === 0) return null;
           return (
             <div key={city.id} className="mb-8">
                 <h2 className="font-headline text-2xl font-bold mb-4">{city.name}</h2>
@@ -57,7 +87,7 @@ export default function FranchiseOutletsPage() {
                                         <TableCell className="text-right">
                                             <Switch
                                                 checked={outlet.isOpen}
-                                                onCheckedChange={() => handleToggleStatus(outlet.id)}
+                                                onCheckedChange={() => handleToggleStatus(outlet.id, outlet.isOpen)}
                                             />
                                         </TableCell>
                                     </TableRow>

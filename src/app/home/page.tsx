@@ -6,17 +6,45 @@ import { Plus, ShoppingCart, Star } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { City, Category, MenuItem } from "@/lib/types";
-import { CITIES, CATEGORIES, MENU_ITEMS, placeholderImages } from "@/lib/data";
 import { CitySelector } from "@/components/city-selector";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useCollection, useUser } from "@/firebase";
+import { placeholderImageMap } from "@/lib/placeholder-images";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0].id);
+  
+  const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
+  const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
+  
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, userLoading, router]);
+
+  useEffect(() => {
+    if (categories && categories.length > 0 && !activeCategory) {
+      setActiveCategory(categories[0].id);
+    }
+  }, [categories, activeCategory]);
+
+  useEffect(() => {
+    const savedCity = localStorage.getItem("zapizza-city");
+    if (savedCity) {
+      setSelectedCity(JSON.parse(savedCity));
+    }
+  }, []);
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -26,10 +54,17 @@ export default function HomePage() {
     });
   };
 
+  if (userLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Loading user...</p>
+      </div>
+    );
+  }
+
   if (!selectedCity) {
     return (
       <CitySelector
-        cities={CITIES}
         onCitySelect={(city) => {
           setSelectedCity(city);
           if (typeof window !== "undefined") {
@@ -40,11 +75,14 @@ export default function HomePage() {
     );
   }
 
+  const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
+
   return (
     <div className="container mx-auto max-w-4xl px-4">
       <nav className="sticky top-16 z-10 -mx-4 bg-background/80 py-2 backdrop-blur-sm">
         <div className="flex space-x-4 overflow-x-auto px-4 pb-2">
-          {CATEGORIES.map((category) => (
+          {categoriesLoading ? Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-9 w-24 rounded-full" />) :
+          sortedCategories.map((category) => (
             <Button
               key={category.id}
               variant={activeCategory === category.id ? "default" : "outline"}
@@ -58,7 +96,21 @@ export default function HomePage() {
       </nav>
 
       <div className="space-y-12">
-        {CATEGORIES.map((category) => (
+        {menuItemsLoading ? (
+            <div className="space-y-12">
+                {Array.from({length: 2}).map((_, i) => (
+                    <section key={i} className="pt-4">
+                        <Skeleton className="h-8 w-48 mb-4" />
+                        <Separator className="my-4" />
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            {Array.from({length: 2}).map((_, j) => (
+                                <Card key={j}><CardContent className="p-4"><Skeleton className="h-36 w-full" /></CardContent></Card>
+                            ))}
+                        </div>
+                    </section>
+                ))}
+            </div>
+        ) : sortedCategories.map((category) => (
           <section
             key={category.id}
             id={category.id}
@@ -70,17 +122,17 @@ export default function HomePage() {
             </h2>
             <Separator className="my-4" />
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {MENU_ITEMS.filter((item) => item.category === category.id).map(
+              {menuItems?.filter((item) => item.category === category.id).map(
                 (item) => (
                   <Card key={item.id} className="overflow-hidden">
                     <CardContent className="flex gap-4 p-4">
                       <div className="relative h-28 w-28 flex-shrink-0 sm:h-36 sm:w-36">
                         <Image
-                          src={placeholderImages[item.imageId].url}
+                          src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
                           alt={item.name}
                           fill
                           className="rounded-lg object-cover"
-                          data-ai-hint={placeholderImages[item.imageId].hint}
+                          data-ai-hint={placeholderImageMap.get(item.imageId)?.imageHint}
                           sizes="(max-width: 640px) 112px, 144px"
                         />
                       </div>
@@ -122,7 +174,7 @@ export default function HomePage() {
         >
           <Button className="h-14 rounded-full bg-primary pl-6 pr-6 shadow-lg" size="lg">
             <ShoppingCart className="mr-3 h-6 w-6" />
-            <span className="font-bold">View Cart (3)</span>
+            <span className="font-bold">View Cart (0)</span>
           </Button>
         </motion.div>
       </AnimatePresence>

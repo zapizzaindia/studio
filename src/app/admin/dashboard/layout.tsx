@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname } from "next/navigation";
+import React, { useEffect } from 'react';
+import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
 import Link from 'next/link';
 import { 
@@ -18,6 +19,10 @@ import {
 import { LayoutDashboard, ShoppingCart, List, BarChart, Store, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth, useUser, useDoc } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import type { UserProfile, Outlet } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -34,6 +39,37 @@ export default function AdminDashboardLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const router = useRouter();
+  const auth = useAuth();
+  const { user, loading: userLoading } = useUser();
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  const { data: outlet, loading: outletLoading } = useDoc<Outlet>('outlets', userProfile?.outletId || 'dummy');
+
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.replace('/admin/login');
+    }
+    if (!profileLoading && userProfile && userProfile.role !== 'outlet-admin') {
+      auth?.signOut();
+      router.replace('/admin/login');
+    }
+  }, [user, userLoading, userProfile, profileLoading, auth, router]);
+
+  const handleLogout = async () => {
+    if (auth) {
+        await signOut(auth);
+        router.push('/login');
+    }
+  }
+
+  if (userLoading || profileLoading || outletLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <p>Loading Dashboard...</p>
+        </div>
+    )
+  }
 
   return (
     <SidebarProvider>
@@ -63,11 +99,9 @@ export default function AdminDashboardLayout({
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                            <Link href="/login">
-                                <LogOut />
-                                <span>Logout</span>
-                            </Link>
+                        <SidebarMenuButton onClick={handleLogout}>
+                            <LogOut />
+                            <span>Logout</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
@@ -82,15 +116,13 @@ export default function AdminDashboardLayout({
                     </h1>
                 </div>
                 <div className="flex items-center gap-4">
-                    <p className="text-sm text-muted-foreground">NYC Outlet</p>
+                    {outlet ? <p className="text-sm text-muted-foreground">{outlet.name}</p> : <Skeleton className="h-5 w-24" />}
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="https://i.pravatar.cc/150?u=admin" />
-                      <AvatarFallback>A</AvatarFallback>
+                      <AvatarImage src={user?.photoURL || undefined} />
+                      <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'A'}</AvatarFallback>
                     </Avatar>
-                     <Button asChild variant="ghost" className="md:hidden">
-                        <Link href="/login">
-                            <LogOut className="h-5 w-5"/>
-                        </Link>
+                     <Button asChild variant="ghost" className="md:hidden" onClick={handleLogout}>
+                        <LogOut className="h-5 w-5"/>
                     </Button>
                 </div>
             </header>

@@ -1,4 +1,4 @@
-import type { placeholderImages } from './data';
+import type { Timestamp } from 'firebase/firestore';
 
 export type City = {
   id: string;
@@ -17,24 +17,28 @@ export type MenuItem = {
   price: number;
   isVeg: boolean;
   category: string;
-  imageId: keyof typeof placeholderImages;
+  imageId: string;
   isAvailable: boolean;
+  isAvailableGlobally: boolean;
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';
 
 export type OrderItem = {
-  menuItem: MenuItem;
+  menuItemId: string;
+  name: string;
   quantity: number;
+  price: number;
 };
 
 export type Order = {
   id: string;
+  customerId: string;
   customerName: string;
   items: OrderItem[];
   total: number;
   status: OrderStatus;
-  createdAt: Date;
+  createdAt: Timestamp;
   outletId: string;
 };
 
@@ -43,12 +47,19 @@ export type Outlet = {
     name: string;
     cityId: string;
     isOpen: boolean;
+    openingTime: string;
+    closingTime: string;
 };
 
-export type User = {
-    id: string;
-    name: string;
+export type UserProfile = {
+    uid: string;
     email: string;
-    role: 'franchise-owner' | 'outlet-admin';
+    displayName?: string;
+    photoURL?: string;
+    role: 'customer' | 'outlet-admin' | 'franchise-owner';
     outletId?: string;
 };
+
+export type OutletMenuAvailability = {
+    isAvailable: boolean;
+}

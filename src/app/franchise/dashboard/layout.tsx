@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname } from "next/navigation";
+import React, { useEffect } from 'react';
+import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
 import Link from 'next/link';
 import { 
@@ -18,6 +19,10 @@ import {
 import { LayoutDashboard, Store, List, BarChart, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth, useDoc, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import type { UserProfile } from '@/lib/types';
+
 
 const navItems = [
   { href: "/franchise/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -34,6 +39,35 @@ export default function FranchiseDashboardLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const router = useRouter();
+  const auth = useAuth();
+  const { user, loading: userLoading } = useUser();
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.replace('/franchise/login');
+    }
+    if (!profileLoading && userProfile && userProfile.role !== 'franchise-owner') {
+      auth?.signOut();
+      router.replace('/franchise/login');
+    }
+  }, [user, userLoading, userProfile, profileLoading, auth, router]);
+
+  const handleLogout = async () => {
+    if (auth) {
+        await signOut(auth);
+        router.push('/login');
+    }
+  }
+  
+  if (userLoading || profileLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <p>Loading Dashboard...</p>
+        </div>
+    )
+  }
 
   return (
     <SidebarProvider>
@@ -63,11 +97,9 @@ export default function FranchiseDashboardLayout({
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                            <Link href="/login">
-                                <LogOut />
-                                <span>Logout</span>
-                            </Link>
+                        <SidebarMenuButton onClick={handleLogout}>
+                            <LogOut />
+                            <span>Logout</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
@@ -83,13 +115,11 @@ export default function FranchiseDashboardLayout({
                 </div>
                 <div className="flex items-center gap-4">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="https://i.pravatar.cc/150?u=superadmin" />
-                      <AvatarFallback>SA</AvatarFallback>
+                       <AvatarImage src={user?.photoURL || undefined} />
+                       <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'S'}</AvatarFallback>
                     </Avatar>
-                     <Button asChild variant="ghost" className="md:hidden">
-                        <Link href="/login">
-                            <LogOut className="h-5 w-5"/>
-                        </Link>
+                     <Button asChild variant="ghost" className="md:hidden" onClick={handleLogout}>
+                        <LogOut className="h-5 w-5"/>
                     </Button>
                 </div>
             </header>

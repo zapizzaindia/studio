@@ -6,13 +6,16 @@ import type { City } from "@/lib/types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ZapizzaLogo } from "./icons";
+import { useCollection } from "@/firebase";
+import { Skeleton } from "./ui/skeleton";
 
 type CitySelectorProps = {
-  cities: City[];
   onCitySelect: (city: City) => void;
 };
 
-export function CitySelector({ cities, onCitySelect }: CitySelectorProps) {
+export function CitySelector({ onCitySelect }: CitySelectorProps) {
+  const { data: cities, loading } = useCollection<City>('cities');
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -41,7 +44,10 @@ export function CitySelector({ cities, onCitySelect }: CitySelectorProps) {
       <div className="flex-1 overflow-y-auto">
         <h2 className="font-headline font-semibold text-muted-foreground">POPULAR CITIES</h2>
         <ul className="mt-4 grid grid-cols-2 gap-4">
-          {cities.map((city) => (
+          {loading && Array.from({ length: 6 }).map((_, i) => (
+             <Skeleton key={i} className="h-20 w-full" />
+          ))}
+          {cities?.map((city) => (
             <motion.li
               key={city.id}
               whileTap={{ scale: 0.95 }}

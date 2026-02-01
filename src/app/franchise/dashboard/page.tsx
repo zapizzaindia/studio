@@ -1,18 +1,29 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DollarSign, ShoppingBag, Store, Map } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CITIES, OUTLETS, ORDERS } from '@/lib/data';
-import { format } from "date-fns";
+import { useCollection } from "@/firebase";
+import type { City, Outlet, Order } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FranchiseDashboardPage() {
-    const totalRevenue = ORDERS.reduce((sum, order) => order.status === 'Completed' ? sum + order.total : sum, 0);
-    const totalOrders = ORDERS.length;
-    const activeOutlets = OUTLETS.filter(o => o.isOpen).length;
-    const totalCities = CITIES.length;
+    const { data: cities, loading: citiesLoading } = useCollection<City>('cities');
+    const { data: outlets, loading: outletsLoading } = useCollection<Outlet>('outlets');
+    const { data: orders, loading: ordersLoading } = useCollection<Order>('orders');
     
-    const findOutlet = (id: string) => OUTLETS.find(o => o.id === id);
-    const findCity = (id: string) => CITIES.find(c => c.id === id);
+    const isLoading = citiesLoading || outletsLoading || ordersLoading;
+
+    const totalRevenue = orders?.reduce((sum, order) => order.status === 'Completed' ? sum + order.total : sum, 0) || 0;
+    const totalOrders = orders?.length || 0;
+    const activeOutlets = outlets?.filter(o => o.isOpen).length || 0;
+    const totalCities = cities?.length || 0;
+    
+    const findOutlet = (id: string) => outlets?.find(o => o.id === id);
+    const findCity = (id: string) => cities?.find(c => c.id === id);
+
+    const sortedOrders = orders ? [...orders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
 
     return (
         <div className="container mx-auto p-0">
@@ -28,7 +39,7 @@ export default function FranchiseDashboardPage() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{totalRevenue.toFixed(2)}</div>
+                       {isLoading ? <Skeleton className="h-8 w-3/4"/> : <div className="text-2xl font-bold">₹{totalRevenue.toFixed(2)}</div>}
                         <p className="text-xs text-muted-foreground">All-time revenue</p>
                     </CardContent>
                 </Card>
@@ -38,7 +49,7 @@ export default function FranchiseDashboardPage() {
                         <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{totalOrders}</div>
+                        {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-bold">{totalOrders}</div>}
                         <p className="text-xs text-muted-foreground">All-time orders</p>
                     </CardContent>
                 </Card>
@@ -48,7 +59,7 @@ export default function FranchiseDashboardPage() {
                         <Store className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{activeOutlets} / {OUTLETS.length}</div>
+                        {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-bold">{activeOutlets} / {outlets?.length || 0}</div>}
                         <p className="text-xs text-muted-foreground">Across all cities</p>
                     </CardContent>
                 </Card>
@@ -58,7 +69,7 @@ export default function FranchiseDashboardPage() {
                         <Map className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{totalCities}</div>
+                        {isLoading ? <Skeleton className="h-8 w-1/4"/> : <div className="text-2xl font-bold">{totalCities}</div>}
                         <p className="text-xs text-muted-foreground">Active regions</p>
                     </CardContent>
                 </Card>
@@ -82,16 +93,21 @@ export default function FranchiseDashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {ORDERS.slice(0, 10).map((order) => {
+                            {isLoading ? Array.from({length: 5}).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell colSpan={6}><Skeleton className="h-5 w-full"/></TableCell>
+                                </TableRow>
+                            )) :
+                            sortedOrders.slice(0, 10).map((order) => {
                                 const outlet = findOutlet(order.outletId);
                                 const city = outlet ? findCity(outlet.cityId) : null;
                                 return (
                                 <TableRow key={order.id}>
-                                    <TableCell className="font-medium">{order.id}</TableCell>
+                                    <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
                                     <TableCell>{outlet?.name || 'N/A'}</TableCell>
                                     <TableCell>{city?.name || 'N/A'}</TableCell>
                                     <TableCell>₹{order.total.toFixed(2)}</TableCell>
-                                    <TableCell>{format(new Date(order.createdAt), 'p')}</TableCell>
+                                    <TableCell>{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
                                     <TableCell>
                                         <Badge variant={order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
                                             {order.status}

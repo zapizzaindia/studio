@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth, useFirestore } from '@/firebase';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -26,22 +29,43 @@ const loginSchema = z.object({
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    // Mock admin login
-    console.log(`Admin login attempt for ${values.email}`);
-    if (values.email === 'admin@zapizza.com' && values.password === 'password') {
-      toast({
-        title: "Admin Login Successful!",
-        description: "Welcome to the Admin Dashboard!",
-      });
-      router.push('/admin/dashboard');
-    } else {
+  async function onSubmit(values: z.infer<typeof loginSchema>) {
+    if (!auth || !firestore) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Firebase not initialized.' });
+      return;
+    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists() && userDocSnap.data().role === 'outlet-admin') {
+        toast({
+          title: "Admin Login Successful!",
+          description: "Welcome to the Admin Dashboard!",
+        });
+        router.push('/admin/dashboard');
+      } else {
+        await auth.signOut();
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You do not have permission to access the admin dashboard.",
+        });
+        form.setError("email", { type: "manual", message: " " });
+        form.setError("password", { type: "manual", message: "Access Denied" });
+      }
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Invalid Credentials",

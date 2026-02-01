@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
+import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/firebase';
 
 const phoneSchema = z.object({
   phone: z.string().min(10, { message: 'Please enter a valid 10-digit phone number.' }).max(10),
@@ -32,11 +34,20 @@ const otpSchema = z.object({
 
 type Step = 'phone' | 'otp';
 
+// Extend window type to include recaptchaVerifier
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier;
+  }
+}
+
 export default function LoginPage() {
   const [step, setStep] = useState<Step>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
 
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
@@ -48,27 +59,60 @@ export default function LoginPage() {
     defaultValues: { otp: '' },
   });
 
-  function onPhoneSubmit(values: z.infer<typeof phoneSchema>) {
-    // Mock Firebase OTP request
-    setPhoneNumber(values.phone);
-    console.log(`Requesting OTP for ${values.phone}`);
-    toast({
-      title: "OTP Sent!",
-      description: `An OTP has been sent to ${values.phone}. (It's 123456)`,
+  useEffect(() => {
+    if (!auth || window.recaptchaVerifier) return;
+    
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'invisible',
+      'callback': (response: any) => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+        // console.log("reCAPTCHA verified");
+      }
     });
-    setStep('otp');
+
+  }, [auth]);
+
+  async function onPhoneSubmit(values: z.infer<typeof phoneSchema>) {
+    if (!auth) {
+      toast({ variant: 'destructive', title: 'Authentication service not ready.' });
+      return;
+    }
+    const appVerifier = window.recaptchaVerifier;
+    const fullPhoneNumber = `+91${values.phone}`;
+    setPhoneNumber(fullPhoneNumber);
+
+    try {
+      const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
+      setConfirmationResult(result);
+      toast({
+        title: "OTP Sent!",
+        description: `An OTP has been sent to ${fullPhoneNumber}.`,
+      });
+      setStep('otp');
+    } catch (error) {
+        console.error("SMS not sent error", error);
+        toast({
+            variant: "destructive",
+            title: "Failed to send OTP",
+            description: "Please try again later or check your phone number.",
+        });
+    }
   }
 
-  function onOtpSubmit(values: z.infer<typeof otpSchema>) {
-    // Mock Firebase OTP verification
-    console.log(`Verifying OTP ${values.otp} for ${phoneNumber}`);
-    if (values.otp === '123456') {
+  async function onOtpSubmit(values: z.infer<typeof otpSchema>) {
+    if (!confirmationResult) {
+      toast({ variant: 'destructive', title: 'Something went wrong. Please try again.' });
+      return;
+    }
+    try {
+      await confirmationResult.confirm(values.otp);
       toast({
         title: "Login Successful!",
         description: "Welcome to Zapizza!",
       });
       router.push('/home');
-    } else {
+    } catch (error) {
+      console.error("OTP verification error", error);
       toast({
         variant: "destructive",
         title: "Invalid OTP",
@@ -86,6 +130,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm p-4">
+      <div id="recaptcha-container"></div>
       <div className="mb-8 flex flex-col items-center text-center">
         <ZapizzaLogo className="mb-4 h-16 w-16 text-primary" />
         <h1 className="font-headline text-3xl font-bold text-primary">Welcome to Zapizza</h1>
@@ -135,7 +180,7 @@ export default function LoginPage() {
                         <Input placeholder="123456" {...field} />
                       </FormControl>
                       <FormDescription>
-                        An OTP was sent to +91 {phoneNumber}.
+                        An OTP was sent to {phoneNumber}.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

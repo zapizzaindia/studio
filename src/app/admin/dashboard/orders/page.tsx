@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from 'react';
-import { format } from 'date-fns';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ORDERS } from '@/lib/data';
-import type { Order, OrderStatus } from '@/lib/types';
+import type { Order, OrderStatus, UserProfile } from '@/lib/types';
 import { Truck, CheckCircle, XCircle, Loader, CircleDot } from 'lucide-react';
+import { useAuth, useCollection, useDoc, useFirestore, useUser } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const statusIcons: Record<OrderStatus, React.ReactNode> = {
   "New": <CircleDot className="h-4 w-4 text-blue-500" />,
@@ -20,16 +24,38 @@ const statusIcons: Record<OrderStatus, React.ReactNode> = {
 
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(ORDERS);
+  const { user } = useUser();
+  const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  const outletId = userProfile?.outletId;
+  const { data: orders, loading: ordersLoading } = useCollection<Order>('orders', { where: outletId ? ['outletId', '==', outletId] : undefined });
+  const firestore = useFirestore();
+  const { toast } = useToast();
 
   const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
-    setOrders(prevOrders => 
-      prevOrders.map(o => o.id === orderId ? { ...o, status } : o)
-    );
+    if (!firestore) return;
+    const orderRef = doc(firestore, 'orders', orderId);
+    
+    updateDoc(orderRef, { status })
+      .then(() => {
+        toast({ title: 'Success', description: `Order status updated to ${status}` });
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+          path: orderRef.path,
+          operation: 'update',
+          requestResourceData: { status }
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
   
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
-    const filteredOrders = statusFilter === 'All' ? orders : orders.filter(o => o.status === statusFilter);
+    if (ordersLoading) {
+      return <Card><CardContent className="p-4"><Skeleton className="h-48 w-full" /></CardContent></Card>;
+    }
+
+    const filteredOrders = statusFilter === 'All' ? orders : orders?.filter(o => o.status === statusFilter);
+    const sortedOrders = filteredOrders?.sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis());
     
     return (
       <Card>
@@ -48,16 +74,16 @@ export default function AdminOrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
+                {sortedOrders && sortedOrders.length > 0 ? (
+                  sortedOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
                     <TableCell>{order.customerName}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
-                      {order.items.map(item => `${item.quantity}x ${item.menuItem.name}`).join(', ')}
+                      {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
                     </TableCell>
                     <TableCell>₹{order.total.toFixed(2)}</TableCell>
-                    <TableCell>{format(new Date(order.createdAt), 'p')}</TableCell>
+                    <TableCell>{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
                     <TableCell>
                        <div className="flex items-center gap-2">
                           {statusIcons[order.status]}

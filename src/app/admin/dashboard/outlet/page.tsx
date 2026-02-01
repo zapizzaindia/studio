@@ -1,19 +1,90 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Clock, MapPin, Power } from 'lucide-react';
+import { useDoc, useUser, useFirestore } from '@/firebase';
+import type { UserProfile, Outlet } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function AdminOutletPage() {
-    const [outletName, setOutletName] = useState("Zapizza - Downtown NYC");
-    const [city, setCity] = useState("New York");
-    const [openingTime, setOpeningTime] = useState("11:00");
-    const [closingTime, setClosingTime] = useState("23:00");
+    const { user } = useUser();
+    const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+    const outletId = userProfile?.outletId;
+    const { data: outlet, loading } = useDoc<Outlet>('outlets', outletId || 'dummy');
+    
+    const [outletName, setOutletName] = useState("");
+    const [city, setCity] = useState("");
+    const [openingTime, setOpeningTime] = useState("");
+    const [closingTime, setClosingTime] = useState("");
     const [isOutletOpen, setIsOutletOpen] = useState(true);
+    
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        if (outlet) {
+            setOutletName(outlet.name);
+            // We'd need to fetch the city name based on cityId
+            setCity(outlet.cityId); 
+            setOpeningTime(outlet.openingTime || "11:00");
+            setClosingTime(outlet.closingTime || "23:00");
+            setIsOutletOpen(outlet.isOpen);
+        }
+    }, [outlet]);
+    
+    const handleSaveChanges = () => {
+        if (!firestore || !outletId) return;
+
+        const outletRef = doc(firestore, 'outlets', outletId);
+        const updatedData = {
+            name: outletName,
+            isOpen: isOutletOpen,
+            openingTime,
+            closingTime,
+        };
+
+        updateDoc(outletRef, updatedData)
+            .then(() => {
+                toast({ title: 'Success', description: 'Outlet details updated successfully.' });
+            })
+            .catch(error => {
+                const permissionError = new FirestorePermissionError({
+                    path: outletRef.path,
+                    operation: 'update',
+                    requestResourceData: updatedData
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            });
+    }
+
+    if (loading) {
+        return (
+             <div className="container mx-auto p-0">
+                <div className="mb-4">
+                    <Skeleton className="h-10 w-1/2" />
+                    <Skeleton className="h-4 w-1/3 mt-2" />
+                </div>
+                <Card className="max-w-2xl">
+                    <CardHeader><Skeleton className="h-8 w-3/4" /></CardHeader>
+                    <CardContent className="space-y-6">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-24" />
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
 
     return (
         <div className="container mx-auto p-0">
@@ -24,7 +95,7 @@ export default function AdminOutletPage() {
 
             <Card className="max-w-2xl">
                 <CardHeader>
-                    <CardTitle>{outletName}</CardTitle>
+                    <CardTitle>{outlet?.name}</CardTitle>
                     <CardDescription>
                         <div className="flex items-center gap-2 text-muted-foreground mt-2">
                             <MapPin className="h-4 w-4"/>
@@ -46,6 +117,7 @@ export default function AdminOutletPage() {
                         <Switch
                             checked={isOutletOpen}
                             onCheckedChange={setIsOutletOpen}
+                            disabled // Franchise owner should control this from their dashboard
                         />
                     </div>
 
@@ -69,7 +141,7 @@ export default function AdminOutletPage() {
                         </div>
                     </div>
                     
-                    <Button>Save Changes</Button>
+                    <Button onClick={handleSaveChanges}>Save Changes</Button>
                 </CardContent>
             </Card>
         </div>

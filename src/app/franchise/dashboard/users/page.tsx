@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { USERS, OUTLETS } from '@/lib/data';
-import type { User } from '@/lib/types';
+import type { UserProfile, Outlet } from '@/lib/types';
 import { Plus } from 'lucide-react';
+import { useCollection } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FranchiseUsersPage() {
-  const [users, setUsers] = useState<User[]>(USERS);
+  const { data: users, loading: usersLoading } = useCollection<UserProfile>('users');
+  const { data: outlets, loading: outletsLoading } = useCollection<Outlet>('outlets');
+  const isLoading = usersLoading || outletsLoading;
+
+  const adminUsers = users?.filter(u => u.role === 'franchise-owner' || u.role === 'outlet-admin');
 
   return (
     <div className="container mx-auto p-0">
@@ -36,11 +40,13 @@ export default function FranchiseUsersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.map(user => {
-                            const outlet = user.outletId ? OUTLETS.find(o => o.id === user.outletId) : null;
+                        {isLoading ? Array.from({length: 4}).map((_, i) => (
+                            <TableRow key={i}><TableCell colSpan={5}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
+                        )) : adminUsers?.map(user => {
+                            const outlet = user.outletId ? outlets?.find(o => o.id === user.outletId) : null;
                             return (
-                            <TableRow key={user.id}>
-                                <TableCell className="font-medium">{user.name}</TableCell>
+                            <TableRow key={user.uid}>
+                                <TableCell className="font-medium">{user.displayName || 'N/A'}</TableCell>
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>
                                     <Badge variant={user.role === 'franchise-owner' ? 'default' : 'secondary'}>
