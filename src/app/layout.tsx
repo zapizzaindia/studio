@@ -5,6 +5,11 @@ import { Toaster } from '@/components/ui/toaster';
 export const metadata: Metadata = {
   title: 'Zapizza PWA',
   description: 'The best pizza delivery PWA, built with Firebase and Next.js',
+  manifest: '/manifest.json',
+  themeColor: '#f04e41',
+  icons: {
+    apple: "/icons/icon-192x192.png",
+  }
 };
 
 export default function RootLayout({

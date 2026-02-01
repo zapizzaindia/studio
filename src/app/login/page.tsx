@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -151,6 +152,19 @@ export default function LoginPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <div className="mt-8 text-center text-sm">
+        <p className="text-muted-foreground">
+          Are you an admin or franchise owner?
+        </p>
+        <div className="mt-2 flex justify-center gap-4">
+          <Button variant="link" asChild>
+            <Link href="/admin/login">Admin Login</Link>
+          </Button>
+          <Button variant="link" asChild>
+            <Link href="/franchise/login">Franchise Login</Link>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
