@@ -1,4 +1,4 @@
-import type { City, Category, MenuItem } from './types';
+import type { City, Category, MenuItem, Order, OrderItem } from './types';
 
 export const CITIES: City[] = [
   { id: 'nyc', name: 'New York' },
@@ -46,3 +46,66 @@ export const placeholderImages = {
   garlic_bread: { url: 'https://picsum.photos/seed/garlicbread/600/400', hint: 'garlic bread' },
   choco_lava_cake: { url: 'https://picsum.photos/seed/chococake/600/400', hint: 'chocolate cake' }
 };
+
+const findMenuItem = (id: string) => MENU_ITEMS.find(i => i.id === id)!;
+
+export const ORDERS: Order[] = [
+  {
+    id: 'ORD-001',
+    customerName: 'John Doe',
+    items: [
+      { menuItem: findMenuItem('nv-01'), quantity: 1 },
+      { menuItem: findMenuItem('s-01'), quantity: 2 },
+      { menuItem: findMenuItem('b-01'), quantity: 1 },
+    ],
+    total: 867,
+    status: 'New',
+    createdAt: new Date('2024-07-29T10:00:00Z'),
+    outletId: 'nyc-1',
+  },
+  {
+    id: 'ORD-002',
+    customerName: 'Jane Smith',
+    items: [
+      { menuItem: findMenuItem('v-01'), quantity: 2 },
+    ],
+    total: 898,
+    status: 'Preparing',
+    createdAt: new Date('2024-07-29T10:05:00Z'),
+    outletId: 'nyc-1',
+  },
+  {
+    id: 'ORD-003',
+    customerName: 'Peter Jones',
+    items: [
+      { menuItem: findMenuItem('m-01'), quantity: 1 },
+      { menuItem: findMenuItem('d-01'), quantity: 1 },
+    ],
+    total: 408,
+    status: 'Out for Delivery',
+    createdAt: new Date('2024-07-29T09:30:00Z'),
+    outletId: 'nyc-1',
+  },
+    {
+    id: 'ORD-004',
+    customerName: 'Mary Brown',
+    items: [
+      { menuItem: findMenuItem('nv-02'), quantity: 1 },
+    ],
+    total: 599,
+    status: 'Completed',
+    createdAt: new Date('2024-07-28T18:00:00Z'),
+    outletId: 'nyc-1',
+  },
+  {
+    id: 'ORD-005',
+    customerName: 'David Wilson',
+    items: [
+      { menuItem: findMenuItem('v-02'), quantity: 1 },
+    ],
+    total: 499,
+    status: 'Cancelled',
+    createdAt: new Date('2024-07-29T11:00:00Z'),
+    outletId: 'nyc-1',
+  },
+];
