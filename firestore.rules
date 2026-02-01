@@ -1,17 +1,81 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
-    }
+  
+    // Helper functions
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-    match /users/{userId} {
-      allow read: if isOwner(userId);
+    
+    function getUserRole(userId) {
+        return get(/databases/$(database)/documents/users/$(userId)).data.role;
     }
+
+    function isFranchiseOwner(userId) {
+        return getUserRole(userId) == 'franchise-owner';
+    }
+
+    function isOutletAdmin(userId, outletId) {
+        let userDoc = get(/databases/$(database)/documents/users/$(userId)).data;
+        return userDoc.role == 'outlet-admin' && userDoc.outletId == outletId;
+    }
+    
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // USERS
     match /users/{userId} {
-      allow write: if isOwner(userId);
+      // Users can read and update their own profile.
+      allow read, update: if isOwner(userId);
+      // Franchise owner can read any user profile.
+      allow get, list: if isFranchiseOwner(request.auth.uid);
+      // Allow creation of user profile for new users.
+      allow create: if request.auth.uid != null;
+    }
+    
+    // CITIES, OUTLETS, CATEGORIES, MENU ITEMS (Global data)
+    // Logged-in users can read global data
+    match /cities/{cityId} {
+        allow read: if request.auth != null;
+        allow write: if isFranchiseOwner(request.auth.uid);
+    }
+    match /outlets/{outletId} {
+        allow read: if request.auth != null;
+        allow write: if isFranchiseOwner(request.auth.uid);
+    }
+    match /categories/{categoryId} {
+        allow read: if request.auth != null;
+        allow write: if isFranchiseOwner(request.auth.uid);
+    }
+    match /menuItems/{menuItemId} {
+        allow read: if request.auth != null;
+        allow write: if isFranchiseOwner(request.auth.uid);
+    }
+
+    // OUTLET MENU AVAILABILITY
+    match /outlets/{outletId}/menuAvailability/{menuItemId} {
+        // Customers can read
+        allow read: if request.auth != null;
+        // Outlet admin can write to their own outlet's menu
+        allow write: if isOutletAdmin(request.auth.uid, outletId);
+        // Franchise owner can write
+        allow write: if isFranchiseOwner(request.auth.uid);
+    }
+
+    // ORDERS
+    match /orders/{orderId} {
+        // Customer can create their own order, and read their own orders
+        allow create: if isOwner(request.resource.data.customerId);
+        allow read: if isOwner(get(/databases/$(database)/documents/orders/$(orderId)).data.customerId);
+
+        // Outlet admin can read and update orders for their outlet
+        allow read, update: if isOutletAdmin(request.auth.uid, get(/databases/$(database)/documents/orders/$(orderId)).data.outletId);
+
+        // Franchise owner can read all orders
+        allow read: if isFranchiseOwner(request.auth.uid);
     }
   }
 }

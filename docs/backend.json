@@ -1,46 +1,141 @@
 {
   "entities": {
-    "user": {
-      "title": "User",
-      "description": "A user of the application",
+    "userProfile": {
+      "title": "User Profile",
+      "description": "A user of the application, could be a customer, admin, or franchise owner.",
       "type": "object",
       "properties": {
-        "uid": {
+        "uid": { "type": "string", "description": "The user's unique ID from Firebase Auth." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "format": "uri", "description": "URL of the user's profile picture." },
+        "role": {
           "type": "string",
-          "description": "The user's unique ID"
+          "description": "The role of the user.",
+          "enum": ["customer", "outlet-admin", "franchise-owner"]
         },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "The user's email address"
-        },
-        "displayName": {
-          "type": "string",
-          "description": "The user's display name"
-        },
-        "photoURL": {
-          "type": "string",
-          "format": "uri",
-          "description": "The URL of the user's profile picture"
+        "outletId": {
+            "type": "string",
+            "description": "The ID of the outlet this user manages, if they are an outlet-admin."
         }
       },
-      "required": [
-        "uid",
-        "email"
-      ]
+      "required": ["uid", "email", "role"]
+    },
+    "city": {
+        "title": "City",
+        "description": "A city where Zapizza has outlets.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "The name of the city." }
+        },
+        "required": ["name"]
+    },
+    "outlet": {
+        "title": "Outlet",
+        "description": "A specific Zapizza outlet in a city.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "The name of the outlet." },
+            "cityId": { "type": "string", "description": "The ID of the city this outlet belongs to." },
+            "isOpen": { "type": "boolean", "description": "Whether the outlet is currently open and accepting orders." },
+            "openingTime": { "type": "string", "format": "time", "description": "The opening time of the outlet." },
+            "closingTime": { "type": "string", "format": "time", "description": "The closing time of the outlet." }
+        },
+        "required": ["name", "cityId", "isOpen"]
+    },
+    "category": {
+        "title": "Menu Category",
+        "description": "A category for menu items, e.g., 'Veg Pizzas'.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "The name of the category." },
+            "order": { "type": "number", "description": "The display order of the category."}
+        },
+        "required": ["name", "order"]
+    },
+    "menuItem": {
+        "title": "Menu Item",
+        "description": "A single item on the Zapizza menu.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "price": { "type": "number", "description": "Price in Indian Rupees (INR)." },
+            "isVeg": { "type": "boolean" },
+            "categoryId": { "type": "string" },
+            "imageId": { "type": "string" },
+            "isAvailableGlobally": {"type": "boolean", "description": "If the item is available across all outlets (franchise controlled)."}
+        },
+        "required": ["name", "price", "isVeg", "categoryId", "isAvailableGlobally"]
+    },
+    "outletMenuAvailability": {
+        "title": "Outlet Menu Availability",
+        "description": "Tracks which menu items are available at a specific outlet.",
+        "type": "object",
+        "properties": {
+            "isAvailable": { "type": "boolean" }
+        },
+        "required": ["isAvailable"]
+    },
+    "order": {
+        "title": "Order",
+        "description": "A customer order.",
+        "type": "object",
+        "properties": {
+            "customerId": { "type": "string" },
+            "customerName": { "type": "string" },
+            "items": { 
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "menuItemId": {"type": "string"},
+                        "name": {"type": "string"},
+                        "quantity": {"type": "number"},
+                        "price": {"type": "number"}
+                    },
+                    "required": ["menuItemId", "name", "quantity", "price"]
+                }
+            },
+            "total": { "type": "number", "description": "Total price in Indian Rupees (INR)." },
+            "status": { "type": "string", "enum": ["New", "Preparing", "Out for Delivery", "Completed", "Cancelled"] },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "outletId": { "type": "string" }
+        },
+        "required": ["customerId", "items", "total", "status", "createdAt", "outletId"]
     }
   },
   "auth": {
-    "providers": [
-      "anonymous"
-    ]
+    "providers": ["phone", "password"]
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/user"
-      },
+      "schema": { "$ref": "#/entities/userProfile" },
       "description": "Stores user profile information."
+    },
+    "/cities/{cityId}": {
+      "schema": { "$ref": "#/entities/city" },
+      "description": "List of cities where Zapizza operates."
+    },
+    "/outlets/{outletId}": {
+        "schema": { "$ref": "#/entities/outlet" },
+        "description": "List of all Zapizza outlets."
+    },
+    "/categories/{categoryId}": {
+        "schema": { "$ref": "#/entities/category" },
+        "description": "Global menu categories."
+    },
+    "/menuItems/{menuItemId}": {
+        "schema": { "$ref": "#/entities/menuItem" },
+        "description": "Global menu items."
+    },
+    "/outlets/{outletId}/menuAvailability/{menuItemId}": {
+        "schema": { "$ref": "#/entities/outletMenuAvailability" },
+        "description": "Tracks availability of a menu item for a specific outlet."
+    },
+    "/orders/{orderId}": {
+        "schema": { "$ref": "#/entities/order" },
+        "description": "All customer orders from all outlets."
     }
   }
 }
