@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "margherita",
+      "description": "Classic Margherita pizza with fresh tomatoes, mozzarella, and basil",
+      "imageUrl": "https://images.unsplash.com/photo-1680405620826-83b0f0f61b28?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtYXJnaGVyaXRhJTIwcGl6emF8ZW58MHx8fHwxNzY5ODg1Nzg1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "margherita pizza"
+    },
+    {
+      "id": "pepperoni",
+      "description": "Classic pizza topped with spicy pepperoni slices",
+      "imageUrl": "https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZXBwZXJvbmklMjBwaXp6YXxlbnwwfHx8fDE3Njk4NTA1MDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pepperoni pizza"
+    },
+    {
+      "id": "veggie_delight",
+      "description": "A delicious mix of fresh vegetables on a cheesy base",
+      "imageUrl": "https://images.unsplash.com/photo-1743615357602-f0711d1bc06f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8dmVnZXRhcmlhbiUyMHBpenphfGVufDB8fHx8MTc2OTkwMjEzOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vegetarian pizza"
+    },
+    {
+      "id": "supreme",
+      "description": "Loaded with a variety of meats, vegetables, and extra cheese",
+      "imageUrl": "https://images.unsplash.com/photo-1681567604770-0dc826c870ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdXByZW1lJTIwcGl6emF8ZW58MHx8fHwxNzY5OTYxOTE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "supreme pizza"
+    },
+    {
+      "id": "bbq_chicken",
+      "description": "Grilled chicken, red onions, and BBQ sauce",
+      "imageUrl": "https://images.unsplash.com/photo-1767065603670-d44bcdf1da5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxiYnElMjBwaXp6YXxlbnwwfHx8fDE3Njk5NjE5MTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bbq pizza"
+    },
+    {
+      "id": "coke",
+      "description": "A refreshing can of Coca-Cola",
+      "imageUrl": "https://images.unsplash.com/photo-1591550936127-58ae7ea00c80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjb2tlJTIwY2FufGVufDB8fHx8MTc2OTk1MDQ4OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "coke can"
+    },
+    {
+      "id": "pepsi",
+      "description": "A refreshing can of Pepsi",
+      "imageUrl": "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXBzaSUyMGNhbnxlbnwwfHx8fDE3Njk4NDYyNzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pepsi can"
+    },
+    {
+      "id": "garlic_bread",
+      "description": "Warm and crispy garlic bread sticks",
+      "imageUrl": "https://images.unsplash.com/photo-1612716391329-28564c434ccc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxnYXJsaWMlMjBicmVhZHxlbnwwfHx8fDE3Njk5NjE5MTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "garlic bread"
+    },
+    {
+      "id": "choco_lava_cake",
+      "description": "Decadent chocolate cake with a molten lava center",
+      "imageUrl": "https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y2hvY29sYXRlJTIwY2FrZXxlbnwwfHx8fDE3Njk4Njk4NzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chocolate cake"
+    }
+  ]
 }
