@@ -1,0 +1,49 @@
+'use client';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { initializeFirebase } from '.';
+import type { FirebaseApp } from 'firebase/app';
+import type { Firestore } from 'firebase/firestore';
+import type { Auth } from 'firebase/auth';
+import { FirebaseProvider } from './provider';
+
+interface FirebaseContextType {
+  firebase: FirebaseApp | null;
+  firestore: Firestore | null;
+  auth: Auth | null;
+}
+
+const FirebaseContext = createContext<FirebaseContextType | null>(null);
+
+export const FirebaseClientProvider: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
+  const [firebaseInstances, setFirebaseInstances] =
+    useState<FirebaseContextType>({
+      firebase: null,
+      firestore: null,
+      auth: null,
+    });
+
+  useEffect(() => {
+    const init = async () => {
+      const { firebase, firestore, auth } = await initializeFirebase();
+      setFirebaseInstances({ firebase, firestore, auth });
+    };
+
+    init();
+  }, []);
+
+  if (!firebaseInstances.firebase) {
+    return null; // Or a loading spinner
+  }
+
+  return (
+    <FirebaseProvider
+      firebase={firebaseInstances.firebase}
+      firestore={firebaseInstances.firestore}
+      auth={firebaseInstances.auth}
+    >
+      {children}
+    </FirebaseProvider>
+  );
+};
