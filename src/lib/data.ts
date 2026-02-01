@@ -1,4 +1,4 @@
-import type { City, Category, MenuItem, Order, OrderItem } from './types';
+import type { City, Category, MenuItem, Order, OrderItem, Outlet, User } from './types';
 
 export const CITIES: City[] = [
   { id: 'nyc', name: 'New York' },
@@ -47,6 +47,22 @@ export const placeholderImages = {
   choco_lava_cake: { url: 'https://picsum.photos/seed/chococake/600/400', hint: 'chocolate cake' }
 };
 
+export const OUTLETS: Outlet[] = [
+    { id: 'nyc-1', name: 'Zapizza - Downtown NYC', cityId: 'nyc', isOpen: true },
+    { id: 'nyc-2', name: 'Zapizza - Midtown', cityId: 'nyc', isOpen: true },
+    { id: 'la-1', name: 'Zapizza - Hollywood', cityId: 'la', isOpen: true },
+    { id: 'la-2', name: 'Zapizza - Santa Monica', cityId: 'la', isOpen: false },
+    { id: 'chicago-1', name: 'Zapizza - The Loop', cityId: 'chicago', isOpen: true },
+];
+
+export const USERS: User[] = [
+    { id: 'user-1', name: 'Super Admin', email: 'franchise@zapizza.com', role: 'franchise-owner' },
+    { id: 'user-2', name: 'John Admin', email: 'admin@zapizza.com', role: 'outlet-admin', outletId: 'nyc-1' },
+    { id: 'user-3', name: 'Jane Manager', email: 'jane.m@zapizza.com', role: 'outlet-admin', outletId: 'la-1' },
+    { id: 'user-4', name: 'Mike Operator', email: 'mike.o@zapizza.com', role: 'outlet-admin', outletId: 'chicago-1' },
+];
+
+
 const findMenuItem = (id: string) => MENU_ITEMS.find(i => i.id === id)!;
 
 export const ORDERS: Order[] = [
@@ -59,7 +75,7 @@ export const ORDERS: Order[] = [
       { menuItem: findMenuItem('b-01'), quantity: 1 },
     ],
     total: 867,
-    status: 'New',
+    status: 'Completed',
     createdAt: new Date('2024-07-29T10:00:00Z'),
     outletId: 'nyc-1',
   },
@@ -70,9 +86,9 @@ export const ORDERS: Order[] = [
       { menuItem: findMenuItem('v-01'), quantity: 2 },
     ],
     total: 898,
-    status: 'Preparing',
+    status: 'Completed',
     createdAt: new Date('2024-07-29T10:05:00Z'),
-    outletId: 'nyc-1',
+    outletId: 'la-1',
   },
   {
     id: 'ORD-003',
@@ -82,9 +98,9 @@ export const ORDERS: Order[] = [
       { menuItem: findMenuItem('d-01'), quantity: 1 },
     ],
     total: 408,
-    status: 'Out for Delivery',
+    status: 'Completed',
     createdAt: new Date('2024-07-29T09:30:00Z'),
-    outletId: 'nyc-1',
+    outletId: 'chicago-1',
   },
     {
     id: 'ORD-004',
@@ -106,6 +122,17 @@ export const ORDERS: Order[] = [
     total: 499,
     status: 'Cancelled',
     createdAt: new Date('2024-07-29T11:00:00Z'),
-    outletId: 'nyc-1',
+    outletId: 'la-1',
+  },
+   {
+    id: 'ORD-006',
+    customerName: 'Chris Green',
+    items: [
+      { menuItem: findMenuItem('nv-03'), quantity: 2 },
+    ],
+    total: 1158,
+    status: 'New',
+    createdAt: new Date(),
+    outletId: 'nyc-2',
   },
 ];

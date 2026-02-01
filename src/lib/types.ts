@@ -37,3 +37,18 @@ export type Order = {
   createdAt: Date;
   outletId: string;
 };
+
+export type Outlet = {
+    id: string;
+    name: string;
+    cityId: string;
+    isOpen: boolean;
+};
+
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: 'franchise-owner' | 'outlet-admin';
+    outletId?: string;
+};
