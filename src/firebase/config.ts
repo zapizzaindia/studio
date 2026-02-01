@@ -3,9 +3,9 @@ import { FirebaseOptions } from 'firebase/app';
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyBSu9BNIBegwN654IxpxaqYxL79O28fcPM",
-  authDomain: "studio-5411657000-b0be0.firebaseapp.com",
-  projectId: "studio-5411657000-b0be0",
-  storageBucket: "studio-5411657000-b0be0.appspot.com",
+  authDomain: "zapizza-backend.firebaseapp.com",
+  projectId: "zapizza-backend",
+  storageBucket: "zapizza-backend.appspot.com",
   messagingSenderId: "869168144766",
   appId: "1:869168144766:web:be17174874980971e5d32f",
 };
