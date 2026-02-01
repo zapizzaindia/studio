@@ -22,17 +22,17 @@ export const CATEGORIES: Category[] = [
 ];
 
 export const MENU_ITEMS: MenuItem[] = [
-    { id: 'm-01', name: 'Margherita', description: 'Classic delight with 100% real mozzarella cheese', price: 299, isVeg: true, category: 'veg_pizzas', imageId: 'margherita' },
-    { id: 'v-01', name: 'Veggie Paradise', description: 'The awesome foursome! Golden corn, black olives, capsicum, red paprika', price: 449, isVeg: true, category: 'veg_pizzas', imageId: 'veggie_delight' },
-    { id: 'v-02', name: 'Paneer Perfection', description: 'Flavorful trio of juicy paneer, crisp capsicum with spicy red paprika', price: 499, isVeg: true, category: 'veg_pizzas', imageId: 'veggie_delight' },
-    { id: 'nv-01', name: 'Pepperoni', description: 'A classic American taste! Relish the delectable flavor of pepperoni', price: 549, isVeg: false, category: 'non_veg_pizzas', imageId: 'pepperoni' },
-    { id: 'nv-02', name: 'Chicken Supreme', description: 'Loaded with delicious chicken, onion, and capsicum', price: 599, isVeg: false, category: 'non_veg_pizzas', imageId: 'supreme' },
-    { id: 'nv-03', name: 'BBQ Chicken', description: 'Smoky BBQ chicken with a touch of sweetness', price: 579, isVeg: false, category: 'non_veg_pizzas', imageId: 'bbq_chicken' },
-    { id: 's-01', name: 'Garlic Breadsticks', description: 'The perfect side to your pizza!', price: 129, isVeg: true, category: 'sides', imageId: 'garlic_bread' },
-    { id: 's-02', name: 'Cheesy Dip', description: 'A dreamy, creamy dip to add that extra oomph to your meal.', price: 30, isVeg: true, category: 'sides', imageId: 'garlic_bread' },
-    { id: 'b-01', name: 'Coke (500ml)', description: 'The perfect companion for your pizza.', price: 60, isVeg: true, category: 'beverages', imageId: 'coke' },
-    { id: 'b-02', name: 'Pepsi (500ml)', description: 'The perfect companion for your pizza.', price: 60, isVeg: true, category: 'beverages', imageId: 'pepsi' },
-    { id: 'd-01', name: 'Choco Lava Cake', description: 'Chocolate lovers delight! Indulgent, gooey, molten chocolate lava cake', price: 109, isVeg: true, category: 'desserts', imageId: 'choco_lava_cake' }
+    { id: 'm-01', name: 'Margherita', description: 'Classic delight with 100% real mozzarella cheese', price: 299, isVeg: true, category: 'veg_pizzas', imageId: 'margherita', isAvailable: true },
+    { id: 'v-01', name: 'Veggie Paradise', description: 'The awesome foursome! Golden corn, black olives, capsicum, red paprika', price: 449, isVeg: true, category: 'veg_pizzas', imageId: 'veggie_delight', isAvailable: true },
+    { id: 'v-02', name: 'Paneer Perfection', description: 'Flavorful trio of juicy paneer, crisp capsicum with spicy red paprika', price: 499, isVeg: true, category: 'veg_pizzas', imageId: 'veggie_delight', isAvailable: true },
+    { id: 'nv-01', name: 'Pepperoni', description: 'A classic American taste! Relish the delectable flavor of pepperoni', price: 549, isVeg: false, category: 'non_veg_pizzas', imageId: 'pepperoni', isAvailable: true },
+    { id: 'nv-02', name: 'Chicken Supreme', description: 'Loaded with delicious chicken, onion, and capsicum', price: 599, isVeg: false, category: 'non_veg_pizzas', imageId: 'supreme', isAvailable: true },
+    { id: 'nv-03', name: 'BBQ Chicken', description: 'Smoky BBQ chicken with a touch of sweetness', price: 579, isVeg: false, category: 'non_veg_pizzas', imageId: 'bbq_chicken', isAvailable: true },
+    { id: 's-01', name: 'Garlic Breadsticks', description: 'The perfect side to your pizza!', price: 129, isVeg: true, category: 'sides', imageId: 'garlic_bread', isAvailable: true },
+    { id: 's-02', name: 'Cheesy Dip', description: 'A dreamy, creamy dip to add that extra oomph to your meal.', price: 30, isVeg: true, category: 'sides', imageId: 'garlic_bread', isAvailable: true },
+    { id: 'b-01', name: 'Coke (500ml)', description: 'The perfect companion for your pizza.', price: 60, isVeg: true, category: 'beverages', imageId: 'coke', isAvailable: true },
+    { id: 'b-02', name: 'Pepsi (500ml)', description: 'The perfect companion for your pizza.', price: 60, isVeg: true, category: 'beverages', imageId: 'pepsi', isAvailable: true },
+    { id: 'd-01', name: 'Choco Lava Cake', description: 'Chocolate lovers delight! Indulgent, gooey, molten chocolate lava cake', price: 109, isVeg: true, category: 'desserts', imageId: 'choco_lava_cake', isAvailable: true }
 ];
 
 export const placeholderImages = {

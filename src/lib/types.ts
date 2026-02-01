@@ -18,6 +18,7 @@ export type MenuItem = {
   isVeg: boolean;
   category: string;
   imageId: keyof typeof placeholderImages;
+  isAvailable: boolean;
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';

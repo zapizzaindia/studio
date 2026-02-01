@@ -1,24 +1,31 @@
-import { ZapizzaLogo } from "@/components/icons";
-import { Button } from "@/components/ui/button";
-import Link from 'next/link';
+'use client';
 
-function AdminHeader() {
-    return (
-        <header className="sticky top-0 z-20 border-b bg-background">
-            <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-                <div className="flex items-center gap-4">
-                    <ZapizzaLogo className="h-8 w-8 text-primary" />
-                    <h1 className="font-headline text-xl font-bold text-primary">
-                        Zapizza Admin
-                    </h1>
-                </div>
-                <Button asChild variant="ghost">
-                    <Link href="/login">Logout</Link>
-                </Button>
-            </div>
-        </header>
-    );
-}
+import { usePathname } from "next/navigation";
+import { ZapizzaLogo } from "@/components/icons";
+import Link from 'next/link';
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarHeader, 
+  SidebarContent, 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton, 
+  SidebarInset,
+  SidebarTrigger,
+  SidebarFooter,
+} from "@/components/ui/sidebar";
+import { LayoutDashboard, ShoppingCart, List, BarChart, Store, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const navItems = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/dashboard/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/dashboard/menu", label: "Menu", icon: List },
+  { href: "/admin/dashboard/reports", label: "Reports", icon: BarChart },
+  { href: "/admin/dashboard/outlet", label: "Outlet", icon: Store },
+];
 
 
 export default function AdminDashboardLayout({
@@ -26,10 +33,69 @@ export default function AdminDashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+
   return (
-    <div className="flex min-h-screen w-full flex-col">
-        <AdminHeader />
-        <main className="flex-1 p-4">{children}</main>
-    </div>
+    <SidebarProvider>
+        <Sidebar>
+            <SidebarHeader>
+              <div className="flex items-center gap-2 p-2">
+                <ZapizzaLogo className="h-8 w-8 text-primary" />
+                <h1 className="font-headline text-xl font-bold text-primary">
+                    Zapizza Admin
+                </h1>
+              </div>
+            </SidebarHeader>
+            <SidebarContent>
+              <SidebarMenu>
+                {navItems.map((item) => (
+                  <SidebarMenuItem key={item.label}>
+                    <SidebarMenuButton asChild isActive={pathname.startsWith(item.href) && (item.href === '/admin/dashboard' ? pathname === item.href : true) } >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarContent>
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                            <Link href="/login">
+                                <LogOut />
+                                <span>Logout</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+            <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background px-4">
+                <div className="flex items-center gap-2">
+                    <SidebarTrigger className="md:hidden" />
+                    <h1 className="font-headline text-xl font-bold text-primary hidden sm:block">
+                        {navItems.find(item => pathname.startsWith(item.href) && (item.href === '/admin/dashboard' ? pathname === item.href : true))?.label}
+                    </h1>
+                </div>
+                <div className="flex items-center gap-4">
+                    <p className="text-sm text-muted-foreground">NYC Outlet</p>
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="https://i.pravatar.cc/150?u=admin" />
+                      <AvatarFallback>A</AvatarFallback>
+                    </Avatar>
+                     <Button asChild variant="ghost" className="md:hidden">
+                        <Link href="/login">
+                            <LogOut className="h-5 w-5"/>
+                        </Link>
+                    </Button>
+                </div>
+            </header>
+            <main className="flex-1 p-4 sm:p-6">{children}</main>
+        </SidebarInset>
+    </SidebarProvider>
   );
 }

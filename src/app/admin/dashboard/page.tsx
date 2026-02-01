@@ -1,122 +1,100 @@
-"use client";
-
-import { useState } from 'react';
-import { format } from 'date-fns';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { DollarSign, ShoppingBag, List, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ORDERS } from '@/lib/data';
-import type { Order, OrderStatus } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot } from 'lucide-react';
-
-const statusIcons: Record<OrderStatus, React.ReactNode> = {
-  "New": <CircleDot className="h-4 w-4 text-blue-500" />,
-  "Preparing": <Loader className="h-4 w-4 text-yellow-500 animate-spin" />,
-  "Out for Delivery": <Truck className="h-4 w-4 text-orange-500" />,
-  "Completed": <CheckCircle className="h-4 w-4 text-green-500" />,
-  "Cancelled": <XCircle className="h-4 w-4 text-red-500" />,
-};
-
+import { format } from "date-fns";
 
 export default function AdminDashboardPage() {
-  const [orders, setOrders] = useState<Order[]>(ORDERS);
+    const today = new Date();
+    const todaysOrders = ORDERS.filter(o => new Date(o.createdAt).toDateString() === today.toDateString());
+    const todaysRevenue = todaysOrders.reduce((sum, order) => order.status === 'Completed' ? sum + order.total : sum, 0);
+    const newOrders = ORDERS.filter(o => o.status === 'New');
 
-  const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
-    setOrders(prevOrders => 
-      prevOrders.map(o => o.id === orderId ? { ...o, status } : o)
-    );
-  };
-
-  const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
-    const filteredOrders = statusFilter === 'All' ? orders : orders.filter(o => o.status === statusFilter);
-    
     return (
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right min-w-[140px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.customerName}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {order.items.map(item => `${item.quantity}x ${item.menuItem.name}`).join(', ')}
-                    </TableCell>
-                    <TableCell>₹{order.total.toFixed(2)}</TableCell>
-                    <TableCell>{format(new Date(order.createdAt), 'p')}</TableCell>
-                    <TableCell>
-                       <div className="flex items-center gap-2">
-                          {statusIcons[order.status]}
-                          <span className="hidden sm:inline">{order.status}</span>
-                        </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {order.status === 'New' && (
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept</Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleUpdateStatus(order.id, 'Cancelled')}>Reject</Button>
-                        </div>
-                      )}
-                      {order.status === 'Preparing' && (
-                        <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(order.id, 'Out for Delivery')}>Ready</Button>
-                      )}
-                      {order.status === 'Out for Delivery' && (
-                        <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(order.id, 'Completed')}>Delivered</Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">No orders for this status.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-  
-  return (
-    <div className="container mx-auto p-4">
-      <div className="mb-4">
-        <h1 className="font-headline text-3xl font-bold">Order Management</h1>
-        <p className="text-muted-foreground">Manage incoming orders for your outlet.</p>
-      </div>
-      
-      <Tabs defaultValue="New" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4">
-          <TabsTrigger value="New">New</TabsTrigger>
-          <TabsTrigger value="Preparing">Preparing</TabsTrigger>
-          <TabsTrigger value="Out for Delivery">Delivery</TabsTrigger>
-          <TabsTrigger value="Completed">Completed</TabsTrigger>
-          <TabsTrigger value="Cancelled">Cancelled</TabsTrigger>
-          <TabsTrigger value="All">All</TabsTrigger>
-        </TabsList>
-        <TabsContent value="All"><OrderTable statusFilter="All" /></TabsContent>
-        <TabsContent value="New"><OrderTable statusFilter="New" /></TabsContent>
-        <TabsContent value="Preparing"><OrderTable statusFilter="Preparing" /></TabsContent>
-        <TabsContent value="Out for Delivery"><OrderTable statusFilter="Out for Delivery" /></TabsContent>
-        <TabsContent value="Completed"><OrderTable statusFilter="Completed" /></TabsContent>
-        <TabsContent value="Cancelled"><OrderTable statusFilter="Cancelled" /></TabsContent>
-      </Tabs>
+        <div className="container mx-auto p-0">
+            <div className="mb-6">
+                <h1 className="font-headline text-3xl font-bold">Dashboard</h1>
+                <p className="text-muted-foreground">A quick overview of your outlet's performance.</p>
+            </div>
+            
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Today's Revenue</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">₹{todaysRevenue.toFixed(2)}</div>
+                        <p className="text-xs text-muted-foreground">+5% from yesterday</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Today's Orders</CardTitle>
+                        <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">+{todaysOrders.length}</div>
+                        <p className="text-xs text-muted-foreground">+10% from yesterday</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">New Orders</CardTitle>
+                        <List className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{newOrders.length}</div>
+                        <p className="text-xs text-muted-foreground">Require immediate attention</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Items Out of Stock</CardTitle>
+                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">3</div>
+                        <p className="text-xs text-muted-foreground">Check menu availability</p>
+                    </CardContent>
+                </Card>
+            </div>
 
-    </div>
-  );
+            <Card>
+                <CardHeader>
+                    <CardTitle>Recent Orders</CardTitle>
+                    <CardDescription>A list of the most recent orders.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Order ID</TableHead>
+                                <TableHead>Customer</TableHead>
+                                <TableHead>Total</TableHead>
+                                <TableHead>Time</TableHead>
+                                <TableHead>Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {ORDERS.slice(0, 5).map((order) => (
+                                <TableRow key={order.id}>
+                                    <TableCell className="font-medium">{order.id}</TableCell>
+                                    <TableCell>{order.customerName}</TableCell>
+                                    <TableCell>₹{order.total.toFixed(2)}</TableCell>
+                                    <TableCell>{format(new Date(order.createdAt), 'p')}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
+                                            {order.status}
+                                        </Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    );
 }
