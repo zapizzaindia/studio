@@ -16,6 +16,7 @@ import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { useToast } from "@/hooks/use-toast";
 
 const serviceModes = [
   { id: 'delivery', label: 'Delivery', sub: 'NOW' },
@@ -26,6 +27,7 @@ const serviceModes = [
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
   
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
@@ -62,6 +64,39 @@ export default function HomePage() {
     localStorage.setItem("zapizza-outlet", JSON.stringify(outlet));
   };
 
+  const handleDetectLocation = () => {
+    if ("geolocation" in navigator) {
+      toast({
+        title: "Locating...",
+        description: "Finding your current location...",
+      });
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          toast({
+            title: "Location detected",
+            description: "You've been located in Mumbai (Demo).",
+          });
+          // In a real application, we would use reverse geocoding to find the closest outlet
+          // For this demo, we provide feedback that the location was identified.
+        },
+        (error) => {
+          toast({
+            variant: "destructive",
+            title: "Location access denied",
+            description: "Please enable location permissions in your browser settings.",
+          });
+        }
+      );
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Not supported",
+        description: "Geolocation is not supported by your browser.",
+      });
+    }
+  };
+
   if (!isHydrated || userLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -96,7 +131,12 @@ export default function HomePage() {
             Give us your exact location<br />for seamless delivery
           </p>
         </div>
-        <Button size="sm" variant="outline" className="text-[10px] h-7 bg-transparent border-white text-white hover:bg-white/10 uppercase font-bold px-4">
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={handleDetectLocation}
+          className="text-[10px] h-7 bg-transparent border-white text-white hover:bg-white/10 uppercase font-bold px-4"
+        >
           Detect location
         </Button>
       </div>
@@ -213,7 +253,7 @@ export default function HomePage() {
                       </div>
                       <div className="mt-auto flex items-center justify-between pt-2">
                         <span className="text-[13px] font-bold text-[#333333]">₹{item.price}</span>
-                        <Button size="sm" className="h-7 px-4 bg-white text-primary border border-primary hover:bg-primary/5 font-bold text-[10px] rounded shadow-sm">
+                        <Button size="sm" className="h-7 px-4 bg-white text-primary border border-primary font-bold text-[10px] rounded shadow-sm">
                           ADD
                         </Button>
                       </div>
