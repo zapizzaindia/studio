@@ -55,16 +55,22 @@ export default function FranchiseLoginPage() {
   
       const userData = userSnap.data();
   
-      if (userData.role !== "superadmin") {
-        throw new Error("Unauthorized access");
+      // Role check should match the UserProfile role: 'franchise-owner'
+      if (userData.role !== "franchise-owner") {
+        await auth.signOut();
+        throw new Error("Unauthorized access. Franchise Owner role required.");
       }
   
+      toast({
+        title: "Login Successful",
+        description: "Welcome back, Franchise Owner!",
+      });
       router.push("/franchise/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Invalid Credentials",
-        description: error.message || "Login failed",
+        title: "Login Failed",
+        description: error.message || "Invalid credentials",
       });
     }
   }
