@@ -1,11 +1,10 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +18,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useFirestore } from '@/firebase';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -29,51 +27,28 @@ const loginSchema = z.object({
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
-  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: 'admin@zapizza.com', password: 'password' },
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    if (!auth || !firestore) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Firebase not initialized.' });
-      return;
-    }
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      const user = userCredential.user;
-
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists() && userDocSnap.data().role === 'outlet-admin') {
-        toast({
-          title: "Admin Login Successful!",
-          description: "Welcome to the Admin Dashboard!",
-        });
-        router.push('/admin/dashboard');
-      } else {
-        await auth.signOut();
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description: "You do not have permission to access the admin dashboard.",
-        });
-        form.setError("email", { type: "manual", message: " " });
-        form.setError("password", { type: "manual", message: "Access Denied" });
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Credentials",
-        description: "The email or password you entered is incorrect.",
-      });
-      form.setError("email", { type: "manual", message: " " });
-      form.setError("password", { type: "manual", message: "Invalid credentials" });
-    }
+    // Mock successful admin login
+    const mockAdmin = {
+        uid: 'admin-1',
+        email: values.email,
+        displayName: 'Demo Admin',
+        role: 'outlet-admin',
+        outletId: 'andheri'
+    };
+    localStorage.setItem('zapizza-mock-session', JSON.stringify(mockAdmin));
+    
+    toast({
+      title: "Admin Login Successful (Demo Mode)",
+      description: "Welcome to the Admin Dashboard!",
+    });
+    window.location.href = '/admin/dashboard';
   }
 
   return (
@@ -81,7 +56,7 @@ export default function AdminLoginPage() {
       <div className="mb-8 flex flex-col items-center text-center">
         <ZapizzaLogo className="mb-4 h-16 w-16 text-primary" />
         <h1 className="font-headline text-3xl font-bold text-primary">Admin Login</h1>
-        <p className="text-muted-foreground">Sign in to the admin dashboard</p>
+        <p className="text-muted-foreground">Sign in to the admin dashboard (Demo Mode)</p>
       </div>
 
       <Form {...form}>

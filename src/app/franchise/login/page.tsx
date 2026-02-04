@@ -1,12 +1,10 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { auth, firestore } from "@/firebase";
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -33,46 +31,24 @@ export default function FranchiseLoginPage() {
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: 'franchise@zapizza.com', password: 'password' },
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        values.email,
-        values.password
-      );
-  
-      const uid = userCredential.user.uid;
-  
-      const userRef = doc(firestore, "users", uid);
-      const userSnap = await getDoc(userRef);
-  
-      if (!userSnap.exists()) {
-        throw new Error("User record not found");
-      }
-  
-      const userData = userSnap.data();
-  
-      // Role check should match the UserProfile role: 'franchise-owner'
-      if (userData.role !== "franchise-owner") {
-        await auth.signOut();
-        throw new Error("Unauthorized access. Franchise Owner role required.");
-      }
-  
-      toast({
-        title: "Login Successful",
-        description: "Welcome back, Franchise Owner!",
-      });
-      router.push("/franchise/dashboard");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "Invalid credentials",
-      });
-    }
+    // Mock successful franchise owner login
+    const mockFranchise = {
+        uid: 'franchise-1',
+        email: values.email,
+        displayName: 'Demo Owner',
+        role: 'franchise-owner'
+    };
+    localStorage.setItem('zapizza-mock-session', JSON.stringify(mockFranchise));
+    
+    toast({
+      title: "Login Successful (Demo Mode)",
+      description: "Welcome back, Franchise Owner!",
+    });
+    window.location.href = '/franchise/dashboard';
   }
   
 
@@ -81,7 +57,7 @@ export default function FranchiseLoginPage() {
       <div className="mb-8 flex flex-col items-center text-center">
         <ZapizzaLogo className="mb-4 h-16 w-16 text-primary" />
         <h1 className="font-headline text-3xl font-bold text-primary">Franchise Login</h1>
-        <p className="text-muted-foreground">Sign in to the franchise dashboard</p>
+        <p className="text-muted-foreground">Sign in to the franchise dashboard (Demo Mode)</p>
       </div>
 
       <Form {...form}>

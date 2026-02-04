@@ -1,10 +1,10 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { ChevronDown, MapPin, User, LogOut } from "lucide-react";
 import { ZapizzaLogo } from "./icons";
 import { Button } from "./ui/button";
-import { useAuth, useUser } from "@/firebase";
-import { signOut } from "firebase/auth";
+import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -17,7 +17,6 @@ import type { City, Outlet } from "@/lib/types";
 
 export function MainNav() {
   const { user, loading } = useUser();
-  const auth = useAuth();
   const router = useRouter();
   const [locationLabel, setLocationLabel] = useState("Select Location");
 
@@ -26,25 +25,27 @@ export function MainNav() {
     const savedOutlet = localStorage.getItem("zapizza-outlet");
     
     if (savedOutlet) {
-      const outlet: Outlet = JSON.parse(savedOutlet);
-      setLocationLabel(outlet.name);
+      try {
+        const outlet: Outlet = JSON.parse(savedOutlet);
+        setLocationLabel(outlet.name);
+      } catch (e) {}
     } else if (savedCity) {
-      const city: City = JSON.parse(savedCity);
-      setLocationLabel(city.name);
+      try {
+        const city: City = JSON.parse(savedCity);
+        setLocationLabel(city.name);
+      } catch (e) {}
     }
   }, []);
 
-  const handleLogout = async () => {
-    if (auth) {
-      await signOut(auth);
-      router.push('/login');
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('zapizza-mock-session');
+    window.location.href = '/login';
   }
 
   const handleChangeLocation = () => {
     localStorage.removeItem("zapizza-city");
     localStorage.removeItem("zapizza-outlet");
-    window.location.reload(); // Force reload to trigger CitySelector
+    window.location.reload(); 
   }
 
   return (
