@@ -44,11 +44,7 @@ export default function HomePage() {
     if (savedOutlet) setSelectedOutlet(JSON.parse(savedOutlet));
   }, []);
 
-  useEffect(() => {
-    if (isHydrated && !userLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, userLoading, router, isHydrated]);
+  // Removed strict login redirect to allow guest browsing
 
   useEffect(() => {
     if (categories && categories.length > 0 && !activeCategory) {
@@ -224,9 +220,9 @@ export default function HomePage() {
           transition={{ ease: "easeInOut" }}
           className="fixed bottom-24 right-4 z-20 md:bottom-8 md:right-8"
         >
-          <Button className="h-14 rounded-full bg-primary pl-6 pr-6 shadow-lg" size="lg">
+          <Button className="h-14 rounded-full bg-primary pl-6 pr-6 shadow-lg" size="lg" onClick={() => !user && router.push('/login')}>
             <ShoppingCart className="mr-3 h-6 w-6" />
-            <span className="font-bold">View Cart (0)</span>
+            <span className="font-bold">{user ? "View Cart (0)" : "Login to Order"}</span>
           </Button>
         </motion.div>
       </AnimatePresence>

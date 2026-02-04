@@ -65,8 +65,7 @@ export default function LoginPage() {
     window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       'size': 'invisible',
       'callback': (response: any) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-        // console.log("reCAPTCHA verified");
+        // reCAPTCHA solved
       }
     });
 
@@ -160,6 +159,24 @@ export default function LoginPage() {
                 />
                 <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                   Send OTP
+                </Button>
+                
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => router.push('/home')}
+                >
+                  Skip for now
                 </Button>
               </form>
             </Form>
