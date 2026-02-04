@@ -29,9 +29,8 @@ export default function HomePage() {
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
   
   // Fetch availability for the selected outlet
-  const { data: availabilityData, loading: availabilityLoading } = useCollection<OutletMenuAvailability>(
-    selectedOutlet ? `outlets/${selectedOutlet.id}/menuAvailability` : 'dummy'
-  );
+  const availabilityPath = selectedOutlet ? `outlets/${selectedOutlet.id}/menuAvailability` : '';
+  const { data: availabilityData, loading: availabilityLoading } = useCollection<OutletMenuAvailability>(availabilityPath);
   
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -40,11 +39,13 @@ export default function HomePage() {
     setIsHydrated(true);
     const savedCity = localStorage.getItem("zapizza-city");
     const savedOutlet = localStorage.getItem("zapizza-outlet");
-    if (savedCity) setSelectedCity(JSON.parse(savedCity));
-    if (savedOutlet) setSelectedOutlet(JSON.parse(savedOutlet));
+    if (savedCity) {
+        try { setSelectedCity(JSON.parse(savedCity)); } catch(e) {}
+    }
+    if (savedOutlet) {
+        try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
+    }
   }, []);
-
-  // Removed strict login redirect to allow guest browsing
 
   useEffect(() => {
     if (categories && categories.length > 0 && !activeCategory) {
@@ -63,7 +64,6 @@ export default function HomePage() {
   const handleCitySelect = (city: City) => {
     setSelectedCity(city);
     localStorage.setItem("zapizza-city", JSON.stringify(city));
-    // Reset outlet when city changes
     setSelectedOutlet(null);
     localStorage.removeItem("zapizza-outlet");
   };
@@ -91,17 +91,15 @@ export default function HomePage() {
 
   const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
   
-  // Create a map of item availability for the selected outlet
   const availabilityMap = new Map<string, boolean>();
   availabilityData?.forEach((doc: any) => {
     availabilityMap.set(doc.id, doc.isAvailable);
   });
 
-  // Filter items: Only show if globally available AND not explicitly disabled for this outlet
   const isItemAvailable = (item: MenuItem) => {
     if (!item.isAvailableGlobally) return false;
     const localAvailability = availabilityMap.get(item.id);
-    return localAvailability !== false; // If undefined, it's available by default
+    return localAvailability !== false;
   };
 
   return (
@@ -146,6 +144,10 @@ export default function HomePage() {
                         </div>
                     </section>
                 ))}
+            </div>
+        ) : sortedCategories.length === 0 ? (
+            <div className="text-center py-20">
+                <p className="text-muted-foreground">No items available at this outlet yet.</p>
             </div>
         ) : sortedCategories.map((category) => {
           const categoryItems = menuItems?.filter((item) => item.category === category.id) || [];

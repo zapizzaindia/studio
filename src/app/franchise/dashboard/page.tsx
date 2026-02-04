@@ -1,14 +1,19 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, ShoppingBag, Store, Map } from "lucide-react";
+import { DollarSign, ShoppingBag, Store, Map, Database } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useCollection } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { useCollection, useFirestore } from "@/firebase";
 import type { City, Outlet, Order } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { doc, writeBatch, collection } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function FranchiseDashboardPage() {
+    const firestore = useFirestore();
+    const { toast } = useToast();
     const { data: cities, loading: citiesLoading } = useCollection<City>('cities');
     const { data: outlets, loading: outletsLoading } = useCollection<Outlet>('outlets');
     const { data: orders, loading: ordersLoading } = useCollection<Order>('orders');
@@ -25,11 +30,72 @@ export default function FranchiseDashboardPage() {
 
     const sortedOrders = orders ? [...orders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
 
+    const handleSeedData = async () => {
+        if (!firestore) return;
+        const batch = writeBatch(firestore);
+
+        // 1. Cities
+        const mumbaiRef = doc(firestore, 'cities', 'mumbai');
+        batch.set(mumbaiRef, { name: 'Mumbai' });
+
+        // 2. Outlets
+        const andheriRef = doc(firestore, 'outlets', 'andheri-west');
+        batch.set(andheriRef, { 
+            name: 'Zapizza Andheri West', 
+            cityId: 'mumbai', 
+            isOpen: true, 
+            openingTime: '11:00', 
+            closingTime: '23:00' 
+        });
+
+        // 3. Categories
+        const vegPizzasRef = doc(firestore, 'categories', 'veg-pizzas');
+        batch.set(vegPizzasRef, { name: 'Veg Pizzas', order: 1 });
+        const beveragesRef = doc(firestore, 'categories', 'beverages');
+        batch.set(beveragesRef, { name: 'Beverages', order: 2 });
+
+        // 4. Menu Items
+        const margheritaRef = doc(firestore, 'menuItems', 'margherita');
+        batch.set(margheritaRef, {
+            name: 'Classic Margherita',
+            description: 'Simple and fresh with mozzarella, tomato sauce, and basil.',
+            price: 249,
+            isVeg: true,
+            category: 'veg-pizzas',
+            imageId: 'margherita',
+            isAvailableGlobally: true
+        });
+
+        const cokeRef = doc(firestore, 'menuItems', 'coke');
+        batch.set(cokeRef, {
+            name: 'Coke (500ml)',
+            description: 'Refreshing Coca-Cola.',
+            price: 60,
+            isVeg: true,
+            category: 'beverages',
+            imageId: 'coke',
+            isAvailableGlobally: true
+        });
+
+        try {
+            await batch.commit();
+            toast({ title: "Success", description: "Demo data seeded successfully!" });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to seed data." });
+        }
+    };
+
     return (
         <div className="container mx-auto p-0">
-            <div className="mb-6">
-                <h1 className="font-headline text-3xl font-bold">Super Admin Dashboard</h1>
-                <p className="text-muted-foreground">Overall business performance overview.</p>
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 className="font-headline text-3xl font-bold">Super Admin Dashboard</h1>
+                    <p className="text-muted-foreground">Overall business performance overview.</p>
+                </div>
+                <Button variant="outline" onClick={handleSeedData}>
+                    <Database className="mr-2 h-4 w-4" />
+                    Seed Demo Data
+                </Button>
             </div>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">

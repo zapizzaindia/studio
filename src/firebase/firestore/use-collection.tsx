@@ -1,4 +1,3 @@
-// src/firebase/firestore/use-collection.tsx
 'use client';
 import {
   collection,
@@ -33,17 +32,23 @@ export function useCollection<T>(
   const [error, setError] = useState<FirestoreError | null>(null);
 
   const collectionQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !path || path === 'dummy' || path === '') return null;
     let q: Query<DocumentData> = collection(firestore, path);
     if (options?.where) {
+      // Don't create query if where value is undefined
+      if (options.where[2] === undefined) return null;
       q = query(q, where(...options.where));
     }
     return q;
-  }, [firestore, path, options?.where]);
+  }, [firestore, path, JSON.stringify(options?.where)]);
 
   useEffect(() => {
-    if (!collectionQuery) return;
+    if (!collectionQuery) {
+        if (!path || path === 'dummy') setLoading(false);
+        return;
+    }
 
+    setLoading(true);
     const unsubscribe = onSnapshot(
       collectionQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
@@ -53,14 +58,17 @@ export function useCollection<T>(
         })) as T[];
         setData(documents);
         setLoading(false);
+        setError(null);
       },
       (err: FirestoreError) => {
-        console.error('Error fetching collection:', err);
-        const permissionError = new FirestorePermissionError({
-          path,
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        // Only report permission errors
+        if (err.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
         setError(err);
         setLoading(false);
       }
