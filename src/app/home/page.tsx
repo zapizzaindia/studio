@@ -77,8 +77,6 @@ export default function HomePage() {
             title: "Location detected",
             description: "You've been located in Mumbai (Demo).",
           });
-          // In a real application, we would use reverse geocoding to find the closest outlet
-          // For this demo, we provide feedback that the location was identified.
         },
         (error) => {
           toast({
