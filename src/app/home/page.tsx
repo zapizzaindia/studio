@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { MapPin, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { City, Category, MenuItem, Outlet, OutletMenuAvailability } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCollection, useUser } from "@/firebase";
 import { placeholderImageMap } from "@/lib/placeholder-images";
