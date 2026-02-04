@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ShoppingBag, List, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { Category, MenuItem } from "@/lib/types";
@@ -12,6 +12,7 @@ import { useCollection } from "@/firebase";
 import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function MenuPage() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function MenuPage() {
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   useEffect(() => {
     if (initialCategory && !categoriesLoading) {
         const el = document.getElementById(`cat-${initialCategory}`);
@@ -31,8 +34,16 @@ export default function MenuPage() {
     }
   }, [initialCategory, categoriesLoading]);
 
+  const scrollToCategory = (id: string) => {
+    const el = document.getElementById(`cat-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setIsMenuOpen(false);
+  };
+
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white">
+    <div className="flex flex-col w-full min-h-screen bg-white relative">
       {/* Menu Header */}
       <div className="sticky top-16 z-20 bg-white border-b shadow-sm px-4 py-3 flex items-center gap-4">
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
@@ -49,10 +60,7 @@ export default function MenuPage() {
             <button 
                 key={category.id} 
                 className="text-[11px] font-black text-[#666666] uppercase whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-200 hover:border-[#14532d] hover:text-[#14532d] transition-colors active:bg-[#14532d]/5"
-                onClick={() => {
-                    const el = document.getElementById(`cat-${category.id}`);
-                    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }}
+                onClick={() => scrollToCategory(category.id)}
             >
                 {category.name}
             </button>
@@ -110,6 +118,54 @@ export default function MenuPage() {
           );
         })}
       </div>
+
+      {/* Floating Menu Button */}
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+        <Button 
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="bg-[#333333] hover:bg-black text-white h-11 px-6 rounded-full shadow-2xl flex items-center gap-2 font-black uppercase tracking-widest text-[12px]"
+        >
+          {isMenuOpen ? <X className="h-4 w-4" /> : <List className="h-4 w-4" />}
+          MENU
+        </Button>
+      </div>
+
+      {/* Category Selection Overlay */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 bg-black/40 z-[51] backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              className="fixed bottom-36 left-4 right-4 bg-white rounded-2xl z-[52] shadow-2xl p-6 overflow-hidden border border-gray-100"
+            >
+              <h3 className="text-sm font-black text-[#14532d] uppercase tracking-widest mb-4">Choose Category</h3>
+              <div className="grid grid-cols-1 gap-1">
+                {categories?.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => scrollToCategory(cat.id)}
+                    className="flex items-center justify-between w-full py-3 px-4 rounded-xl hover:bg-[#f1f2f6] transition-colors text-left group"
+                  >
+                    <span className="text-sm font-bold text-[#333333] group-hover:text-[#14532d]">{cat.name}</span>
+                    <span className="text-[10px] font-black text-muted-foreground opacity-50">
+                      {menuItems?.filter(i => i.category === cat.id).length}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {totalItems > 0 && (
         <div className="fixed bottom-20 left-4 right-4 z-40">
