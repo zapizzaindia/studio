@@ -221,22 +221,6 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* App Install Promotional Card */}
-      <div className="mx-4 mt-6 bg-white rounded-xl p-4 shadow-sm border flex items-center justify-between">
-        <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center">
-                <Zap className="h-6 w-6 text-white" />
-            </div>
-            <div>
-                <p className="text-[11px] font-bold text-[#333333]">Order via Zapizza App for</p>
-                <p className="text-[13px] font-black text-[#14532d] uppercase">Real-time Tracking</p>
-            </div>
-        </div>
-        <Button size="sm" className="bg-[#e31837] text-white font-bold h-8 rounded-md px-6 shadow-md uppercase text-[10px]">
-            Install
-        </Button>
-      </div>
-
       {/* Categories Horizontal Scroll */}
       <div className="py-8 bg-white mt-6 rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
         <h2 className="px-6 text-[14px] font-black text-[#14532d] mb-5 uppercase tracking-wide">What are you craving for?</h2>
