@@ -19,7 +19,6 @@ import { useToast } from "@/hooks/use-toast";
 const serviceModes = [
   { id: 'delivery', label: 'Delivery', sub: 'NOW' },
   { id: 'takeaway', label: 'Takeaway', sub: 'Select Store' },
-  { id: 'dinein', label: 'Dine-in', sub: 'Select Store' },
 ];
 
 export default function HomePage() {
