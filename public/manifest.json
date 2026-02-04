@@ -1,11 +1,11 @@
 
 {
-  "name": "Zapizza",
+  "name": "Zapizza PWA",
   "short_name": "Zapizza",
   "description": "Fastest Pizza Delivery in India",
   "start_url": "/home",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#00143c",
   "theme_color": "#00143c",
   "icons": [
     {

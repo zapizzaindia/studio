@@ -15,10 +15,39 @@ import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 const serviceModes = [
   { id: 'delivery', label: 'Delivery', sub: 'NOW' },
   { id: 'takeaway', label: 'Takeaway', sub: 'Select Store' },
+];
+
+const banners = [
+  {
+    id: 'banner_1',
+    title: 'CHEESE LAVA PULL APART',
+    subtitle: 'Freshly Launched!',
+    price: '399',
+    imageUrl: placeholderImageMap.get('banner_1')?.imageUrl || '',
+  },
+  {
+    id: 'banner_2',
+    title: 'ULTIMATE PIZZA PARTY',
+    subtitle: 'Limited Time Offer!',
+    price: '499',
+    imageUrl: placeholderImageMap.get('banner_2')?.imageUrl || '',
+  },
+  {
+    id: 'banner_3',
+    title: 'LAVALICIOUS DESSERTS',
+    subtitle: 'Sweeten Your Meal!',
+    price: '99',
+    imageUrl: placeholderImageMap.get('banner_3')?.imageUrl || '',
+  },
 ];
 
 export default function HomePage() {
@@ -132,30 +161,46 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Hero Banner Section */}
-      <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden">
-        <Image
-          src={placeholderImageMap.get('banner_1')?.imageUrl || ''}
-          alt="Promotional Banner"
-          fill
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
-            <span className="text-white text-[10px] font-bold uppercase tracking-widest mb-1">Freshly Launched!</span>
-            <h2 className="text-white text-2xl font-black uppercase italic leading-none mb-2">CHEESE LAVA PULL APART</h2>
-            <div className="flex items-center gap-4">
-                <div className="text-white">
-                    <span className="text-[10px] font-bold block opacity-80 uppercase">Starting @</span>
-                    <span className="text-2xl font-black">399</span>
+      {/* Hero Banner Carousel */}
+      <div className="relative w-full overflow-hidden">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full"
+        >
+          <CarouselContent>
+            {banners.map((banner, index) => (
+              <CarouselItem key={index}>
+                <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden">
+                  <Image
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                      <span className="text-white text-[10px] font-bold uppercase tracking-widest mb-1">{banner.subtitle}</span>
+                      <h2 className="text-white text-2xl font-black uppercase italic leading-none mb-2">{banner.title}</h2>
+                      <div className="flex items-center gap-4">
+                          <div className="text-white">
+                              <span className="text-[10px] font-bold block opacity-80 uppercase">Starting @</span>
+                              <span className="text-2xl font-black">{banner.price}</span>
+                          </div>
+                          <Button size="sm" className="bg-primary text-white font-bold h-8 rounded-full px-4 group">
+                              ORDER NOW <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
+                          </Button>
+                      </div>
+                  </div>
                 </div>
-                <Button size="sm" className="bg-primary text-white font-bold h-8 rounded-full px-4 group">
-                    ORDER NOW <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
-                </Button>
-            </div>
-        </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </div>
 
-      {/* Location Help Bar - Conditionally Rendered */}
+      {/* Location Help Bar */}
       {!isLocationDetected && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -198,17 +243,6 @@ export default function HomePage() {
         </Button>
       </div>
 
-      {/* Free Delivery Banner */}
-      <div className="mx-4 mt-4 bg-white rounded-xl p-3 shadow-sm border border-l-4 border-l-[#4CAF50] flex items-center gap-3 overflow-hidden">
-        <div className="h-8 w-8 rounded-full bg-[#E8F5E9] flex items-center justify-center flex-shrink-0">
-            <Zap className="h-4 w-4 text-[#4CAF50]" />
-        </div>
-        <div className="flex-1">
-            <p className="text-[11px] font-bold text-[#333333] leading-none mb-0.5">Guaranteed Cashback & Free Delivery above 99</p>
-            <p className="text-[9px] text-muted-foreground">Add items worth 99 to get FREE delivery!</p>
-        </div>
-      </div>
-
       {/* Categories Horizontal Scroll */}
       <div className="py-8 bg-white mt-6 rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
         <h2 className="px-6 text-[14px] font-black text-[#00143c] mb-5 uppercase tracking-wide">What are you craving for?</h2>
@@ -245,13 +279,6 @@ export default function HomePage() {
 
       {/* Menu Section */}
       <div className="flex-1 pb-24 bg-white">
-        <div className="bg-[#f8f8f8] p-4 flex items-center gap-2 border-y">
-            <div className="bg-[#ffcc00] p-0.5 rounded-full">
-                <Info className="h-3 w-3 text-black" />
-            </div>
-            <p className="text-[10px] font-black text-[#333333] uppercase">All prices are inclusive of taxes.</p>
-        </div>
-
         {categories?.map((category) => {
           const categoryItems = menuItems?.filter(i => i.category === category.id) || [];
           if (categoryItems.length === 0) return null;
