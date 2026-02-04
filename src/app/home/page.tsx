@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { MapPin, Info, ArrowRight, Zap } from "lucide-react";
+import { Info, ArrowRight, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { City, Category, MenuItem, Outlet } from "@/lib/types";
@@ -59,7 +59,6 @@ export default function HomePage() {
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeMode, setActiveMode] = useState('delivery');
-  const [isLocationDetected, setIsLocationDetected] = useState(false);
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -68,16 +67,12 @@ export default function HomePage() {
     setIsHydrated(true);
     const savedCity = localStorage.getItem("zapizza-city");
     const savedOutlet = localStorage.getItem("zapizza-outlet");
-    const locationStatus = localStorage.getItem("zapizza-precise-location");
     
     if (savedCity) {
         try { setSelectedCity(JSON.parse(savedCity)); } catch(e) {}
     }
     if (savedOutlet) {
         try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
-    }
-    if (locationStatus === 'true') {
-        setIsLocationDetected(true);
     }
   }, []);
 
@@ -91,39 +86,6 @@ export default function HomePage() {
   const handleOutletSelect = (outlet: Outlet) => {
     setSelectedOutlet(outlet);
     localStorage.setItem("zapizza-outlet", JSON.stringify(outlet));
-  };
-
-  const handleDetectLocation = () => {
-    if ("geolocation" in navigator) {
-      toast({
-        title: "Locating...",
-        description: "Finding your current location...",
-      });
-      
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          toast({
-            title: "Location detected",
-            description: "You've been located precisely!",
-          });
-          setIsLocationDetected(true);
-          localStorage.setItem("zapizza-precise-location", "true");
-        },
-        (error) => {
-          toast({
-            variant: "destructive",
-            title: "Location access denied",
-            description: "Please enable location permissions in your browser settings.",
-          });
-        }
-      );
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Not supported",
-        description: "Geolocation is not supported by your browser.",
-      });
-    }
   };
 
   if (!isHydrated || userLoading) {
@@ -179,6 +141,7 @@ export default function HomePage() {
                     alt={banner.title}
                     fill
                     className="object-cover"
+                    data-ai-hint="pizza banner"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
                       <span className="text-white text-[10px] font-bold uppercase tracking-widest mb-1">{banner.subtitle}</span>
@@ -199,33 +162,6 @@ export default function HomePage() {
           </CarouselContent>
         </Carousel>
       </div>
-
-      {/* Location Help Bar */}
-      {!isLocationDetected && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="bg-[#007cc3] text-white p-4 flex items-center justify-between mx-4 -mt-6 relative z-10 rounded-lg shadow-xl border-b-4 border-black/10"
-        >
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-full">
-              <MapPin className="h-5 w-5" />
-            </div>
-            <p className="text-[11px] font-bold leading-tight">
-              Give us your exact location<br />for seamless delivery
-            </p>
-          </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={handleDetectLocation}
-            className="text-[10px] h-8 bg-white text-[#007cc3] hover:bg-white/90 border-none uppercase font-black px-4 rounded shadow-md"
-          >
-            Detect location
-          </Button>
-        </motion.div>
-      )}
 
       {/* App Install Promotional Card */}
       <div className="mx-4 mt-6 bg-white rounded-xl p-4 shadow-sm border flex items-center justify-between">
@@ -267,6 +203,7 @@ export default function HomePage() {
                   alt={category.name}
                   fill
                   className="object-cover"
+                  data-ai-hint="pizza category"
                 />
               </div>
               <span className="text-[10px] font-black text-[#666666] text-center w-24 leading-tight uppercase tracking-tighter">
@@ -298,6 +235,7 @@ export default function HomePage() {
                         alt={item.name}
                         fill
                         className="object-cover"
+                        data-ai-hint="pizza item"
                       />
                     </div>
                     <div className="flex-1 flex flex-col">
