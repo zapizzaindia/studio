@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { MapPin, Info } from "lucide-react";
+import { MapPin, Info, ArrowRight, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { City, Category, MenuItem, Outlet, OutletMenuAvailability } from "@/lib/types";
@@ -13,7 +14,6 @@ import { useCollection, useUser } from "@/firebase";
 import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useToast } from "@/hooks/use-toast";
 
 const serviceModes = [
@@ -33,9 +33,6 @@ export default function HomePage() {
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
-  
-  const availabilityPath = selectedOutlet ? `outlets/${selectedOutlet.id}/menuAvailability` : '';
-  const { data: availabilityData, loading: availabilityLoading } = useCollection<OutletMenuAvailability>(availabilityPath);
   
   useEffect(() => {
     setIsHydrated(true);
@@ -72,7 +69,7 @@ export default function HomePage() {
         (position) => {
           toast({
             title: "Location detected",
-            description: "You've been located in Mumbai (Demo).",
+            description: "You've been located (Demo).",
           });
         },
         (error) => {
@@ -108,21 +105,55 @@ export default function HomePage() {
     return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
   }
 
-  const banners = [
-    placeholderImageMap.get('banner_1'),
-    placeholderImageMap.get('banner_2'),
-    placeholderImageMap.get('banner_3'),
-  ];
-
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white">
+    <div className="flex flex-col w-full min-h-screen bg-[#f1f2f6]">
+      {/* Service Modes Tabs */}
+      <div className="flex bg-[#00143c] border-t border-white/10">
+        {serviceModes.map((mode) => (
+          <button
+            key={mode.id}
+            onClick={() => setActiveMode(mode.id)}
+            className={`flex-1 flex flex-col items-center justify-center py-3 transition-all relative ${
+              activeMode === mode.id ? 'bg-white text-[#00143c]' : 'text-white'
+            }`}
+          >
+            <span className="text-[12px] font-bold uppercase tracking-tight">{mode.label}</span>
+            <span className={`text-[9px] ${activeMode === mode.id ? 'text-[#00143c]/60' : 'text-white/60'}`}>{mode.sub}</span>
+            {activeMode === mode.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />}
+          </button>
+        ))}
+      </div>
+
+      {/* Hero Banner Section */}
+      <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden">
+        <Image
+          src={placeholderImageMap.get('banner_1')?.imageUrl || ''}
+          alt="Promotional Banner"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+            <span className="text-white text-[10px] font-bold uppercase tracking-widest mb-1">Freshly Launched!</span>
+            <h2 className="text-white text-2xl font-black uppercase italic leading-none mb-2">CHEESE LAVA PULL APART</h2>
+            <div className="flex items-center gap-4">
+                <div className="text-white">
+                    <span className="text-[10px] font-bold block opacity-80 uppercase">Starting @</span>
+                    <span className="text-2xl font-black">399</span>
+                </div>
+                <Button size="sm" className="bg-primary text-white font-bold h-8 rounded-full px-4 group">
+                    ORDER NOW <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
+                </Button>
+            </div>
+        </div>
+      </div>
+
       {/* Location Help Bar */}
-      <div className="bg-[#0066a2] text-white p-3 flex items-center justify-between">
+      <div className="bg-[#007cc3] text-white p-4 flex items-center justify-between mx-4 -mt-6 relative z-10 rounded-lg shadow-xl border-b-4 border-black/10">
         <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-1.5 rounded-full">
-            <MapPin className="h-4 w-4" />
+          <div className="bg-white/20 p-2 rounded-full">
+            <MapPin className="h-5 w-5" />
           </div>
-          <p className="text-[11px] font-medium leading-tight">
+          <p className="text-[11px] font-bold leading-tight">
             Give us your exact location<br />for seamless delivery
           </p>
         </div>
@@ -130,48 +161,58 @@ export default function HomePage() {
           size="sm" 
           variant="outline" 
           onClick={handleDetectLocation}
-          className="text-[10px] h-7 bg-transparent border-white text-white hover:bg-white/10 uppercase font-bold px-4"
+          className="text-[10px] h-8 bg-white text-[#007cc3] hover:bg-white/90 border-none uppercase font-black px-4 rounded shadow-md"
         >
           Detect location
         </Button>
       </div>
 
-      {/* Service Modes */}
-      <div className="flex border-b">
-        {serviceModes.map((mode) => (
-          <button
-            key={mode.id}
-            onClick={() => setActiveMode(mode.id)}
-            className={`flex-1 flex flex-col items-center justify-center py-2 transition-all relative ${
-              activeMode === mode.id ? 'bg-[#333333] text-white' : 'bg-white text-muted-foreground'
-            }`}
-          >
-            <span className="text-[10px] font-bold uppercase">{mode.label}</span>
-            <span className="text-[8px] opacity-70">{mode.sub}</span>
-            {activeMode === mode.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
-          </button>
-        ))}
+      {/* App Install Promotional Card */}
+      <div className="mx-4 mt-6 bg-white rounded-xl p-4 shadow-sm border flex items-center justify-between">
+        <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center">
+                <Zap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+                <p className="text-[11px] font-bold text-[#333333]">Order via Zapizza App for</p>
+                <p className="text-[13px] font-black text-[#00143c] uppercase">Real-time Tracking</p>
+            </div>
+        </div>
+        <Button size="sm" className="bg-[#e31837] text-white font-bold h-8 rounded-md px-6 shadow-md uppercase text-[10px]">
+            Install
+        </Button>
+      </div>
+
+      {/* Free Delivery Banner */}
+      <div className="mx-4 mt-4 bg-white rounded-xl p-3 shadow-sm border border-l-4 border-l-[#4CAF50] flex items-center gap-3 overflow-hidden">
+        <div className="h-8 w-8 rounded-full bg-[#E8F5E9] flex items-center justify-center flex-shrink-0">
+            <Zap className="h-4 w-4 text-[#4CAF50]" />
+        </div>
+        <div className="flex-1">
+            <p className="text-[11px] font-bold text-[#333333] leading-none mb-0.5">Guaranteed Cashback & Free Delivery above 99</p>
+            <p className="text-[9px] text-muted-foreground">Add items worth 99 to get FREE delivery!</p>
+        </div>
       </div>
 
       {/* Categories Horizontal Scroll */}
-      <div className="py-6">
-        <h2 className="px-4 text-[13px] font-bold text-[#333333] mb-4">What are you craving for?</h2>
-        <div className="flex overflow-x-auto px-4 pb-2 space-x-6 scrollbar-hide">
+      <div className="py-8 bg-white mt-6 rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+        <h2 className="px-6 text-[14px] font-black text-[#00143c] mb-5 uppercase tracking-wide">What are you craving for?</h2>
+        <div className="flex overflow-x-auto px-6 pb-2 space-x-6 scrollbar-hide">
           {categoriesLoading ? Array.from({length: 6}).map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
+            <div key={i} className="flex flex-col items-center gap-3 flex-shrink-0">
               <Skeleton className="h-20 w-20 rounded-full" />
               <Skeleton className="h-3 w-16" />
             </div>
           )) : categories?.map((category) => (
             <div 
               key={category.id} 
-              className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer"
+              className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer group"
               onClick={() => {
                 const el = document.getElementById(`cat-${category.id}`);
                 el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
             >
-              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-[#f2f2f2] shadow-sm">
+              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-[#f2f2f2] shadow-sm transition-transform active:scale-90 group-hover:border-primary">
                 <Image
                   src={`https://picsum.photos/seed/${category.id}/200/200`}
                   alt={category.name}
@@ -179,7 +220,7 @@ export default function HomePage() {
                   className="object-cover"
                 />
               </div>
-              <span className="text-[10px] font-bold text-[#666666] text-center w-20 leading-tight truncate px-1">
+              <span className="text-[10px] font-black text-[#666666] text-center w-24 leading-tight uppercase tracking-tighter">
                 {category.name}
               </span>
             </div>
@@ -187,35 +228,13 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Promotional Banners */}
-      <div className="py-4">
-        <h2 className="px-4 text-[13px] font-bold text-[#333333] mb-4">What's New</h2>
-        <Carousel className="w-full" opts={{ align: "start", loop: true }}>
-          <CarouselContent className="-ml-2 px-4">
-            {banners.map((banner, index) => (
-              <CarouselItem key={index} className="pl-2 basis-[85%]">
-                <div className="relative aspect-[21/9] rounded-xl overflow-hidden shadow-md">
-                  <Image
-                    src={banner?.imageUrl || ''}
-                    alt={banner?.description || ''}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={banner?.imageHint}
-                  />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
-      </div>
-
       {/* Menu Section */}
-      <div className="flex-1 pb-16">
-        <div className="bg-[#f8f8f8] p-4 flex items-center gap-2">
+      <div className="flex-1 pb-24 bg-white">
+        <div className="bg-[#f8f8f8] p-4 flex items-center gap-2 border-y">
             <div className="bg-[#ffcc00] p-0.5 rounded-full">
                 <Info className="h-3 w-3 text-black" />
             </div>
-            <p className="text-[9px] font-bold text-[#333333]">All prices are inclusive of taxes.</p>
+            <p className="text-[10px] font-black text-[#333333] uppercase">All prices are inclusive of taxes.</p>
         </div>
 
         {categories?.map((category) => {
@@ -223,12 +242,15 @@ export default function HomePage() {
           if (categoryItems.length === 0) return null;
 
           return (
-            <div key={category.id} id={`cat-${category.id}`} className="p-4 border-b last:border-0 scroll-mt-20">
-              <h3 className="text-sm font-bold text-[#333333] mb-4 uppercase tracking-wide">{category.name}</h3>
-              <div className="space-y-6">
+            <div key={category.id} id={`cat-${category.id}`} className="p-6 border-b last:border-0 scroll-mt-24">
+              <h3 className="text-base font-black text-[#00143c] mb-6 uppercase tracking-widest flex items-center gap-2">
+                <div className="h-4 w-1 bg-primary rounded-full" />
+                {category.name}
+              </h3>
+              <div className="space-y-8">
                 {categoryItems.map((item) => (
-                  <div key={item.id} className="flex gap-4">
-                    <div className="relative h-24 w-24 flex-shrink-0 rounded-lg overflow-hidden shadow-sm">
+                  <div key={item.id} className="flex gap-5">
+                    <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
                       <Image
                         src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
                         alt={item.name}
@@ -239,16 +261,16 @@ export default function HomePage() {
                     <div className="flex-1 flex flex-col">
                       <div className="flex items-start justify-between">
                         <div>
-                          <div className={`h-3 w-3 border-2 mb-1 flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                            <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+                          <div className={`h-4 w-4 border-2 mb-1.5 flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
+                            <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
                           </div>
-                          <h4 className="text-[13px] font-bold text-[#333333] leading-tight">{item.name}</h4>
-                          <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{item.description}</p>
+                          <h4 className="text-[14px] font-black text-[#333333] leading-tight uppercase tracking-tight">{item.name}</h4>
+                          <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed font-medium">{item.description}</p>
                         </div>
                       </div>
-                      <div className="mt-auto flex items-center justify-between pt-2">
-                        <span className="text-[13px] font-bold text-[#333333]">{item.price}</span>
-                        <Button size="sm" className="h-7 px-4 bg-white text-primary border border-primary font-bold text-[10px] rounded shadow-sm">
+                      <div className="mt-auto flex items-center justify-between pt-3">
+                        <span className="text-[15px] font-black text-[#00143c]">{item.price}</span>
+                        <Button size="sm" className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors">
                           ADD
                         </Button>
                       </div>
@@ -266,14 +288,20 @@ export default function HomePage() {
         <motion.div
           initial={{ y: 100 }}
           animate={{ y: 0 }}
-          className="fixed bottom-20 left-4 right-4 z-20 flex justify-center"
+          className="fixed bottom-20 left-4 right-4 z-40 flex justify-center"
         >
           <Button 
-            className="w-full max-w-sm h-12 bg-primary text-white font-bold rounded-lg shadow-xl flex justify-between px-6"
+            className="w-full max-w-md h-14 bg-[#00143c] text-white font-black rounded-xl shadow-[0_10px_30px_rgba(0,20,60,0.3)] flex justify-between items-center px-6 border-b-4 border-black/30"
             onClick={() => !user && router.push('/login')}
           >
-            <span className="text-xs">{user ? "1 Item | 249" : "Login to order"}</span>
-            <span className="text-xs uppercase tracking-widest">{user ? "View Cart" : "Continue"}</span>
+            <div className="flex flex-col items-start">
+                <span className="text-[10px] uppercase opacity-70 tracking-widest font-bold">{user ? "1 Item" : "Welcome"}</span>
+                <span className="text-[14px] leading-none">{user ? "249" : "Guest User"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <span className="text-[12px] uppercase tracking-[0.2em] font-black">{user ? "View Cart" : "Login To Order"}</span>
+                <ArrowRight className="h-5 w-5" />
+            </div>
           </Button>
         </motion.div>
       </AnimatePresence>

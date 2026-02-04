@@ -17,7 +17,7 @@ import type { City, Outlet } from "@/lib/types";
 export function MainNav() {
   const { user, loading } = useUser();
   const router = useRouter();
-  const [locationLabel, setLocationLabel] = useState("No Location");
+  const [locationLabel, setLocationLabel] = useState("Select Location");
 
   useEffect(() => {
     const savedCity = localStorage.getItem("zapizza-city");
@@ -48,16 +48,16 @@ export function MainNav() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm">
+    <header className="fixed top-0 left-0 right-0 z-30 bg-[#00143c] text-white">
       <div className="container mx-auto flex h-16 max-w-full items-center justify-between px-4">
         <div className="flex items-center gap-1 overflow-hidden" onClick={handleChangeLocation}>
-          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+          <MapPin className="h-5 w-5 text-white flex-shrink-0" />
           <div className="flex flex-col">
-            <div className="flex items-center text-primary font-bold text-sm">
-              <span className="truncate max-w-[150px]">{locationLabel}</span>
-              <ChevronDown className="ml-1 h-3 w-3" />
+            <div className="flex items-center font-bold text-sm">
+              <span className="truncate max-w-[180px]">{locationLabel}</span>
+              <ChevronDown className="ml-1 h-4 w-4" />
             </div>
-            <span className="text-[10px] text-muted-foreground whitespace-nowrap">Exact Location Required!</span>
+            <span className="text-[10px] text-white/70 whitespace-nowrap">Tap to change location</span>
           </div>
         </div>
         
@@ -67,10 +67,10 @@ export function MainNav() {
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 border border-white/20">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.photoURL || undefined} />
-                    <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback className="bg-[#002a77] text-white">{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -82,7 +82,7 @@ export function MainNav() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => router.push('/login')}>
+            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 border border-white/20" onClick={() => router.push('/login')}>
               <User className="h-5 w-5" />
             </Button>
           )}
