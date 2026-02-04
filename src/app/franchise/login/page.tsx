@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { auth, firestore } from "@/firebase";
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -19,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useFirestore } from '@/firebase';
+
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -29,8 +30,6 @@ const loginSchema = z.object({
 export default function FranchiseLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
-  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -38,43 +37,38 @@ export default function FranchiseLoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    if (!auth || !firestore) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Firebase not initialized.' });
-      return;
-    }
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      const user = userCredential.user;
-
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists() && userDocSnap.data().role === 'franchise-owner') {
-        toast({
-          title: "Franchise Login Successful!",
-          description: "Welcome to the Franchise Dashboard!",
-        });
-        router.push('/franchise/dashboard');
-      } else {
-        await auth.signOut();
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description: "You are not an authorized franchise owner.",
-        });
-        form.setError("email", { type: "manual", message: " " });
-        form.setError("password", { type: "manual", message: "Access Denied" });
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+  
+      const uid = userCredential.user.uid;
+  
+      const userRef = doc(firestore, "users", uid);
+      const userSnap = await getDoc(userRef);
+  
+      if (!userSnap.exists()) {
+        throw new Error("User record not found");
       }
-    } catch (error) {
+  
+      const userData = userSnap.data();
+  
+      if (userData.role !== "superadmin") {
+        throw new Error("Unauthorized access");
+      }
+  
+      router.push("/franchise/dashboard");
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Invalid Credentials",
-        description: "The email or password you entered is incorrect.",
+        description: error.message || "Login failed",
       });
-      form.setError("email", { type: "manual", message: " " });
-      form.setError("password", { type: "manual", message: "Invalid credentials" });
     }
   }
+  
 
   return (
     <div className="w-full max-w-sm p-4">
