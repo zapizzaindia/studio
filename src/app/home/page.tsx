@@ -160,8 +160,8 @@ export default function HomePage() {
         <div className="flex overflow-x-auto px-4 pb-2 space-x-6 scrollbar-hide">
           {categoriesLoading ? Array.from({length: 6}).map((_, i) => (
             <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
-              <Skeleton className="h-16 w-16 rounded-full" />
-              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-20 w-20 rounded-full" />
+              <Skeleton className="h-3 w-16" />
             </div>
           )) : categories?.map((category) => (
             <div 
@@ -172,7 +172,7 @@ export default function HomePage() {
                 el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
             >
-              <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-[#f2f2f2] shadow-sm">
+              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-[#f2f2f2] shadow-sm">
                 <Image
                   src={`https://picsum.photos/seed/${category.id}/200/200`}
                   alt={category.name}
@@ -180,7 +180,7 @@ export default function HomePage() {
                   className="object-cover"
                 />
               </div>
-              <span className="text-[9px] font-bold text-[#666666] text-center w-16 leading-tight truncate">
+              <span className="text-[10px] font-bold text-[#666666] text-center w-20 leading-tight truncate px-1">
                 {category.name}
               </span>
             </div>
