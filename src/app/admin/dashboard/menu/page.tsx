@@ -114,7 +114,7 @@ export default function AdminMenuPage() {
                                         <p className="font-medium">{item.name}</p>
                                         <p className="text-sm text-muted-foreground hidden md:block">{item.description}</p>
                                     </TableCell>
-                                    <TableCell>₹{item.price.toFixed(2)}</TableCell>
+                                    <TableCell>{item.price.toFixed(2)}</TableCell>
                                     <TableCell className="text-right">
                                         <Switch
                                             checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}

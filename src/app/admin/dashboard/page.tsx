@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{todaysRevenue.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">{todaysRevenue.toFixed(2)}</div>
                         <p className="text-xs text-muted-foreground">For completed orders</p>
                     </CardContent>
                 </Card>
@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
                                 <TableRow key={order.id}>
                                     <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
                                     <TableCell>{order.customerName}</TableCell>
-                                    <TableCell>₹{order.total.toFixed(2)}</TableCell>
+                                    <TableCell>{order.total.toFixed(2)}</TableCell>
                                     <TableCell>{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
                                     <TableCell>
                                         <Badge variant={order.status === 'Cancelled' ? 'destructive' : 'secondary'}>

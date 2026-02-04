@@ -247,7 +247,7 @@ export default function HomePage() {
                         </div>
                       </div>
                       <div className="mt-auto flex items-center justify-between pt-2">
-                        <span className="text-[13px] font-bold text-[#333333]">₹{item.price}</span>
+                        <span className="text-[13px] font-bold text-[#333333]">{item.price}</span>
                         <Button size="sm" className="h-7 px-4 bg-white text-primary border border-primary font-bold text-[10px] rounded shadow-sm">
                           ADD
                         </Button>
@@ -272,7 +272,7 @@ export default function HomePage() {
             className="w-full max-w-sm h-12 bg-primary text-white font-bold rounded-lg shadow-xl flex justify-between px-6"
             onClick={() => !user && router.push('/login')}
           >
-            <span className="text-xs">{user ? "1 Item | ₹249" : "Login to order"}</span>
+            <span className="text-xs">{user ? "1 Item | 249" : "Login to order"}</span>
             <span className="text-xs uppercase tracking-widest">{user ? "View Cart" : "Continue"}</span>
           </Button>
         </motion.div>

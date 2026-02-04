@@ -82,7 +82,7 @@ export default function AdminOrdersPage() {
                     <TableCell className="max-w-[200px] truncate">
                       {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
                     </TableCell>
-                    <TableCell>₹{order.total.toFixed(2)}</TableCell>
+                    <TableCell>{order.total.toFixed(2)}</TableCell>
                     <TableCell>{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
                     <TableCell>
                        <div className="flex items-center gap-2">

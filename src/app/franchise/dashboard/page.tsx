@@ -41,7 +41,7 @@ export default function FranchiseDashboardPage() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                       {isLoading ? <Skeleton className="h-8 w-3/4"/> : <div className="text-2xl font-bold">₹{totalRevenue.toFixed(2)}</div>}
+                       {isLoading ? <Skeleton className="h-8 w-3/4"/> : <div className="text-2xl font-bold">{totalRevenue.toFixed(2)}</div>}
                         <p className="text-xs text-muted-foreground">All-time revenue</p>
                     </CardContent>
                 </Card>
@@ -108,7 +108,7 @@ export default function FranchiseDashboardPage() {
                                     <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
                                     <TableCell>{outlet?.name || 'N/A'}</TableCell>
                                     <TableCell>{city?.name || 'N/A'}</TableCell>
-                                    <TableCell>₹{order.total.toFixed(2)}</TableCell>
+                                    <TableCell>{order.total.toFixed(2)}</TableCell>
                                     <TableCell>{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
                                     <TableCell>
                                         <Badge variant={order.status === 'Cancelled' ? 'destructive' : 'secondary'}>

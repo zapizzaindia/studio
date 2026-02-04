@@ -70,7 +70,6 @@ export default function FranchiseMenuPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <span>₹</span>
                                             <Input type="number" defaultValue={item.price.toFixed(2)} className="w-24" />
                                         </div>
                                     </TableCell>

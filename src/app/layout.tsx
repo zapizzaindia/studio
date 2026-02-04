@@ -4,10 +4,18 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'Zapizza PWA',
-  description: 'The best pizza delivery PWA, built with Firebase and Next.js',
+  title: 'Zapizza',
+  description: 'Fastest Pizza Delivery in India',
   manifest: '/manifest.json',
   themeColor: '#f04e41',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Zapizza',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     apple: "/icons/icon-192x192.png",
   }
