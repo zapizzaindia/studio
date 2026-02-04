@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { Category, MenuItem } from "@/lib/types";
@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import { useCollection } from "@/firebase";
 import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCart } from "@/hooks/use-cart";
 
 export default function MenuPage() {
   const router = useRouter();
+  const { addItem, totalItems, totalPrice } = useCart();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category');
   
@@ -46,7 +48,7 @@ export default function MenuPage() {
         )) : categories?.map((category) => (
             <button 
                 key={category.id} 
-                className="text-[11px] font-black text-[#666666] uppercase whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-200 hover:border-primary hover:text-primary transition-colors active:bg-primary/5"
+                className="text-[11px] font-black text-[#666666] uppercase whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-200 hover:border-[#14532d] hover:text-[#14532d] transition-colors active:bg-[#14532d]/5"
                 onClick={() => {
                     const el = document.getElementById(`cat-${category.id}`);
                     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -58,7 +60,7 @@ export default function MenuPage() {
       </div>
 
       {/* Menu Sections */}
-      <div className="flex-1 pb-24 bg-white">
+      <div className="flex-1 pb-32 bg-white">
         {categories?.map((category) => {
           const categoryItems = menuItems?.filter(i => i.category === category.id) || [];
           if (categoryItems.length === 0) return null;
@@ -78,7 +80,6 @@ export default function MenuPage() {
                         alt={item.name}
                         fill
                         className="object-cover"
-                        data-ai-hint="pizza item"
                       />
                     </div>
                     <div className="flex-1 flex flex-col">
@@ -93,7 +94,11 @@ export default function MenuPage() {
                       </div>
                       <div className="mt-auto flex items-center justify-between pt-3">
                         <span className="text-[15px] font-black text-[#14532d]">{item.price}</span>
-                        <Button size="sm" className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors">
+                        <Button 
+                          size="sm" 
+                          onClick={() => addItem(item)}
+                          className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors"
+                        >
                           ADD
                         </Button>
                       </div>
@@ -105,6 +110,23 @@ export default function MenuPage() {
           );
         })}
       </div>
+
+      {totalItems > 0 && (
+        <div className="fixed bottom-20 left-4 right-4 z-40">
+          <Button 
+            onClick={() => router.push('/home/checkout')}
+            className="w-full h-14 bg-[#14532d] hover:bg-[#0f4023] text-white flex items-center justify-between px-6 rounded-xl shadow-2xl animate-in slide-in-from-bottom-10"
+          >
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
+              <span className="text-lg font-black">{totalPrice}</span>
+            </div>
+            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[12px]">
+              VIEW CART <ShoppingBag className="h-5 w-5" />
+            </div>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

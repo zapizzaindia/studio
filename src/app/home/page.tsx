@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ArrowRight, Zap, Crown, Pizza, Utensils, Star } from "lucide-react";
+import { ArrowRight, Crown, Pizza, Utensils, Star, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { City, Category, MenuItem, Outlet } from "@/lib/types";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useCollection, useUser } from "@/firebase";
 import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCart } from "@/hooks/use-cart";
 import {
   Carousel,
   CarouselContent,
@@ -50,6 +51,7 @@ const banners = [
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const { addItem, totalItems, totalPrice } = useCart();
   
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
@@ -104,7 +106,7 @@ export default function HomePage() {
     <div className="bg-white py-8 border-b border-gray-100 last:border-0">
       <div className="px-6 mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <Icon className="h-5 w-5 text-primary" />
+          <Icon className="h-5 w-5 text-[#14532d]" />
           <h2 className="text-[16px] font-black text-[#14532d] uppercase tracking-wide leading-none">{title}</h2>
         </div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{subtitle}</p>
@@ -121,7 +123,6 @@ export default function HomePage() {
                 alt={item.name}
                 fill
                 className="object-cover"
-                data-ai-hint="pizza item"
               />
               <div className="absolute bottom-3 right-3">
                 <Button variant="secondary" className="h-6 px-3 bg-black/50 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/70 backdrop-blur-sm">
@@ -146,7 +147,11 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[18px] font-black text-[#14532d] leading-none">{item.price}</span>
-                  <Button size="sm" className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform hover:bg-[#c61430]">
+                  <Button 
+                    size="sm" 
+                    onClick={() => addItem(item)}
+                    className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform hover:bg-[#c61430]"
+                  >
                     Add +
                   </Button>
                 </div>
@@ -195,7 +200,6 @@ export default function HomePage() {
                     alt={banner.title}
                     fill
                     className="object-cover"
-                    data-ai-hint="pizza banner"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
                       <span className="text-white text-[10px] font-bold uppercase tracking-widest mb-1">{banner.subtitle}</span>
@@ -242,7 +246,6 @@ export default function HomePage() {
                   alt={category.name}
                   fill
                   className="object-cover"
-                  data-ai-hint="pizza category"
                 />
               </div>
               <span className="text-[10px] font-black text-[#666666] text-center w-24 leading-tight uppercase tracking-tighter">
@@ -253,7 +256,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Sections based on Screenshot */}
       <Section 
         title="Top 10 Bestsellers" 
         subtitle="In Your Locality" 
@@ -281,6 +283,23 @@ export default function HomePage() {
         icon={Utensils} 
         items={menuItems?.filter(i => i.category === 'desserts' || i.category === 'beverages')} 
       />
+
+      {totalItems > 0 && (
+        <div className="fixed bottom-20 left-4 right-4 z-40">
+          <Button 
+            onClick={() => router.push('/home/checkout')}
+            className="w-full h-14 bg-[#14532d] hover:bg-[#0f4023] text-white flex items-center justify-between px-6 rounded-xl shadow-2xl animate-in slide-in-from-bottom-10"
+          >
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
+              <span className="text-lg font-black">{totalPrice}</span>
+            </div>
+            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[12px]">
+              VIEW CART <ShoppingBag className="h-5 w-5" />
+            </div>
+          </Button>
+        </div>
+      )}
 
       <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
         Zapizza
