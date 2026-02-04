@@ -1,23 +1,22 @@
+
 {
   "name": "Zapizza",
   "short_name": "Zapizza",
   "description": "Fastest Pizza Delivery in India",
-  "start_url": "/",
+  "start_url": "/home",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#f04e41",
+  "theme_color": "#00143c",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/zap1/192/192",
+      "src": "https://picsum.photos/seed/zapizza/192/192",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "https://picsum.photos/seed/zap2/512/512",
+      "src": "https://picsum.photos/seed/zapizza/512/512",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

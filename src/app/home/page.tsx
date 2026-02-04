@@ -6,7 +6,7 @@ import Image from "next/image";
 import { MapPin, Info, ArrowRight, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import type { City, Category, MenuItem, Outlet, OutletMenuAvailability } from "@/lib/types";
+import type { City, Category, MenuItem, Outlet } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ export default function HomePage() {
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeMode, setActiveMode] = useState('delivery');
+  const [isLocationDetected, setIsLocationDetected] = useState(false);
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -38,11 +39,16 @@ export default function HomePage() {
     setIsHydrated(true);
     const savedCity = localStorage.getItem("zapizza-city");
     const savedOutlet = localStorage.getItem("zapizza-outlet");
+    const locationStatus = localStorage.getItem("zapizza-precise-location");
+    
     if (savedCity) {
         try { setSelectedCity(JSON.parse(savedCity)); } catch(e) {}
     }
     if (savedOutlet) {
         try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
+    }
+    if (locationStatus === 'true') {
+        setIsLocationDetected(true);
     }
   }, []);
 
@@ -69,8 +75,10 @@ export default function HomePage() {
         (position) => {
           toast({
             title: "Location detected",
-            description: "You've been located (Demo).",
+            description: "You've been located precisely!",
           });
+          setIsLocationDetected(true);
+          localStorage.setItem("zapizza-precise-location", "true");
         },
         (error) => {
           toast({
@@ -147,25 +155,32 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Location Help Bar */}
-      <div className="bg-[#007cc3] text-white p-4 flex items-center justify-between mx-4 -mt-6 relative z-10 rounded-lg shadow-xl border-b-4 border-black/10">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-full">
-            <MapPin className="h-5 w-5" />
-          </div>
-          <p className="text-[11px] font-bold leading-tight">
-            Give us your exact location<br />for seamless delivery
-          </p>
-        </div>
-        <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={handleDetectLocation}
-          className="text-[10px] h-8 bg-white text-[#007cc3] hover:bg-white/90 border-none uppercase font-black px-4 rounded shadow-md"
+      {/* Location Help Bar - Conditionally Rendered */}
+      {!isLocationDetected && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="bg-[#007cc3] text-white p-4 flex items-center justify-between mx-4 -mt-6 relative z-10 rounded-lg shadow-xl border-b-4 border-black/10"
         >
-          Detect location
-        </Button>
-      </div>
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-2 rounded-full">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <p className="text-[11px] font-bold leading-tight">
+              Give us your exact location<br />for seamless delivery
+            </p>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={handleDetectLocation}
+            className="text-[10px] h-8 bg-white text-[#007cc3] hover:bg-white/90 border-none uppercase font-black px-4 rounded shadow-md"
+          >
+            Detect location
+          </Button>
+        </motion.div>
+      )}
 
       {/* App Install Promotional Card */}
       <div className="mx-4 mt-6 bg-white rounded-xl p-4 shadow-sm border flex items-center justify-between">
