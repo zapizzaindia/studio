@@ -1,21 +1,23 @@
 {
-  "name": "Zapizza PWA",
+  "name": "Zapizza",
   "short_name": "Zapizza",
-  "description": "The best pizza delivery PWA, built with Firebase and Next.js",
+  "description": "Fastest Pizza Delivery in India",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f04e41",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "https://picsum.photos/seed/zap1/192/192",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "https://picsum.photos/seed/zap2/512/512",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

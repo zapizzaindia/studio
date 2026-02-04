@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
@@ -7,7 +7,6 @@ export const metadata: Metadata = {
   title: 'Zapizza',
   description: 'Fastest Pizza Delivery in India',
   manifest: '/manifest.json',
-  themeColor: '#f04e41',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -16,9 +15,14 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-  icons: {
-    apple: "/icons/icon-192x192.png",
-  }
+};
+
+export const viewport: Viewport = {
+  themeColor: '#f04e41',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
