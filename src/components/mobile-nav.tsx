@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -24,14 +23,14 @@ export function MobileNav() {
               href={item.href}
               key={item.label}
               className={`flex-1 flex flex-col items-center justify-center gap-1.5 transition-all relative h-full ${
-                isActive ? "text-[#00143c]" : "text-[#666666]"
+                isActive ? "text-[#14532d]" : "text-[#666666]"
               }`}
             >
               <item.icon className={`h-6 w-6 ${isActive ? 'scale-110' : ''}`} strokeWidth={isActive ? 3 : 2} />
               <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-60'}`}>
                 {item.label}
               </span>
-              {isActive && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#00143c] rounded-b-full" />}
+              {isActive && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#14532d] rounded-b-full" />}
             </Link>
           );
         })}

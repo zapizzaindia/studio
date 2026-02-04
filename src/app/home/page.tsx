@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -106,7 +105,7 @@ export default function HomePage() {
       <div className="px-6 mb-6">
         <div className="flex items-center gap-2 mb-1">
           <Icon className="h-5 w-5 text-primary" />
-          <h2 className="text-[16px] font-black text-[#00143c] uppercase tracking-wide leading-none">{title}</h2>
+          <h2 className="text-[16px] font-black text-[#14532d] uppercase tracking-wide leading-none">{title}</h2>
         </div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{subtitle}</p>
       </div>
@@ -146,7 +145,7 @@ export default function HomePage() {
                   <ArrowRight className="h-2 w-2" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[18px] font-black text-[#00143c] leading-none">{item.price}</span>
+                  <span className="text-[18px] font-black text-[#14532d] leading-none">{item.price}</span>
                   <Button size="sm" className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform hover:bg-[#c61430]">
                     Add +
                   </Button>
@@ -162,17 +161,17 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f1f2f6]">
       {/* Service Modes Tabs */}
-      <div className="flex bg-[#00143c] border-t border-white/10">
+      <div className="flex bg-[#14532d] border-t border-white/10">
         {serviceModes.map((mode) => (
           <button
             key={mode.id}
             onClick={() => setActiveMode(mode.id)}
             className={`flex-1 flex flex-col items-center justify-center py-3 transition-all relative ${
-              activeMode === mode.id ? 'bg-white text-[#00143c]' : 'text-white'
+              activeMode === mode.id ? 'bg-white text-[#14532d]' : 'text-white'
             }`}
           >
             <span className="text-[12px] font-bold uppercase tracking-tight">{mode.label}</span>
-            <span className={`text-[9px] ${activeMode === mode.id ? 'text-[#00143c]/60' : 'text-white/60'}`}>{mode.sub}</span>
+            <span className={`text-[9px] ${activeMode === mode.id ? 'text-[#14532d]/60' : 'text-white/60'}`}>{mode.sub}</span>
             {activeMode === mode.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />}
           </button>
         ))}
@@ -230,7 +229,7 @@ export default function HomePage() {
             </div>
             <div>
                 <p className="text-[11px] font-bold text-[#333333]">Order via Zapizza App for</p>
-                <p className="text-[13px] font-black text-[#00143c] uppercase">Real-time Tracking</p>
+                <p className="text-[13px] font-black text-[#14532d] uppercase">Real-time Tracking</p>
             </div>
         </div>
         <Button size="sm" className="bg-[#e31837] text-white font-bold h-8 rounded-md px-6 shadow-md uppercase text-[10px]">
@@ -240,7 +239,7 @@ export default function HomePage() {
 
       {/* Categories Horizontal Scroll */}
       <div className="py-8 bg-white mt-6 rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-        <h2 className="px-6 text-[14px] font-black text-[#00143c] mb-5 uppercase tracking-wide">What are you craving for?</h2>
+        <h2 className="px-6 text-[14px] font-black text-[#14532d] mb-5 uppercase tracking-wide">What are you craving for?</h2>
         <div className="flex overflow-x-auto px-6 pb-2 space-x-6 scrollbar-hide">
           {categoriesLoading ? Array.from({length: 6}).map((_, i) => (
             <div key={i} className="flex flex-col items-center gap-3 flex-shrink-0">

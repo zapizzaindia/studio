@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -37,7 +36,7 @@ export default function MenuPage() {
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-[18px] font-black text-[#00143c] uppercase tracking-widest">Menu</h1>
+        <h1 className="text-[18px] font-black text-[#14532d] uppercase tracking-widest">Menu</h1>
       </div>
 
       {/* Categories Horizontal Scroll */}
@@ -66,7 +65,7 @@ export default function MenuPage() {
 
           return (
             <div key={category.id} id={`cat-${category.id}`} className="p-6 border-b last:border-0 scroll-mt-36">
-              <h3 className="text-base font-black text-[#00143c] mb-6 uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-base font-black text-[#14532d] mb-6 uppercase tracking-widest flex items-center gap-2">
                 <div className="h-4 w-1 bg-primary rounded-full" />
                 {category.name}
               </h3>
@@ -93,7 +92,7 @@ export default function MenuPage() {
                         </div>
                       </div>
                       <div className="mt-auto flex items-center justify-between pt-3">
-                        <span className="text-[15px] font-black text-[#00143c]">{item.price}</span>
+                        <span className="text-[15px] font-black text-[#14532d]">{item.price}</span>
                         <Button size="sm" className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors">
                           ADD
                         </Button>
