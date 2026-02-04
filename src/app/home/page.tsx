@@ -3,8 +3,9 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Info, ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Crown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 import type { City, Category, MenuItem, Outlet } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
@@ -13,8 +14,6 @@ import { Button } from "@/components/ui/button";
 import { useCollection, useUser } from "@/firebase";
 import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
 import {
   Carousel,
   CarouselContent,
@@ -53,7 +52,6 @@ const banners = [
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
-  const { toast } = useToast();
   
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
@@ -151,7 +149,11 @@ export default function HomePage() {
                               <span className="text-[10px] font-bold block opacity-80 uppercase">Starting @</span>
                               <span className="text-2xl font-black">{banner.price}</span>
                           </div>
-                          <Button size="sm" className="bg-primary text-white font-bold h-8 rounded-full px-4 group">
+                          <Button 
+                            size="sm" 
+                            className="bg-primary text-white font-bold h-8 rounded-full px-4 group"
+                            onClick={() => router.push('/home/menu')}
+                          >
                               ORDER NOW <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
                           </Button>
                       </div>
@@ -192,10 +194,7 @@ export default function HomePage() {
             <div 
               key={category.id} 
               className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer group"
-              onClick={() => {
-                const el = document.getElementById(`cat-${category.id}`);
-                el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
+              onClick={() => router.push(`/home/menu?category=${category.id}`)}
             >
               <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-[#f2f2f2] shadow-sm transition-transform active:scale-90 group-hover:border-primary">
                 <Image
@@ -214,77 +213,79 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Menu Section */}
-      <div className="flex-1 pb-24 bg-white">
-        {categories?.map((category) => {
-          const categoryItems = menuItems?.filter(i => i.category === category.id) || [];
-          if (categoryItems.length === 0) return null;
-
-          return (
-            <div key={category.id} id={`cat-${category.id}`} className="p-6 border-b last:border-0 scroll-mt-24">
-              <h3 className="text-base font-black text-[#00143c] mb-6 uppercase tracking-widest flex items-center gap-2">
-                <div className="h-4 w-1 bg-primary rounded-full" />
-                {category.name}
-              </h3>
-              <div className="space-y-8">
-                {categoryItems.map((item) => (
-                  <div key={item.id} className="flex gap-5">
-                    <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
-                      <Image
-                        src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                        data-ai-hint="pizza item"
-                      />
-                    </div>
-                    <div className="flex-1 flex flex-col">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className={`h-4 w-4 border-2 mb-1.5 flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-                            <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
-                          </div>
-                          <h4 className="text-[14px] font-black text-[#333333] leading-tight uppercase tracking-tight">{item.name}</h4>
-                          <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed font-medium">{item.description}</p>
-                        </div>
-                      </div>
-                      <div className="mt-auto flex items-center justify-between pt-3">
-                        <span className="text-[15px] font-black text-[#00143c]">{item.price}</span>
-                        <Button size="sm" className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors">
-                          ADD
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* Top 10 Bestsellers Section */}
+      <div className="bg-[#fff9e6] py-8 border-y border-yellow-200">
+        <div className="flex flex-col items-center mb-6">
+            <div className="flex items-center gap-2 mb-1">
+                <div className="h-[1px] w-8 bg-yellow-600/30" />
+                <Crown className="h-5 w-5 text-yellow-600 fill-yellow-600/20" />
+                <div className="h-[1px] w-8 bg-yellow-600/30" />
             </div>
-          );
-        })}
+            <h2 className="text-[18px] font-black text-[#8b5e3c] uppercase italic tracking-wider leading-none">Top 10 Bestsellers</h2>
+            <p className="text-[10px] font-bold text-yellow-700/60 uppercase tracking-widest mt-1 flex items-center gap-1">
+                <Zap className="h-3 w-3 fill-yellow-700/60" /> In Your Locality
+            </p>
+        </div>
+
+        <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
+            {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
+                <Skeleton key={i} className="h-72 w-64 rounded-xl flex-shrink-0" />
+            )) : menuItems?.slice(0, 5).map((item) => (
+                <div key={item.id} className="relative h-80 w-64 flex-shrink-0 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col group">
+                    <div className="relative h-44 w-full">
+                        <Image
+                            src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                            data-ai-hint="pizza bestseller"
+                        />
+                        <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-[8px] font-black text-yellow-700 uppercase shadow-sm border border-yellow-100">
+                            Zapizza TOP 10
+                        </div>
+                        <div className="absolute bottom-2 right-2">
+                             <Button variant="secondary" className="h-6 px-3 bg-black/60 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/80">
+                                Customise <ArrowRight className="ml-1 h-2 w-2" />
+                            </Button>
+                        </div>
+                    </div>
+                    
+                    <div className="p-4 flex-1 flex flex-col">
+                        <div className="flex items-center gap-1 mb-1">
+                            <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
+                                <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+                            </div>
+                            <h4 className="text-[13px] font-black text-[#333333] uppercase truncate">{item.name}</h4>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight font-medium h-8">{item.description}</p>
+                        
+                        <div className="mt-auto flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-[16px] font-black text-[#00143c] leading-none">{item.price}</span>
+                                <span className="text-[8px] font-bold text-muted-foreground/60 uppercase mt-1">Regular | New Hand Tossed</span>
+                            </div>
+                            <Button size="sm" className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform">
+                                Add +
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            ))}
+            <div 
+                className="flex-shrink-0 h-80 w-32 bg-white/50 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-colors"
+                onClick={() => router.push('/home/menu')}
+            >
+                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                    <ArrowRight className="h-5 w-5 text-gray-400" />
+                </div>
+                <span className="text-[10px] font-black text-gray-400 uppercase text-center px-4 leading-tight">View Full Menu</span>
+            </div>
+        </div>
       </div>
 
-      {/* Floating Action Button */}
-      <AnimatePresence>
-        <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="fixed bottom-20 left-4 right-4 z-40 flex justify-center"
-        >
-          <Button 
-            className="w-full max-w-md h-14 bg-[#00143c] text-white font-black rounded-xl shadow-[0_10px_30px_rgba(0,20,60,0.3)] flex justify-between items-center px-6 border-b-4 border-black/30"
-            onClick={() => !user && router.push('/login')}
-          >
-            <div className="flex flex-col items-start">
-                <span className="text-[10px] uppercase opacity-70 tracking-widest font-bold">{user ? "1 Item" : "Welcome"}</span>
-                <span className="text-[14px] leading-none">{user ? "249" : "Guest User"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-                <span className="text-[12px] uppercase tracking-[0.2em] font-black">{user ? "View Cart" : "Login To Order"}</span>
-                <ArrowRight className="h-5 w-5" />
-            </div>
-          </Button>
-        </motion.div>
-      </AnimatePresence>
+      <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
+        Zapizza
+      </div>
     </div>
   );
 }

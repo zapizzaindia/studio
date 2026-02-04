@@ -2,11 +2,12 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutGrid, Percent } from "lucide-react";
+import { LayoutGrid, Percent, Home } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/home", label: "Menu", icon: LayoutGrid },
+  { href: "/home", label: "Home", icon: Home },
+  { href: "/home/menu", label: "Menu", icon: LayoutGrid },
   { href: "/offers", label: "Offers", icon: Percent },
 ];
 
