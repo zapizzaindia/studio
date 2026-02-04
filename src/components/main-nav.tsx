@@ -2,7 +2,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ChevronDown, MapPin, User, LogOut } from "lucide-react";
-import { ZapizzaLogo } from "./icons";
 import { Button } from "./ui/button";
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
@@ -18,7 +17,7 @@ import type { City, Outlet } from "@/lib/types";
 export function MainNav() {
   const { user, loading } = useUser();
   const router = useRouter();
-  const [locationLabel, setLocationLabel] = useState("Select Location");
+  const [locationLabel, setLocationLabel] = useState("No Location");
 
   useEffect(() => {
     const savedCity = localStorage.getItem("zapizza-city");
@@ -49,31 +48,26 @@ export function MainNav() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-20 border-b bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-16 max-w-4xl items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <ZapizzaLogo className="h-8 w-8 text-primary" />
-          <h1 className="hidden font-headline text-2xl font-bold text-primary sm:block">
-            Zapizza
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" className="flex items-center gap-2 text-left" onClick={handleChangeLocation}>
-            <MapPin className="h-5 w-5 text-primary" />
-            <div className="hidden xs:block">
-                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Delivering to</span>
-                <p className="flex items-center font-bold text-sm leading-tight truncate max-w-[120px]">
-                  {locationLabel} <ChevronDown className="ml-1 h-3 w-3 flex-shrink-0" />
-                </p>
+    <header className="fixed top-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm">
+      <div className="container mx-auto flex h-16 max-w-full items-center justify-between px-4">
+        <div className="flex items-center gap-1 overflow-hidden" onClick={handleChangeLocation}>
+          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+          <div className="flex flex-col">
+            <div className="flex items-center text-primary font-bold text-sm">
+              <span className="truncate max-w-[150px]">{locationLabel}</span>
+              <ChevronDown className="ml-1 h-3 w-3" />
             </div>
-          </Button>
-          
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap">Exact Location Required!</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
           {loading ? (
              <Avatar className="h-8 w-8"><AvatarFallback>?</AvatarFallback></Avatar>
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.photoURL || undefined} />
                     <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
@@ -88,7 +82,7 @@ export function MainNav() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => router.push('/login')}>
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" onClick={() => router.push('/login')}>
               <User className="h-5 w-5" />
             </Button>
           )}

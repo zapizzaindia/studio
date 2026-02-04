@@ -19,34 +19,28 @@
       "imageHint": "vegetarian pizza"
     },
     {
-      "id": "supreme",
-      "description": "Loaded with a variety of meats, vegetables, and extra cheese",
-      "imageUrl": "https://images.unsplash.com/photo-1681567604770-0dc826c870ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdXByZW1lJTIwcGl6emF8ZW58MHx8fHwxNzY5OTYxOTE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "supreme pizza"
+      "id": "banner_1",
+      "description": "Big Big Pizza Promotional Banner",
+      "imageUrl": "https://images.unsplash.com/photo-1513104890138-7c749659a591?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+      "imageHint": "pizza deal"
     },
     {
-      "id": "bbq_chicken",
-      "description": "Grilled chicken, red onions, and BBQ sauce",
-      "imageUrl": "https://images.unsplash.com/photo-1767065603670-d44bcdf1da5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxiYnElMjBwaXp6YXxlbnwwfHx8fDE3Njk5NjE5MTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "bbq pizza"
+      "id": "banner_2",
+      "description": "Cheese Burst Pizza Promotional Banner",
+      "imageUrl": "https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+      "imageHint": "cheese pizza"
+    },
+    {
+      "id": "banner_3",
+      "description": "Lavalicious Dessert Promotional Banner",
+      "imageUrl": "https://images.unsplash.com/photo-1587314168485-3236d6710814?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+      "imageHint": "chocolate dessert"
     },
     {
       "id": "coke",
       "description": "A refreshing can of Coca-Cola",
       "imageUrl": "https://images.unsplash.com/photo-1591550936127-58ae7ea00c80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjb2tlJTIwY2FufGVufDB8fHx8MTc2OTk1MDQ4OHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "coke can"
-    },
-    {
-      "id": "pepsi",
-      "description": "A refreshing can of Pepsi",
-      "imageUrl": "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXBzaSUyMGNhbnxlbnwwfHx8fDE3Njk4NDYyNzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "pepsi can"
-    },
-    {
-      "id": "garlic_bread",
-      "description": "Warm and crispy garlic bread sticks",
-      "imageUrl": "https://images.unsplash.com/photo-1612716391329-28564c434ccc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxnYXJsaWMlMjBicmVhZHxlbnwwfHx8fDE3Njk5NjE5MTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "garlic bread"
     },
     {
       "id": "choco_lava_cake",
