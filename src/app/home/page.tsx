@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Plus, ShoppingCart, Star } from "lucide-react";
+import { Plus, ShoppingCart, Star, MapPin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import type { City, Category, MenuItem } from "@/lib/types";
+import type { City, Category, MenuItem, Outlet, OutletMenuAvailability } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
+import { OutletSelector } from "@/components/outlet-selector";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,32 +20,41 @@ import { useRouter } from "next/navigation";
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
+  
+  // Fetch availability for the selected outlet
+  const { data: availabilityData, loading: availabilityLoading } = useCollection<OutletMenuAvailability>(
+    selectedOutlet ? `outlets/${selectedOutlet.id}/menuAvailability` : 'dummy'
+  );
   
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
-    if (!userLoading && !user) {
+    setIsHydrated(true);
+    const savedCity = localStorage.getItem("zapizza-city");
+    const savedOutlet = localStorage.getItem("zapizza-outlet");
+    if (savedCity) setSelectedCity(JSON.parse(savedCity));
+    if (savedOutlet) setSelectedOutlet(JSON.parse(savedOutlet));
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && !userLoading && !user) {
       router.push('/login');
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, router, isHydrated]);
 
   useEffect(() => {
     if (categories && categories.length > 0 && !activeCategory) {
       setActiveCategory(categories[0].id);
     }
   }, [categories, activeCategory]);
-
-  useEffect(() => {
-    const savedCity = localStorage.getItem("zapizza-city");
-    if (savedCity) {
-      setSelectedCity(JSON.parse(savedCity));
-    }
-  }, []);
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -54,31 +64,62 @@ export default function HomePage() {
     });
   };
 
-  if (userLoading) {
+  const handleCitySelect = (city: City) => {
+    setSelectedCity(city);
+    localStorage.setItem("zapizza-city", JSON.stringify(city));
+    // Reset outlet when city changes
+    setSelectedOutlet(null);
+    localStorage.removeItem("zapizza-outlet");
+  };
+
+  const handleOutletSelect = (outlet: Outlet) => {
+    setSelectedOutlet(outlet);
+    localStorage.setItem("zapizza-outlet", JSON.stringify(outlet));
+  };
+
+  if (!isHydrated || userLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p>Loading user...</p>
+        <Skeleton className="h-12 w-12 rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!selectedCity) {
-    return (
-      <CitySelector
-        onCitySelect={(city) => {
-          setSelectedCity(city);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("zapizza-city", JSON.stringify(city));
-          }
-        }}
-      />
-    );
+    return <CitySelector onCitySelect={handleCitySelect} />;
+  }
+
+  if (!selectedOutlet) {
+    return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
   }
 
   const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
+  
+  // Create a map of item availability for the selected outlet
+  const availabilityMap = new Map<string, boolean>();
+  availabilityData?.forEach((doc: any) => {
+    availabilityMap.set(doc.id, doc.isAvailable);
+  });
+
+  // Filter items: Only show if globally available AND not explicitly disabled for this outlet
+  const isItemAvailable = (item: MenuItem) => {
+    if (!item.isAvailableGlobally) return false;
+    const localAvailability = availabilityMap.get(item.id);
+    return localAvailability !== false; // If undefined, it's available by default
+  };
 
   return (
     <div className="container mx-auto max-w-4xl px-4">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-primary">
+          <MapPin className="h-4 w-4" />
+          <span className="text-sm font-bold uppercase tracking-wider">{selectedOutlet.name}, {selectedCity.name}</span>
+        </div>
+        <Button variant="link" size="sm" onClick={() => setSelectedOutlet(null)} className="text-xs text-muted-foreground">
+          Change Outlet
+        </Button>
+      </div>
+
       <nav className="sticky top-16 z-10 -mx-4 bg-background/80 py-2 backdrop-blur-sm">
         <div className="flex space-x-4 overflow-x-auto px-4 pb-2">
           {categoriesLoading ? Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-9 w-24 rounded-full" />) :
@@ -96,7 +137,7 @@ export default function HomePage() {
       </nav>
 
       <div className="space-y-12">
-        {menuItemsLoading ? (
+        {menuItemsLoading || availabilityLoading ? (
             <div className="space-y-12">
                 {Array.from({length: 2}).map((_, i) => (
                     <section key={i} className="pt-4">
@@ -110,58 +151,69 @@ export default function HomePage() {
                     </section>
                 ))}
             </div>
-        ) : sortedCategories.map((category) => (
-          <section
-            key={category.id}
-            id={category.id}
-            ref={(el) => (categoryRefs.current[category.id] = el)}
-            className="scroll-mt-24 pt-4"
-          >
-            <h2 className="font-headline text-2xl font-bold text-foreground">
-              {category.name}
-            </h2>
-            <Separator className="my-4" />
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {menuItems?.filter((item) => item.category === category.id).map(
-                (item) => (
-                  <Card key={item.id} className="overflow-hidden">
-                    <CardContent className="flex gap-4 p-4">
-                      <div className="relative h-28 w-28 flex-shrink-0 sm:h-36 sm:w-36">
-                        <Image
-                          src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-                          alt={item.name}
-                          fill
-                          className="rounded-lg object-cover"
-                          data-ai-hint={placeholderImageMap.get(item.imageId)?.imageHint}
-                          sizes="(max-width: 640px) 112px, 144px"
-                        />
-                      </div>
-                      <div className="flex flex-1 flex-col">
-                        <h3 className="font-headline text-lg font-semibold">
-                          {item.name}
-                        </h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Badge variant={item.isVeg ? 'secondary' : 'destructive'} className="h-5 border-2" style={{ borderColor: item.isVeg ? '#22c55e' : '#ef4444' }}/>
-                          <Star className="h-4 w-4 text-accent" fill="currentColor" />
-                          <span>4.5</span>
+        ) : sortedCategories.map((category) => {
+          const categoryItems = menuItems?.filter((item) => item.category === category.id) || [];
+          if (categoryItems.length === 0) return null;
+
+          return (
+            <section
+              key={category.id}
+              id={category.id}
+              ref={(el) => (categoryRefs.current[category.id] = el)}
+              className="scroll-mt-24 pt-4"
+            >
+              <h2 className="font-headline text-2xl font-bold text-foreground">
+                {category.name}
+              </h2>
+              <Separator className="my-4" />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {categoryItems.map((item) => {
+                  const available = isItemAvailable(item);
+                  return (
+                    <Card key={item.id} className={`overflow-hidden transition-opacity ${available ? 'opacity-100' : 'opacity-60 grayscale'}`}>
+                      <CardContent className="flex gap-4 p-4">
+                        <div className="relative h-28 w-28 flex-shrink-0 sm:h-36 sm:w-36">
+                          <Image
+                            src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+                            alt={item.name}
+                            fill
+                            className="rounded-lg object-cover"
+                            data-ai-hint={placeholderImageMap.get(item.imageId)?.imageHint}
+                            sizes="(max-width: 640px) 112px, 144px"
+                          />
+                          {!available && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                              <span className="text-white text-xs font-bold uppercase rotate-[-15deg] border-2 border-white px-1">Sold Out</span>
+                            </div>
+                          )}
                         </div>
-                        <p className="mt-2 flex-1 text-sm text-muted-foreground">
-                          {item.description}
-                        </p>
-                        <div className="mt-2 flex items-center justify-between">
-                          <p className="text-lg font-bold">₹{item.price}</p>
-                          <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                            <Plus className="mr-2 h-4 w-4" /> Add
-                          </Button>
+                        <div className="flex flex-1 flex-col">
+                          <h3 className="font-headline text-lg font-semibold">
+                            {item.name}
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Badge variant={item.isVeg ? 'secondary' : 'destructive'} className="h-5 border-2" style={{ borderColor: item.isVeg ? '#22c55e' : '#ef4444' }}/>
+                            <Star className="h-4 w-4 text-accent" fill="currentColor" />
+                            <span>4.5</span>
+                          </div>
+                          <p className="mt-2 flex-1 text-sm text-muted-foreground line-clamp-2">
+                            {item.description}
+                          </p>
+                          <div className="mt-2 flex items-center justify-between">
+                            <p className="text-lg font-bold">₹{item.price}</p>
+                            <Button size="sm" disabled={!available} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                              <Plus className="mr-2 h-4 w-4" /> Add
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              )}
-            </div>
-          </section>
-        ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
       </div>
 
       <AnimatePresence>

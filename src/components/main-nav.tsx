@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { ChevronDown, MapPin, User, LogOut } from "lucide-react";
 import { ZapizzaLogo } from "./icons";
 import { Button } from "./ui/button";
@@ -12,17 +13,38 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import type { City, Outlet } from "@/lib/types";
 
 export function MainNav() {
   const { user, loading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const [locationLabel, setLocationLabel] = useState("Select Location");
+
+  useEffect(() => {
+    const savedCity = localStorage.getItem("zapizza-city");
+    const savedOutlet = localStorage.getItem("zapizza-outlet");
+    
+    if (savedOutlet) {
+      const outlet: Outlet = JSON.parse(savedOutlet);
+      setLocationLabel(outlet.name);
+    } else if (savedCity) {
+      const city: City = JSON.parse(savedCity);
+      setLocationLabel(city.name);
+    }
+  }, []);
 
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
       router.push('/login');
     }
+  }
+
+  const handleChangeLocation = () => {
+    localStorage.removeItem("zapizza-city");
+    localStorage.removeItem("zapizza-outlet");
+    window.location.reload(); // Force reload to trigger CitySelector
   }
 
   return (
@@ -35,11 +57,13 @@ export function MainNav() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" className="flex items-center gap-2 text-left">
+          <Button variant="ghost" className="flex items-center gap-2 text-left" onClick={handleChangeLocation}>
             <MapPin className="h-5 w-5 text-primary" />
-            <div>
-                <span className="text-xs text-muted-foreground">Delivering to</span>
-                <p className="flex items-center font-bold">New York <ChevronDown className="ml-1 h-4 w-4" /></p>
+            <div className="hidden xs:block">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Delivering to</span>
+                <p className="flex items-center font-bold text-sm leading-tight truncate max-w-[120px]">
+                  {locationLabel} <ChevronDown className="ml-1 h-3 w-3 flex-shrink-0" />
+                </p>
             </div>
           </Button>
           
