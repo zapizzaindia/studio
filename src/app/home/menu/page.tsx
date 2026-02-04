@@ -120,13 +120,13 @@ export default function MenuPage() {
       </div>
 
       {/* Floating Menu Button */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-36 right-6 z-50">
         <Button 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="bg-[#333333] hover:bg-black text-white h-11 px-6 rounded-full shadow-2xl flex items-center gap-2 font-black uppercase tracking-widest text-[12px]"
+          className="bg-[#333333] hover:bg-black text-white h-12 w-12 rounded-full shadow-2xl flex items-center justify-center p-0"
+          title="Menu"
         >
-          {isMenuOpen ? <X className="h-4 w-4" /> : <List className="h-4 w-4" />}
-          MENU
+          {isMenuOpen ? <X className="h-6 w-6" /> : <List className="h-6 w-6" />}
         </Button>
       </div>
 
