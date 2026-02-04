@@ -3,8 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ArrowRight, Zap, Crown } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Zap, Crown, Pizza, Utensils, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { City, Category, MenuItem, Outlet } from "@/lib/types";
@@ -101,6 +100,64 @@ export default function HomePage() {
   if (!selectedOutlet) {
     return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
   }
+
+  const Section = ({ title, subtitle, icon: Icon, items }: { title: string, subtitle: string, icon: any, items: MenuItem[] | undefined }) => (
+    <div className="bg-white py-8 border-b border-gray-100 last:border-0">
+      <div className="px-6 mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Icon className="h-5 w-5 text-primary" />
+          <h2 className="text-[16px] font-black text-[#00143c] uppercase tracking-wide leading-none">{title}</h2>
+        </div>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{subtitle}</p>
+      </div>
+
+      <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
+        {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
+          <Skeleton key={i} className="h-[360px] w-64 rounded-xl flex-shrink-0" />
+        )) : items?.map((item) => (
+          <div key={item.id} className="relative w-64 flex-shrink-0 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col group">
+            <div className="relative h-44 w-full">
+              <Image
+                src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+                alt={item.name}
+                fill
+                className="object-cover"
+                data-ai-hint="pizza item"
+              />
+              <div className="absolute bottom-3 right-3">
+                <Button variant="secondary" className="h-6 px-3 bg-black/50 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/70 backdrop-blur-sm">
+                  Customise <ArrowRight className="ml-1 h-2 w-2" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-4 flex-1 flex flex-col">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
+                  <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+                </div>
+                <h4 className="text-[13px] font-black text-[#333333] uppercase truncate tracking-tight">{item.name}</h4>
+              </div>
+              <p className="text-[10px] text-muted-foreground line-clamp-2 leading-snug font-medium h-8 mb-4">{item.description}</p>
+              
+              <div className="mt-auto">
+                <div className="flex items-center justify-between mb-3 text-[10px] font-bold text-muted-foreground/80 border-b border-dashed pb-2">
+                  <span className="truncate">Regular | New Hand Tossed</span>
+                  <ArrowRight className="h-2 w-2" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[18px] font-black text-[#00143c] leading-none">{item.price}</span>
+                  <Button size="sm" className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform hover:bg-[#c61430]">
+                    Add +
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f1f2f6]">
@@ -213,75 +270,34 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Top 10 Bestsellers Section */}
-      <div className="bg-[#fff9e6] py-8 border-y border-yellow-200">
-        <div className="flex flex-col items-center mb-6">
-            <div className="flex items-center gap-2 mb-1">
-                <div className="h-[1px] w-8 bg-yellow-600/30" />
-                <Crown className="h-5 w-5 text-yellow-600 fill-yellow-600/20" />
-                <div className="h-[1px] w-8 bg-yellow-600/30" />
-            </div>
-            <h2 className="text-[18px] font-black text-[#8b5e3c] uppercase italic tracking-wider leading-none">Top 10 Bestsellers</h2>
-            <p className="text-[10px] font-bold text-yellow-700/60 uppercase tracking-widest mt-1 flex items-center gap-1">
-                <Zap className="h-3 w-3 fill-yellow-700/60" /> In Your Locality
-            </p>
-        </div>
+      {/* Sections based on Screenshot */}
+      <Section 
+        title="Top 10 Bestsellers" 
+        subtitle="In Your Locality" 
+        icon={Crown} 
+        items={menuItems?.slice(0, 5)} 
+      />
 
-        <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
-            {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
-                <Skeleton key={i} className="h-72 w-64 rounded-xl flex-shrink-0" />
-            )) : menuItems?.slice(0, 5).map((item) => (
-                <div key={item.id} className="relative h-80 w-64 flex-shrink-0 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col group">
-                    <div className="relative h-44 w-full">
-                        <Image
-                            src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                            data-ai-hint="pizza bestseller"
-                        />
-                        <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-[8px] font-black text-yellow-700 uppercase shadow-sm border border-yellow-100">
-                            Zapizza TOP 10
-                        </div>
-                        <div className="absolute bottom-2 right-2">
-                             <Button variant="secondary" className="h-6 px-3 bg-black/60 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/80">
-                                Customise <ArrowRight className="ml-1 h-2 w-2" />
-                            </Button>
-                        </div>
-                    </div>
-                    
-                    <div className="p-4 flex-1 flex flex-col">
-                        <div className="flex items-center gap-1 mb-1">
-                            <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-                                <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
-                            </div>
-                            <h4 className="text-[13px] font-black text-[#333333] uppercase truncate">{item.name}</h4>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight font-medium h-8">{item.description}</p>
-                        
-                        <div className="mt-auto flex items-center justify-between">
-                            <div className="flex flex-col">
-                                <span className="text-[16px] font-black text-[#00143c] leading-none">{item.price}</span>
-                                <span className="text-[8px] font-bold text-muted-foreground/60 uppercase mt-1">Regular | New Hand Tossed</span>
-                            </div>
-                            <Button size="sm" className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform">
-                                Add +
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            ))}
-            <div 
-                className="flex-shrink-0 h-80 w-32 bg-white/50 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-colors"
-                onClick={() => router.push('/home/menu')}
-            >
-                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-                    <ArrowRight className="h-5 w-5 text-gray-400" />
-                </div>
-                <span className="text-[10px] font-black text-gray-400 uppercase text-center px-4 leading-tight">View Full Menu</span>
-            </div>
-        </div>
-      </div>
+      <Section 
+        title="Popular Veg Delights" 
+        subtitle="Free Delivery For Orders Above 149" 
+        icon={Star} 
+        items={menuItems?.filter(i => i.isVeg && i.category === 'veg-pizzas')} 
+      />
+
+      <Section 
+        title="Non-Veg Favorites" 
+        subtitle="The Meat Lovers Choice" 
+        icon={Pizza} 
+        items={menuItems?.filter(i => !i.isVeg)} 
+      />
+
+      <Section 
+        title="Sides & Breads" 
+        subtitle="Best Companions To Your Pizza" 
+        icon={Utensils} 
+        items={menuItems?.filter(i => i.category === 'desserts' || i.category === 'beverages')} 
+      />
 
       <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
         Zapizza
