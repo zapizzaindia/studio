@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +5,7 @@ import Image from "next/image";
 import { ArrowRight, Crown, Pizza, Utensils, Star, ShoppingBag, Search, Filter, Flame } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { City, Category, MenuItem, Outlet } from "@/lib/types";
+import type { City, Category, MenuItem, Outlet, Banner } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
@@ -27,30 +26,6 @@ const serviceModes = [
   { id: 'takeaway', label: 'Takeaway', sub: 'Select Store' },
 ];
 
-const banners = [
-  {
-    id: 'banner_1',
-    title: 'CHEESE LAVA PULL APART',
-    subtitle: 'Freshly Launched!',
-    price: '399',
-    imageUrl: placeholderImageMap.get('banner_1')?.imageUrl || '',
-  },
-  {
-    id: 'banner_2',
-    title: 'ULTIMATE PIZZA PARTY',
-    subtitle: 'Limited Time Offer!',
-    price: '499',
-    imageUrl: placeholderImageMap.get('banner_2')?.imageUrl || '',
-  },
-  {
-    id: 'banner_3',
-    title: 'LAVALICIOUS DESSERTS',
-    subtitle: 'Sweeten Your Meal!',
-    price: '99',
-    imageUrl: placeholderImageMap.get('banner_3')?.imageUrl || '',
-  },
-];
-
 const filters = ["All", "Veg", "Non-Veg", "Bestsellers", "New Launches"];
 
 export default function HomePage() {
@@ -67,6 +42,7 @@ export default function HomePage() {
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
+  const { data: banners, loading: bannersLoading } = useCollection<Banner>('banners');
   
   useEffect(() => {
     setIsHydrated(true);
@@ -180,6 +156,8 @@ export default function HomePage() {
     </div>
   );
 
+  const activeBanners = banners?.filter(b => b.active) || [];
+
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f1f2f6]">
       {/* Service Modes Tabs */}
@@ -242,11 +220,15 @@ export default function HomePage() {
           className="w-full"
         >
           <CarouselContent>
-            {banners.map((banner, index) => (
+            {bannersLoading ? (
+              <CarouselItem>
+                <Skeleton className="w-full aspect-[16/9] md:aspect-[21/9]" />
+              </CarouselItem>
+            ) : activeBanners.map((banner, index) => (
               <CarouselItem key={index}>
                 <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden">
                   <Image
-                    src={banner.imageUrl}
+                    src={placeholderImageMap.get(banner.imageId)?.imageUrl || ''}
                     alt={banner.title}
                     fill
                     className="object-cover"

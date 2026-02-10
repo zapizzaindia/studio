@@ -1,5 +1,4 @@
-
-import { City, Category, MenuItem, Outlet, UserProfile, Order } from './types';
+import { City, Category, MenuItem, Outlet, UserProfile, Order, Banner } from './types';
 import { Timestamp } from 'firebase/firestore';
 
 export const MOCK_CITIES: City[] = [
@@ -84,6 +83,33 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
     isAvailable: true,
     isAvailableGlobally: true
   }
+];
+
+export const MOCK_BANNERS: Banner[] = [
+  {
+    id: 'banner_1',
+    title: 'CHEESE LAVA PULL APART',
+    subtitle: 'Freshly Launched!',
+    price: '399',
+    imageId: 'banner_1',
+    active: true
+  },
+  {
+    id: 'banner_2',
+    title: 'ULTIMATE PIZZA PARTY',
+    subtitle: 'Limited Time Offer!',
+    price: '499',
+    imageId: 'banner_2',
+    active: true
+  },
+  {
+    id: 'banner_3',
+    title: 'LAVALICIOUS DESSERTS',
+    subtitle: 'Sweeten Your Meal!',
+    price: '99',
+    imageId: 'banner_3',
+    active: true
+  },
 ];
 
 export const MOCK_USERS: Record<string, UserProfile> = {

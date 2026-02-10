@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, List, BarChart, Users, LogOut } from "lucide-react";
+import { LayoutDashboard, Store, List, BarChart, Users, LogOut, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth, useDoc, useUser } from '@/firebase';
@@ -28,6 +28,7 @@ const navItems = [
   { href: "/franchise/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/franchise/dashboard/outlets", label: "Outlets", icon: Store },
   { href: "/franchise/dashboard/menu", label: "Global Menu", icon: List },
+  { href: "/franchise/dashboard/banners", label: "Global Banners", icon: ImageIcon },
   { href: "/franchise/dashboard/reports", label: "Reports", icon: BarChart },
   { href: "/franchise/dashboard/users", label: "Users", icon: Users },
 ];

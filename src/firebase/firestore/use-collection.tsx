@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { 
@@ -6,7 +5,8 @@ import {
   MOCK_OUTLETS, 
   MOCK_CATEGORIES, 
   MOCK_MENU_ITEMS, 
-  MOCK_ORDERS 
+  MOCK_ORDERS,
+  MOCK_BANNERS
 } from '@/lib/mock-data';
 
 interface CollectionData<T> {
@@ -44,6 +44,8 @@ export function useCollection<T>(
         result = MOCK_MENU_ITEMS;
       } else if (path.includes('orders')) {
         result = MOCK_ORDERS;
+      } else if (path.includes('banners')) {
+        result = MOCK_BANNERS;
       } else if (path.includes('users')) {
         result = Object.values(import('@/lib/mock-data').then(m => m.MOCK_USERS));
       }
