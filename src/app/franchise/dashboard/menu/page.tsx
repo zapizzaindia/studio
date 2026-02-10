@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,7 +70,8 @@ export default function FranchiseMenuPage() {
                                         <p className="text-sm text-muted-foreground hidden md:block">{item.description}</p>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-sm font-bold text-muted-foreground">₹</span>
                                             <Input type="number" defaultValue={item.price.toFixed(2)} className="w-24" />
                                         </div>
                                     </TableCell>
