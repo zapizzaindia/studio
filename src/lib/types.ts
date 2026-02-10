@@ -60,6 +60,16 @@ export type UserProfile = {
     outletId?: string;
 };
 
+export type Address = {
+    id: string;
+    label: 'Home' | 'Work' | 'Other';
+    flatNo: string;
+    area: string;
+    landmark?: string;
+    city: string;
+    isDefault: boolean;
+};
+
 export type OutletMenuAvailability = {
     isAvailable: boolean;
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ChevronDown, MapPin, User, LogOut, ShoppingCart } from "lucide-react";
+import { ChevronDown, MapPin, User, LogOut, ShoppingCart, History, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import type { City, Outlet } from "@/lib/types";
@@ -90,15 +91,38 @@ export function MainNav() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push('/home/orders')}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>My Orders</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-64 p-0">
+                <div className="flex items-center gap-3 p-4 bg-[#f1f2f6]/50 border-b">
+                   <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.photoURL || undefined} />
+                    <AvatarFallback className="bg-[#14532d] text-white">{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-black text-[#14532d] truncate uppercase">{user.displayName || 'Demo User'}</span>
+                    <span className="text-[10px] text-muted-foreground truncate">{user.email}</span>
+                  </div>
+                </div>
+                <div className="p-1">
+                  <DropdownMenuItem onClick={() => router.push('/home/profile')} className="py-2.5">
+                    <User className="mr-3 h-4 w-4 text-[#14532d]" />
+                    <span className="font-bold text-xs uppercase tracking-wider">My Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/home/addresses')} className="py-2.5">
+                    <MapPin className="mr-3 h-4 w-4 text-[#14532d]" />
+                    <span className="font-bold text-xs uppercase tracking-wider">Manage Addresses</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/home/orders')} className="py-2.5">
+                    <History className="mr-3 h-4 w-4 text-[#14532d]" />
+                    <span className="font-bold text-xs uppercase tracking-wider">My Orders</span>
+                  </DropdownMenuItem>
+                </div>
+                <DropdownMenuSeparator />
+                <div className="p-1">
+                  <DropdownMenuItem onClick={handleLogout} className="py-2.5 text-red-600 focus:text-red-600">
+                    <LogOut className="mr-3 h-4 w-4" />
+                    <span className="font-bold text-xs uppercase tracking-wider">Logout</span>
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
