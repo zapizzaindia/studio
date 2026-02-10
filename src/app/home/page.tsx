@@ -3,13 +3,14 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ArrowRight, Crown, Pizza, Utensils, Star, ShoppingBag } from "lucide-react";
+import { ArrowRight, Crown, Pizza, Utensils, Star, ShoppingBag, Search, Filter, Flame } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { City, Category, MenuItem, Outlet } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useCollection, useUser } from "@/firebase";
 import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +20,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import { Badge } from "@/components/ui/badge";
 
 const serviceModes = [
   { id: 'delivery', label: 'Delivery', sub: 'NOW' },
@@ -49,6 +51,8 @@ const banners = [
   },
 ];
 
+const filters = ["All", "Veg", "Non-Veg", "Bestsellers", "New Launches"];
+
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
@@ -58,6 +62,8 @@ export default function HomePage() {
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeMode, setActiveMode] = useState('delivery');
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -110,7 +116,10 @@ export default function HomePage() {
           <Icon className="h-5 w-5 text-[#14532d]" />
           <h2 className="text-[16px] font-black text-[#14532d] uppercase tracking-wide leading-none">{title}</h2>
         </div>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{subtitle}</p>
+        <div className="flex justify-between items-center">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{subtitle}</p>
+          <Button variant="link" size="sm" onClick={() => router.push('/home/menu')} className="text-[#14532d] p-0 h-auto text-[10px] font-black uppercase">SEE ALL</Button>
+        </div>
       </div>
 
       <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
@@ -125,6 +134,13 @@ export default function HomePage() {
                 fill
                 className="object-cover"
               />
+              <div className="absolute top-3 right-3">
+                 {item.isAvailableGlobally && (
+                   <Badge className="bg-white/90 text-[#14532d] border-none shadow-sm text-[8px] font-black uppercase tracking-tighter flex gap-1 items-center px-1.5 py-0.5">
+                     <Flame className="h-2 w-2 text-primary" /> Popular
+                   </Badge>
+                 )}
+              </div>
               <div className="absolute bottom-3 right-3">
                 <Button variant="secondary" className="h-6 px-3 bg-black/50 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/70 backdrop-blur-sm">
                   Customise <ArrowRight className="ml-1 h-2 w-2" />
@@ -181,6 +197,39 @@ export default function HomePage() {
             {activeMode === mode.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />}
           </button>
         ))}
+      </div>
+
+      {/* Search Bar Section */}
+      <div className="bg-white p-4 shadow-sm border-b sticky top-16 z-20">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search for pizzas, sides..." 
+            className="pl-10 h-12 bg-[#f1f2f6] border-none rounded-xl font-bold placeholder:font-normal"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Filter className="h-4 w-4 text-[#14532d]" />
+          </button>
+        </div>
+        
+        {/* Filter Chips */}
+        <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">
+          {filters.map(filter => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${
+                activeFilter === filter 
+                  ? 'bg-[#14532d] text-white border-[#14532d]' 
+                  : 'bg-white text-[#666666] border-gray-200 hover:border-[#14532d]'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Hero Banner Carousel */}

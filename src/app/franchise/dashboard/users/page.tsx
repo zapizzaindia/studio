@@ -34,11 +34,16 @@ export default function FranchiseUsersPage() {
   const adminUsers = users?.filter(u => u.role === 'franchise-owner' || u.role === 'outlet-admin');
 
   const handleAddUser = async () => {
-    if (!firestore || !newUserEmail || !newUserName) return;
+    if (!newUserEmail || !newUserName) return;
     
-    // In a real app, you would use Firebase Auth to create the user.
-    // Here we create the userProfile document which handles the app logic.
-    // For the prototype, we use the email as a UID surrogate or generate a random one.
+    // UI Mock for Demo Mode
+    toast({ title: "User assigned successfully (Demo Mode)", description: `Access granted to ${newUserName} as ${newUserRole}.` });
+    setIsUserDialogOpen(false);
+    setNewUserName(""); setNewUserEmail(""); setSelectedOutletId("");
+
+    // In production, real auth/firestore logic:
+    /*
+    if (!firestore) return;
     const tempUid = `user_${Date.now()}`;
     const userData: UserProfile = {
       uid: tempUid,
@@ -47,16 +52,12 @@ export default function FranchiseUsersPage() {
       role: newUserRole,
       ...(newUserRole === 'outlet-admin' && { outletId: selectedOutletId })
     };
-
     try {
       await setDoc(doc(firestore, 'users', tempUid), userData);
-      toast({ title: "Admin user added successfully" });
-      setIsUserDialogOpen(false);
-      // Reset form
-      setNewUserName(""); setNewUserEmail(""); setSelectedOutletId("");
     } catch (e) {
       toast({ variant: 'destructive', title: "Error creating user" });
     }
+    */
   };
 
   return (

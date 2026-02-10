@@ -34,19 +34,36 @@ export default function FranchiseOutletsPage() {
   const isLoading = outletsLoading || citiesLoading;
 
   const handleAddCity = async () => {
-    if (!firestore || !newCityName) return;
+    if (!newCityName) return;
+    
+    // UI Mock for Demo Mode
+    toast({ title: "City added successfully (Demo Mode)", description: `New city "${newCityName}" added to regional list.` });
+    setNewCityName("");
+    setIsCityDialogOpen(false);
+
+    // In production, firestore write would happen here:
+    /*
+    if (!firestore) return;
     try {
       await addDoc(collection(firestore, 'cities'), { name: newCityName });
-      toast({ title: "City added successfully" });
-      setNewCityName("");
-      setIsCityDialogOpen(false);
     } catch (e) {
       toast({ variant: 'destructive', title: "Error adding city" });
     }
+    */
   };
 
   const handleAddOutlet = async () => {
-    if (!firestore || !newOutletName || !selectedCityId) return;
+    if (!newOutletName || !selectedCityId) return;
+
+    // UI Mock for Demo Mode
+    toast({ title: "Outlet added successfully (Demo Mode)", description: `"${newOutletName}" has been established.` });
+    setNewOutletName("");
+    setSelectedCityId("");
+    setIsOutletDialogOpen(false);
+
+    // In production, firestore write would happen here:
+    /*
+    if (!firestore) return;
     const outletData = {
       name: newOutletName,
       cityId: selectedCityId,
@@ -56,31 +73,28 @@ export default function FranchiseOutletsPage() {
     };
     try {
       await addDoc(collection(firestore, 'outlets'), outletData);
-      toast({ title: "Outlet added successfully" });
-      setNewOutletName("");
-      setSelectedCityId("");
-      setIsOutletDialogOpen(false);
     } catch (e) {
       toast({ variant: 'destructive', title: "Error adding outlet" });
     }
+    */
   };
 
   const handleToggleStatus = (outletId: string, currentStatus: boolean) => {
+    toast({ title: 'Status updated (Demo Mode)', description: 'Outlet operations status changed.' });
+
+    // In production:
+    /*
     if (!firestore) return;
     const outletRef = doc(firestore, 'outlets', outletId);
-    
     updateDoc(outletRef, { isOpen: !currentStatus })
-      .then(() => {
-        toast({ title: 'Success', description: 'Outlet status updated.'});
-      })
       .catch(error => {
-        const permissionError = new FirestorePermissionError({
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: outletRef.path,
           operation: 'update',
           requestResourceData: { isOpen: !currentStatus }
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        }));
       })
+    */
   };
 
   return (
