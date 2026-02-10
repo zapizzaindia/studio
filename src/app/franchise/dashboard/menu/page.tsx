@@ -78,6 +78,13 @@ export default function FranchiseMenuPage() {
     setNewCategoryName("");
   };
 
+  const handleDeleteCategory = (catName: string) => {
+    toast({
+        title: "Category deleted (Demo Mode)",
+        description: `"${catName}" has been removed from the list.`
+    });
+  };
+
   return (
     <div className="container mx-auto p-0">
       <div className="flex justify-between items-center mb-6">
@@ -94,7 +101,7 @@ export default function FranchiseMenuPage() {
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Menu Categories</DialogTitle>
-                        <DialogDescription>View and add categories to organize your menu display order.</DialogDescription>
+                        <DialogDescription>View and manage your menu organization.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -103,7 +110,14 @@ export default function FranchiseMenuPage() {
                                 {sortedCategories.length > 0 ? sortedCategories.map(cat => (
                                     <div key={cat.id} className="flex justify-between items-center text-sm p-3 bg-white border rounded-lg shadow-sm">
                                         <span className="font-bold text-[#14532d]">{cat.name}</span>
-                                        <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">Sort Rank: {(cat as any).order}</span>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => handleDeleteCategory(cat.name)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 )) : <p className="text-center py-4 text-xs text-muted-foreground">No categories found.</p>}
                             </div>
