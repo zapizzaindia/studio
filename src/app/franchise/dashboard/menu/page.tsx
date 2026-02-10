@@ -94,7 +94,7 @@ export default function FranchiseMenuPage() {
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Menu Categories</DialogTitle>
-                        <DialogDescription>View and add categories to organize your menu.</DialogDescription>
+                        <DialogDescription>View and add categories to organize your menu display order.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -103,7 +103,7 @@ export default function FranchiseMenuPage() {
                                 {sortedCategories.length > 0 ? sortedCategories.map(cat => (
                                     <div key={cat.id} className="flex justify-between items-center text-sm p-3 bg-white border rounded-lg shadow-sm">
                                         <span className="font-bold text-[#14532d]">{cat.name}</span>
-                                        <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">Order: {(cat as any).order}</span>
+                                        <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">Sort Rank: {(cat as any).order}</span>
                                     </div>
                                 )) : <p className="text-center py-4 text-xs text-muted-foreground">No categories found.</p>}
                             </div>
@@ -208,7 +208,7 @@ export default function FranchiseMenuPage() {
           </div>
         ))
       ) : sortedCategories.map(category => (
-        <div key={category.id} className="mb-8">
+        <div key={category.id} id={`cat-${category.id}`} className="mb-8">
             <h2 className="font-headline text-2xl font-bold mb-4">{category.name}</h2>
             <Card>
                 <CardContent className="p-0">
