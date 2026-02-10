@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -98,7 +99,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h4 className="text-[14px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
-                    <span className="text-[12px] font-black text-[#14532d] mt-1 block">{item.price * item.quantity}</span>
+                    <span className="text-[12px] font-black text-[#14532d] mt-1 block">₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
@@ -139,19 +140,19 @@ export default function CheckoutPage() {
           <CardContent className="p-4 space-y-3 bg-white">
             <div className="flex justify-between text-sm text-muted-foreground font-medium">
               <span>Item Total</span>
-              <span>{totalPrice}</span>
+              <span>₹{totalPrice}</span>
             </div>
             <div className="flex justify-between text-sm text-muted-foreground font-medium">
               <span>Delivery Partner Fee</span>
-              <span>30</span>
+              <span>₹30</span>
             </div>
             <div className="flex justify-between text-sm text-muted-foreground font-medium">
               <span>Taxes and Charges</span>
-              <span>18</span>
+              <span>₹18</span>
             </div>
             <div className="border-t pt-3 flex justify-between text-lg font-black text-[#333333]">
               <span>GRAND TOTAL</span>
-              <span>{totalPrice + 48}</span>
+              <span>₹{totalPrice + 48}</span>
             </div>
           </CardContent>
         </Card>
@@ -171,7 +172,7 @@ export default function CheckoutPage() {
           disabled={isPlacing}
           className="w-full h-14 bg-[#e31837] hover:bg-[#c61430] text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg"
         >
-          {isPlacing ? "PLACING ORDER..." : `PLACE ORDER - ${totalPrice + 48}`}
+          {isPlacing ? "PLACING ORDER..." : `PLACE ORDER - ₹${totalPrice + 48}`}
         </Button>
       </div>
     </div>

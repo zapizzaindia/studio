@@ -94,7 +94,7 @@ export default function OrdersPage() {
                 </div>
                 <div className="p-4 bg-white flex justify-between items-center">
                   <div className="text-lg font-black text-[#14532d]">
-                    {order.total + 48}
+                    ₹{order.total + 48}
                   </div>
                   <Button 
                     variant="ghost" 
@@ -136,7 +136,7 @@ export default function OrdersPage() {
                           <span className="text-xs font-black text-[#14532d]">{item.quantity}x</span>
                           <span className="text-xs font-bold text-[#333333]">{item.name}</span>
                         </div>
-                        <span className="text-xs font-black text-[#333333]">{item.price * item.quantity}</span>
+                        <span className="text-xs font-black text-[#333333]">₹{item.price * item.quantity}</span>
                       </div>
                     ))}
                   </div>
@@ -149,19 +149,19 @@ export default function OrdersPage() {
                   <div className="space-y-2 text-xs font-bold">
                     <div className="flex justify-between text-muted-foreground">
                       <span>Item Total</span>
-                      <span>{selectedOrder.total}</span>
+                      <span>₹{selectedOrder.total}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Delivery Fee</span>
-                      <span>30</span>
+                      <span>₹30</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Taxes & Charges</span>
-                      <span>18</span>
+                      <span>₹18</span>
                     </div>
                     <div className="flex justify-between text-lg font-black text-[#14532d] pt-2">
                       <span>Grand Total</span>
-                      <span>{selectedOrder.total + 48}</span>
+                      <span>₹{selectedOrder.total + 48}</span>
                     </div>
                   </div>
                 </div>

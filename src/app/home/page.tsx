@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -146,7 +147,7 @@ export default function HomePage() {
                   <ArrowRight className="h-2 w-2" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[18px] font-black text-[#14532d] leading-none">{item.price}</span>
+                  <span className="text-[18px] font-black text-[#14532d] leading-none">₹{item.price}</span>
                   <Button 
                     size="sm" 
                     onClick={() => addItem(item)}
@@ -207,7 +208,7 @@ export default function HomePage() {
                       <div className="flex items-center gap-4">
                           <div className="text-white">
                               <span className="text-[10px] font-bold block opacity-80 uppercase">Starting @</span>
-                              <span className="text-2xl font-black">{banner.price}</span>
+                              <span className="text-2xl font-black">₹{banner.price}</span>
                           </div>
                           <Button 
                             size="sm" 
@@ -292,7 +293,7 @@ export default function HomePage() {
           >
             <div className="flex flex-col items-start">
               <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
-              <span className="text-lg font-black">{totalPrice}</span>
+              <span className="text-lg font-black">₹{totalPrice}</span>
             </div>
             <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[12px]">
               VIEW CART <ShoppingBag className="h-5 w-5" />

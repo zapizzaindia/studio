@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +53,7 @@ export default function AdminReportsPage() {
                             <RechartsBarChart data={salesData}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value / 1000}k`} />
                                 <ChartTooltip content={<ChartTooltipContent />} />
                                 <Legend />
                                 <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
