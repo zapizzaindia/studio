@@ -89,7 +89,7 @@ export default function CheckoutPage() {
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4">
             <CardTitle className="text-sm font-black text-[#14532d] uppercase tracking-widest">Order Summary</CardTitle>
-          </CardHeader>
+          </Header>
           <CardContent className="p-0 bg-white">
             {items.map((item) => (
               <div key={item.id} className="p-4 border-b last:border-0 flex items-center justify-between">
