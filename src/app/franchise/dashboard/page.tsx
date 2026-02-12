@@ -43,7 +43,6 @@ export default function FranchiseDashboardPage() {
                     </CardHeader>
                     <CardContent>
                        {isLoading ? <Skeleton className="h-8 w-3/4"/> : <div className="text-2xl font-bold">₹{totalRevenue.toFixed(2)}</div>}
-                        <p className="text-xs text-muted-foreground">All-time revenue</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -53,7 +52,6 @@ export default function FranchiseDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-bold">{totalOrders}</div>}
-                        <p className="text-xs text-muted-foreground">All-time orders</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -63,7 +61,6 @@ export default function FranchiseDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-bold">{activeOutlets} / {outlets?.length || 0}</div>}
-                        <p className="text-xs text-muted-foreground">Across all cities</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -73,7 +70,6 @@ export default function FranchiseDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         {isLoading ? <Skeleton className="h-8 w-1/4"/> : <div className="text-2xl font-bold">{totalCities}</div>}
-                        <p className="text-xs text-muted-foreground">Active regions</p>
                     </CardContent>
                 </Card>
             </div>

@@ -45,7 +45,6 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">₹{todaysRevenue.toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">For completed orders</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -55,7 +54,6 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">+{todaysOrders.length}</div>
-                        <p className="text-xs text-muted-foreground">Total orders today</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -65,7 +63,6 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{newOrders.length}</div>
-                        <p className="text-xs text-muted-foreground">Require immediate attention</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -75,7 +72,6 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{itemsOutOfStock}</div>
-                        <p className="text-xs text-muted-foreground">Check menu availability</p>
                     </CardContent>
                 </Card>
             </div>
