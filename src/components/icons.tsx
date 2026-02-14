@@ -1,14 +1,12 @@
-import type { SVGProps } from 'react';
+'use client';
 
-/**
- * ZapizzaLogo Component
- * 
- * TO UPDATE YOUR LOGO:
- * 1. Upload your PNG file to the "public" folder.
- * 2. Rename it to "logo.png".
- * 3. The component below will automatically display it.
- */
+import type { SVGProps } from 'react';
+import { Pizza } from 'lucide-react';
+import { useState } from 'react';
+
 export function ZapizzaLogo(props: SVGProps<SVGSVGElement>) {
+  const [error, setError] = useState(false);
+
   return (
     <div 
       className={props.className} 
@@ -21,15 +19,20 @@ export function ZapizzaLogo(props: SVGProps<SVGSVGElement>) {
         justifyContent: 'center'
       }}
     >
-      <img 
-        src="/logo.png" 
-        alt="Zapizza" 
-        style={{ 
-          maxWidth: '100%', 
-          maxHeight: '100%', 
-          objectFit: 'contain' 
-        }} 
-      />
+      {!error ? (
+        <img 
+          src="/logo.png" 
+          alt="Zapizza" 
+          style={{ 
+            maxWidth: '100%', 
+            maxHeight: '100%', 
+            objectFit: 'contain' 
+          }} 
+          onError={() => setError(true)}
+        />
+      ) : (
+        <Pizza className="text-primary w-full h-full" />
+      )}
     </div>
   );
 }
