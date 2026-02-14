@@ -297,7 +297,7 @@ export default function HomePage() {
 
       <Section 
         title="Popular Veg Delights" 
-        subtitle="Free Delivery For Orders Above 149" 
+        subtitle="Free Delivery For Orders Above ₹149" 
         icon={Star} 
         items={menuItems?.filter(i => i.isVeg && i.category === 'veg-pizzas')} 
       />
