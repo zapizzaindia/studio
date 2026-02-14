@@ -109,6 +109,7 @@ export default function HomePage() {
                 alt={item.name}
                 fill
                 className="object-cover"
+                data-ai-hint="pizza"
               />
               <div className="absolute top-3 right-3">
                  {item.isAvailableGlobally && (
@@ -232,6 +233,7 @@ export default function HomePage() {
                     alt={banner.title}
                     fill
                     className="object-cover"
+                    data-ai-hint="pizza promotion"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
                       <span className="text-white text-[10px] font-bold uppercase tracking-widest mb-1">{banner.subtitle}</span>
@@ -278,6 +280,7 @@ export default function HomePage() {
                   alt={category.name}
                   fill
                   className="object-cover"
+                  data-ai-hint="pizza category"
                 />
               </div>
               <span className="text-[10px] font-black text-[#666666] text-center w-24 leading-tight uppercase tracking-tighter">
