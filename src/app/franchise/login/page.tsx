@@ -54,22 +54,22 @@ export default function FranchiseLoginPage() {
 
   return (
     <div className="w-full max-w-sm p-4">
-      <div className="mb-8 flex flex-col items-center text-center">
-        <ZapizzaLogo className="mb-4 h-16 w-16 text-primary" />
-        <h1 className="font-headline text-3xl font-bold text-primary">Franchise Login</h1>
-        <p className="text-muted-foreground">Sign in to the franchise dashboard (Demo Mode)</p>
+      <div className="mb-6 flex flex-col items-center text-center">
+        <ZapizzaLogo className="mb-3 h-14 w-14 text-primary" />
+        <h1 className="font-headline text-2xl font-bold text-primary">Franchise Login</h1>
+        <p className="text-sm text-muted-foreground">Sign in to the franchise dashboard</p>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className="text-xs">Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="franchise@zapizza.com" {...field} />
+                  <Input placeholder="franchise@zapizza.com" {...field} className="h-11" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -80,15 +80,15 @@ export default function FranchiseLoginPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel className="text-xs">Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="********" {...field} />
+                  <Input type="password" placeholder="********" {...field} className="h-11" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+          <Button type="submit" className="w-full h-11 bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
             Login
           </Button>
         </form>
