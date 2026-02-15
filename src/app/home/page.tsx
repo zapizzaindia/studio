@@ -19,7 +19,8 @@ import {
   PlusCircle,
   Clock,
   Ticket,
-  Copy
+  Copy,
+  Flame
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -260,44 +261,66 @@ export default function HomePage() {
 
       {/* Trending Now */}
       <div className="mt-12">
-        <div className="px-6 flex justify-between items-center mb-4">
+        <div className="px-6 flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-[#14532d]" />
-            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Trending Now</h2>
+            <div className="bg-[#14532d] p-1.5 rounded-lg shadow-sm">
+              <TrendingUp className="h-4 w-4 text-white" />
+            </div>
+            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter italic">Trending Now</h2>
           </div>
+          <Badge variant="outline" className="text-[9px] border-[#14532d] text-[#14532d] font-black uppercase tracking-[0.1em] px-2 py-0.5">Hot Selling</Badge>
         </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-8">
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
-            <Skeleton key={i} className="h-52 w-40 rounded-[24px] flex-shrink-0" />
+            <Skeleton key={i} className="h-56 w-44 rounded-[28px] flex-shrink-0" />
           )) : menuItems?.slice(0, 5).map((item) => (
-            <div 
+            <motion.div 
               key={item.id} 
-              className="flex flex-col gap-3 w-40 flex-shrink-0 group cursor-pointer"
+              whileTap={{ scale: 0.95 }}
+              className="flex flex-col gap-3 w-44 flex-shrink-0 cursor-pointer group"
               onClick={() => handleAddClick(item)}
             >
-              <div className="relative h-40 w-full rounded-[24px] overflow-hidden shadow-lg group-active:scale-95 transition-transform">
-                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
-                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
-                   <PlusCircle className="h-5 w-5 text-[#14532d]" />
-                </div>
-              </div>
-              <div className="px-1">
-                <h4 className="text-[11px] font-black text-[#333333] uppercase leading-tight line-clamp-1">{item.name}</h4>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-[12px] font-black text-[#14532d]">₹{item.price}</span>
-                  <div className="flex items-center gap-0.5 text-[#14532d]">
-                    <Star className="h-2.5 w-2.5 fill-current" />
-                    <span className="text-[9px] font-bold text-muted-foreground">4.8</span>
+              <div className="relative h-44 w-full rounded-[28px] overflow-hidden shadow-xl border border-white/20">
+                <Image 
+                  src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} 
+                  alt={item.name} 
+                  fill 
+                  className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                />
+                
+                {/* Floating Add Button */}
+                <div className="absolute bottom-3 right-3">
+                  <div className="bg-[#14532d] p-2.5 rounded-2xl shadow-lg ring-4 ring-white/10 group-hover:bg-black transition-colors">
+                    <PlusCircle className="h-5 w-5 text-white" />
                   </div>
                 </div>
+
+                {/* Rating Tag */}
+                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2 py-1 rounded-xl shadow-sm flex items-center gap-1 border border-white/20">
+                  <Star className="h-2.5 w-2.5 fill-accent text-accent" />
+                  <span className="text-[10px] font-black text-[#333333]">4.8</span>
+                </div>
+
+                {/* Hot Badge Overlay */}
+                <div className="absolute top-3 right-3 bg-red-600 text-white p-1 rounded-lg shadow-md">
+                   <Flame className="h-3 w-3 fill-current" />
+                </div>
               </div>
-            </div>
+              
+              <div className="px-2 space-y-0.5">
+                <h4 className="text-[12px] font-black text-[#333333] uppercase leading-tight tracking-tight line-clamp-1">{item.name}</h4>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[14px] font-black text-[#14532d]">₹{item.price}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground line-through opacity-40 italic">₹{item.price + 50}</span>
+                </div>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* TOP OFFERS */}
-      <div className="mt-12">
+      <div className="mt-8">
         <div className="px-6 mb-6">
           <div className="flex items-center gap-2 mb-1">
             <Ticket className="h-5 w-5 text-[#14532d]" />
