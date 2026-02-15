@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -99,7 +98,7 @@ export default function OrdersPage() {
                 </div>
                 <div className="p-4 bg-white flex justify-between items-center">
                   <div className="text-lg font-black text-[#14532d]">
-                    ₹{order.total + 48}
+                    ₹{order.total.toFixed(2)}
                   </div>
                   <Button 
                     variant="ghost" 
@@ -152,12 +151,26 @@ export default function OrdersPage() {
                   <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Your Items</h4>
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-start">
-                        <div className="flex gap-2">
-                          <span className="text-xs font-black text-[#14532d]">{item.quantity}x</span>
-                          <span className="text-xs font-bold text-[#333333]">{item.name}</span>
+                      <div key={idx} className="flex flex-col border-b border-dashed pb-3 last:border-0 last:pb-0">
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-2">
+                            <span className="text-xs font-black text-[#14532d]">{item.quantity}x</span>
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs font-bold text-[#333333] uppercase">{item.name}</span>
+                              {item.variation && (
+                                <span className="text-[9px] font-black text-muted-foreground uppercase">Size: {item.variation}</span>
+                              )}
+                              {item.addons && item.addons.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {item.addons.map((addon, aIdx) => (
+                                    <span key={aIdx} className="text-[8px] font-bold text-[#14532d] uppercase">+{addon}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-xs font-black text-[#333333]">₹{item.price * item.quantity}</span>
                         </div>
-                        <span className="text-xs font-black text-[#333333]">₹{item.price * item.quantity}</span>
                       </div>
                     ))}
                   </div>
@@ -170,19 +183,25 @@ export default function OrdersPage() {
                   <div className="space-y-2 text-xs font-bold">
                     <div className="flex justify-between text-muted-foreground">
                       <span>Item Total</span>
-                      <span>₹{selectedOrder.total}</span>
+                      <span>₹{selectedOrder.subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Delivery Fee</span>
-                      <span>₹30</span>
+                      <span className={selectedOrder.deliveryFee === 0 ? "text-green-600" : ""}>{selectedOrder.deliveryFee === 0 ? "FREE" : `₹${selectedOrder.deliveryFee}`}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Taxes & Charges</span>
-                      <span>₹18</span>
+                      <span>Taxes (GST)</span>
+                      <span>₹{selectedOrder.gst.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-lg font-black text-[#14532d] pt-2">
+                    {selectedOrder.discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount Applied</span>
+                        <span>-₹{selectedOrder.discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-lg font-black text-[#14532d] pt-2 border-t border-dashed">
                       <span>Grand Total</span>
-                      <span>₹{selectedOrder.total + 48}</span>
+                      <span>₹{selectedOrder.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

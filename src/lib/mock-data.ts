@@ -1,4 +1,3 @@
-
 import { City, Category, MenuItem, Outlet, UserProfile, Order, Banner, Coupon } from './types';
 import { Timestamp } from 'firebase/firestore';
 
@@ -209,7 +208,7 @@ export const MOCK_ORDERS: Order[] = [
     customerId: 'customer-1',
     customerName: 'John Doe',
     customerPhone: '+91-9876543210',
-    items: [{ menuItemId: 'margherita', name: 'Classic Margherita', quantity: 1, price: 249 }],
+    items: [{ menuItemId: 'margherita', name: 'Classic Margherita', quantity: 1, price: 249, variation: 'Regular' }],
     total: 249,
     subtotal: 249,
     gst: 44.82,
@@ -231,7 +230,14 @@ export const MOCK_ORDERS: Order[] = [
     customerId: 'customer-1',
     customerName: 'John Doe',
     customerPhone: '+91-9876543210',
-    items: [{ menuItemId: 'pepperoni', name: 'Pepperoni Feast', quantity: 2, price: 499 }],
+    items: [{ 
+      menuItemId: 'pepperoni', 
+      name: 'Pepperoni Feast', 
+      quantity: 2, 
+      price: 499, 
+      variation: 'Medium', 
+      addons: ['Double Pepperoni', 'Jalapenos'] 
+    }],
     total: 998,
     subtotal: 998,
     gst: 179.64,

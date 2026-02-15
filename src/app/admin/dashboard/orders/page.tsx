@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -242,14 +241,32 @@ export default function AdminOrdersPage() {
 
                 <div>
                   <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Order Items</h4>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-start text-xs">
-                        <div className="flex gap-2">
-                          <span className="font-black text-[#14532d]">{item.quantity}x</span>
-                          <span className="font-bold">{item.name} {item.variation ? `(${item.variation})` : ''}</span>
+                      <div key={idx} className="flex flex-col border-b border-dashed pb-3 last:border-0 last:pb-0">
+                        <div className="flex justify-between items-start text-xs">
+                          <div className="flex gap-3">
+                            <span className="font-black text-[#14532d] min-w-[20px]">{item.quantity}x</span>
+                            <div className="flex flex-col gap-1">
+                              <span className="font-bold text-[#333333] uppercase tracking-tight">{item.name}</span>
+                              {item.variation && (
+                                <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1">
+                                  <span className="h-1 w-1 bg-muted-foreground rounded-full" /> Size: {item.variation}
+                                </span>
+                              )}
+                              {item.addons && item.addons.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-1">
+                                  {item.addons.map((addon, aIdx) => (
+                                    <span key={aIdx} className="text-[8px] font-black bg-[#14532d]/10 text-[#14532d] px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                      +{addon}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="font-black text-[#333333]">₹{item.price * item.quantity}</span>
                         </div>
-                        <span className="font-black">₹{item.price * item.quantity}</span>
                       </div>
                     ))}
                   </div>
