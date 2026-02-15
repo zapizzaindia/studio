@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -6,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, BellRing, Volume2, VolumeX, Timer, AlertTriangle, MapPin, Phone, Eye, Package, IndianRupee, Crown } from 'lucide-react';
-import { useAuth, useCollection, useDoc, useFirestore, useUser } from '@/firebase';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation } from 'lucide-react';
+import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -207,7 +208,7 @@ export default function AdminOrdersPage() {
       </Tabs>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none">
+        <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none max-h-[90vh] overflow-y-auto">
           {selectedOrder && (
             <div className="flex flex-col">
               <DialogHeader className="p-6 bg-[#14532d] text-white">
@@ -218,7 +219,25 @@ export default function AdminOrdersPage() {
               </DialogHeader>
               <div className="p-6 space-y-6">
                 <div>
-                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Delivery Information</h4>
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Delivery Information</h4>
+                    {selectedOrder.deliveryAddress?.latitude && (
+                      <Button 
+                        asChild
+                        variant="outline" 
+                        size="sm" 
+                        className="h-7 text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border-blue-200"
+                      >
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
+                          <Navigation className="h-3 w-3 mr-1" /> Open Map Pin
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                   <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-dashed">
                     <div className="flex items-start gap-3">
                       <MapPin className="h-4 w-4 text-[#14532d] mt-0.5" />

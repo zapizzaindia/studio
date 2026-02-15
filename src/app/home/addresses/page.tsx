@@ -1,14 +1,15 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Map, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Map, Check, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useUser, useFirestore, useCollection } from "@/firebase";
-import { collection, doc, addDoc, deleteDoc, updateDoc, query, where, getDocs } from "firebase/firestore";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, doc, addDoc, deleteDoc, updateDoc, query, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -17,17 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-type Address = {
-  id: string;
-  label: 'Home' | 'Work' | 'Other';
-  flatNo: string;
-  area: string;
-  landmark?: string;
-  city: string;
-  isDefault: boolean;
-};
+import type { Address } from "@/lib/types";
 
 const labelIcons = {
   Home: <Home className="h-4 w-4" />,
@@ -45,6 +36,7 @@ export default function AddressesPage() {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
 
   // Form State
   const [label, setLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
@@ -52,6 +44,7 @@ export default function AddressesPage() {
   const [area, setArea] = useState("");
   const [landmark, setLandmark] = useState("");
   const [city, setCity] = useState("");
+  const [coords, setCoords] = useState<{ lat?: number; lng?: number }>({});
 
   useEffect(() => {
     if (!user || !db) return;
@@ -72,6 +65,30 @@ export default function AddressesPage() {
     fetchAddresses();
   }, [user, db]);
 
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Geolocation is not supported by your browser", variant: "destructive" });
+      return;
+    }
+
+    setIsDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setIsDetecting(false);
+        toast({ title: "Location captured!", description: "We've pinned your exact coordinates." });
+      },
+      (error) => {
+        setIsDetecting(false);
+        toast({ title: "Permission Denied", description: "Please allow location access to use this feature.", variant: "destructive" });
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
   const handleAddAddress = async () => {
     if (!user || !db) return;
     if (!flatNo || !area || !city) {
@@ -87,15 +104,17 @@ export default function AddressesPage() {
       landmark,
       city,
       isDefault: addresses.length === 0,
+      latitude: coords.lat,
+      longitude: coords.lng,
     };
 
     try {
       const docRef = await addDoc(collection(db, `users/${user.uid}/addresses`), newAddress);
       setAddresses([...addresses, { id: docRef.id, ...newAddress }]);
       setIsOpen(false);
-      toast({ title: "Address added successfully" });
+      toast({ title: "Address saved successfully" });
       // Reset form
-      setFlatNo(""); setArea(""); setLandmark(""); setCity("");
+      setFlatNo(""); setArea(""); setLandmark(""); setCity(""); setCoords({});
     } catch (e: any) {
       toast({ title: "Failed to add address", description: e.message, variant: "destructive" });
     } finally {
@@ -117,11 +136,8 @@ export default function AddressesPage() {
   const handleSetDefault = async (id: string) => {
     if (!user || !db) return;
     try {
-      // Update locally first for snappy UI
       const updated = addresses.map(a => ({ ...a, isDefault: a.id === id }));
       setAddresses(updated);
-
-      // Update in Firebase (should really batch this, but for prototype it's fine)
       for (const addr of addresses) {
         await updateDoc(doc(db, `users/${user.uid}/addresses`, addr.id), { isDefault: addr.id === id });
       }
@@ -158,9 +174,16 @@ export default function AddressesPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-black uppercase text-[#14532d] tracking-widest bg-[#14532d]/10 px-2 py-0.5 rounded-full">
-                      {addr.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase text-[#14532d] tracking-widest bg-[#14532d]/10 px-2 py-0.5 rounded-full">
+                        {addr.label}
+                      </span>
+                      {addr.latitude && (
+                        <span className="text-[8px] font-black uppercase text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1">
+                          <Navigation className="h-2 w-2 fill-current" /> GPS PINNED
+                        </span>
+                      )}
+                    </div>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => handleDelete(addr.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -199,11 +222,21 @@ export default function AddressesPage() {
               ADD NEW ADDRESS <Plus className="h-5 w-5" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[90vw] rounded-2xl p-6">
+          <DialogContent className="max-w-[90vw] rounded-2xl p-6 overflow-y-auto max-h-[90vh]">
             <DialogHeader>
               <DialogTitle className="text-xl font-black text-[#14532d] uppercase tracking-widest">New Address</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
+              <Button 
+                onClick={handleDetectLocation}
+                disabled={isDetecting}
+                variant="outline"
+                className="w-full h-12 border-dashed border-[#14532d] text-[#14532d] font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
+              >
+                {isDetecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                {coords.lat ? "GPS LOCATION PINNED!" : "DETECT CURRENT LOCATION"}
+              </Button>
+
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Save as</Label>
                 <div className="flex gap-2">

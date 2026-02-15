@@ -73,6 +73,8 @@ export type DeliveryAddress = {
   area: string;
   landmark?: string;
   city: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 export type Order = {
@@ -124,6 +126,8 @@ export type Address = {
     landmark?: string;
     city: string;
     isDefault: boolean;
+    latitude?: number;
+    longitude?: number;
 };
 
 export type Banner = {
