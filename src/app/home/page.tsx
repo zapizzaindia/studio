@@ -134,9 +134,9 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      {/* Welcome Header with Manual GIF Background Slot */}
+      {/* Welcome Header with Custom GIF Background */}
       <div className="relative bg-[#14532d] text-white px-6 pt-12 pb-64 rounded-b-[40px] shadow-lg overflow-hidden">
-        {/* MANUAL GIF SLOT - Update the src URL below */}
+        {/* CUSTOM GIF SLOT */}
         <div className="absolute inset-0 z-0">
           <motion.div 
             animate={{ scale: [1, 1.05, 1] }}
@@ -144,9 +144,9 @@ export default function HomePage() {
             className="absolute inset-0"
           >
             <img 
-              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif"
-              alt="Dynamic Header" 
-              className="w-full h-full object-cover opacity-60 grayscale brightness-125"
+              src="https://jumpshare.com/s/SLpdAMrhVcxT9ckCqvFB"
+              alt="Custom Promotional Background" 
+              className="w-full h-full object-cover opacity-70 grayscale brightness-125"
             />
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/20 via-[#14532d]/60 to-[#14532d]" />
