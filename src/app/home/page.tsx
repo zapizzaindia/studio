@@ -231,28 +231,28 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Circular Explore Menu */}
-      <div className="mt-10 px-6">
-        <div className="flex justify-between items-center mb-6">
+      {/* Circular Explore Menu - Small Scrollable */}
+      <div className="mt-10">
+        <div className="px-6 flex justify-between items-center mb-4">
           <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Explore Menu</h2>
           <Button variant="ghost" size="sm" className="text-xs font-black uppercase text-[#14532d] gap-1 pr-0" onClick={() => router.push('/home/menu')}>
             See All <ChevronRight className="h-3 w-3" />
           </Button>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
           {categoriesLoading ? Array.from({length: 6}).map((_, i) => (
-            <Skeleton key={i} className="aspect-square rounded-full" />
+            <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />
           )) : categories?.map((cat) => (
             <div 
               key={cat.id} 
-              className="flex flex-col items-center gap-2 group cursor-pointer"
+              className="flex flex-col items-center gap-2 group cursor-pointer flex-shrink-0"
               onClick={() => router.push(`/home/menu?category=${cat.id}`)}
             >
-              <div className="relative aspect-square w-full rounded-full overflow-hidden border-2 border-transparent group-hover:border-[#14532d] transition-all shadow-md active:scale-95">
+              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-[#14532d] transition-all shadow-md active:scale-95">
                 <Image src={`https://picsum.photos/seed/${cat.id}/300/300`} alt={cat.name} fill className="object-cover" />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
               </div>
-              <span className="text-[10px] font-black text-[#14532d] uppercase tracking-tighter text-center line-clamp-1">{cat.name}</span>
+              <span className="text-[10px] font-black text-[#14532d] uppercase tracking-tighter text-center max-w-[80px] line-clamp-1">{cat.name}</span>
             </div>
           ))}
         </div>

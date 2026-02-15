@@ -28,6 +28,16 @@ import { Progress } from "@/components/ui/progress";
 import { useUser, useDoc, useFirestore } from "@/firebase";
 import type { UserProfile, Outlet } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -36,14 +46,33 @@ export default function ProfilePage() {
   const { data: outlet } = useDoc<Outlet>('outlets', profile?.outletId || 'andheri');
 
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState("");
 
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
+  useEffect(() => {
+    if (profile?.displayName) {
+      setNewDisplayName(profile.displayName);
+    }
+  }, [profile]);
+
   const handleLogout = () => {
     localStorage.removeItem('zapizza-mock-session');
     window.location.href = '/login';
+  };
+
+  const handleUpdateProfile = () => {
+    if (!user) return;
+    // Update the mock session
+    const mockUser = JSON.parse(localStorage.getItem('zapizza-mock-session') || '{}');
+    mockUser.displayName = newDisplayName;
+    localStorage.setItem('zapizza-mock-session', JSON.stringify(mockUser));
+    
+    setIsEditDialogOpen(false);
+    window.location.reload(); // Refresh to show the new name
   };
 
   if (!isHydrated || userLoading || profileLoading) {
@@ -83,9 +112,35 @@ export default function ProfilePage() {
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <button className="text-[10px] font-black uppercase tracking-widest border-b border-white/40 pb-0.5">
-              EDIT
-            </button>
+            
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogTrigger asChild>
+                <button className="text-[10px] font-black uppercase tracking-widest border-b border-white/40 pb-0.5">
+                  EDIT
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[90vw] rounded-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-[#14532d] font-black uppercase tracking-widest">Edit Profile</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Full Name</Label>
+                    <Input 
+                      value={newDisplayName} 
+                      onChange={e => setNewDisplayName(e.target.value)}
+                      className="font-bold h-12"
+                      placeholder="Enter your name"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleUpdateProfile} className="w-full h-12 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl">
+                    Save Changes
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="flex justify-between items-end">
