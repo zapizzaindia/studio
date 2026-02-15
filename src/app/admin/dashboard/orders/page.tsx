@@ -39,7 +39,8 @@ const OrderTimer = ({ createdAt, orderId, onTimeout }: { createdAt: any, orderId
 
   useEffect(() => {
     const calculate = () => {
-      const start = createdAt.toMillis();
+      if (!createdAt) return;
+      const start = typeof createdAt.toMillis === 'function' ? createdAt.toMillis() : Date.now();
       const elapsed = Date.now() - start;
       const remaining = Math.max(0, ACCEPTANCE_TIMEOUT_MS - elapsed);
       setTimeLeft(remaining);
@@ -110,7 +111,11 @@ export default function AdminOrdersPage() {
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return <Card><CardContent className="p-4"><Skeleton className="h-48 w-full" /></CardContent></Card>;
     const filteredOrders = statusFilter === 'All' ? orders : orders?.filter(o => o.status === statusFilter);
-    const sortedOrders = filteredOrders?.sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+    const sortedOrders = filteredOrders?.sort((a,b) => {
+        const timeA = typeof a.createdAt?.toMillis === 'function' ? a.createdAt.toMillis() : 0;
+        const timeB = typeof b.createdAt?.toMillis === 'function' ? b.createdAt.toMillis() : 0;
+        return timeB - timeA;
+    });
     
     return (
       <Card className="border-none shadow-sm overflow-hidden">
@@ -151,7 +156,12 @@ export default function AdminOrdersPage() {
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
                         <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="h-8 w-8 p-0"><Eye className="h-4 w-4" /></Button>
-                        {order.status === 'New' && <Button size="sm" className="bg-[#14532d] font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept</Button>}
+                        {order.status === 'New' && (
+                          <>
+                            <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
+                            <Button size="sm" className="bg-[#14532d] font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept</Button>
+                          </>
+                        )}
                         {order.status === 'Preparing' && <Button className="bg-orange-500 font-bold text-[10px] uppercase h-8" size="sm" onClick={() => handleUpdateStatus(order.id, 'Out for Delivery')}>Dispatch</Button>}
                         {order.status === 'Out for Delivery' && <Button className="bg-green-600 font-bold text-[10px] uppercase h-8" size="sm" onClick={() => handleUpdateStatus(order.id, 'Completed')}>Delivered</Button>}
                       </div>
@@ -252,7 +262,12 @@ export default function AdminOrdersPage() {
               </div>
               <div className="p-6 bg-muted/50 border-t flex gap-3">
                 <Button variant="outline" onClick={() => setSelectedOrder(null)} className="flex-1 font-black uppercase text-[10px] h-12">Close</Button>
-                {selectedOrder.status === 'New' && <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Preparing')} className="flex-1 bg-[#14532d] font-black uppercase text-[10px] h-12">Accept Order</Button>}
+                {selectedOrder.status === 'New' && (
+                  <>
+                    <Button variant="outline" onClick={() => handleUpdateStatus(selectedOrder.id, 'Cancelled', 'Rejected by Outlet')} className="flex-1 text-red-600 border-red-200 font-black uppercase text-[10px] h-12">Reject Order</Button>
+                    <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Preparing')} className="flex-1 bg-[#14532d] font-black uppercase text-[10px] h-12">Accept Order</Button>
+                  </>
+                )}
               </div>
             </div>
           )}
