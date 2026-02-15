@@ -1,5 +1,5 @@
 
-import type { { Timestamp } } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 
 export type City = {
   id: string;
@@ -36,6 +36,22 @@ export type MenuItem = {
   recommendedSides?: string[];
 };
 
+export type GlobalSettings = {
+  gstPercentage: number;
+  deliveryFee: number;
+  minOrderForFreeDelivery: number;
+  loyaltyRatio: number; // points per 100 INR spent
+};
+
+export type Coupon = {
+  id: string;
+  code: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  minOrderAmount: number;
+  active: boolean;
+};
+
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';
 
 export type OrderItem = {
@@ -50,6 +66,10 @@ export type Order = {
   customerId: string;
   customerName: string;
   items: OrderItem[];
+  subtotal: number;
+  gst: number;
+  deliveryFee: number;
+  discount: number;
   total: number;
   status: OrderStatus;
   createdAt: Timestamp;
@@ -72,6 +92,7 @@ export type UserProfile = {
     photoURL?: string;
     role: 'customer' | 'outlet-admin' | 'franchise-owner';
     outletId?: string;
+    loyaltyPoints?: number;
 };
 
 export type Address = {
@@ -82,10 +103,6 @@ export type Address = {
     landmark?: string;
     city: string;
     isDefault: boolean;
-};
-
-export type OutletMenuAvailability = {
-    isAvailable: boolean;
 };
 
 export type Banner = {

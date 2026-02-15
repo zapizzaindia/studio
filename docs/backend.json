@@ -18,7 +18,8 @@
         "outletId": {
             "type": "string",
             "description": "The ID of the outlet this user manages, if they are an outlet-admin."
-        }
+        },
+        "loyaltyPoints": { "type": "number", "description": "Accumulated loyalty points for the customer." }
       },
       "required": ["uid", "email", "role"]
     },
@@ -89,14 +90,30 @@
         },
         "required": ["name", "price", "isVeg", "categoryId", "isAvailableGlobally"]
     },
-    "outletMenuAvailability": {
-        "title": "Outlet Menu Availability",
-        "description": "Tracks which menu items are available at a specific outlet.",
-        "type": "object",
-        "properties": {
-            "isAvailable": { "type": "boolean" }
-        },
-        "required": ["isAvailable"]
+    "globalSettings": {
+      "title": "Global Settings",
+      "description": "Business rules controlled by the franchise owner.",
+      "type": "object",
+      "properties": {
+        "gstPercentage": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "minOrderForFreeDelivery": { "type": "number" },
+        "loyaltyRatio": { "type": "number", "description": "Points earned per 100 INR spent." }
+      },
+      "required": ["gstPercentage", "deliveryFee", "minOrderForFreeDelivery"]
+    },
+    "coupon": {
+      "title": "Coupon",
+      "description": "Promotional codes for customers.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+        "discountValue": { "type": "number" },
+        "minOrderAmount": { "type": "number" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["code", "discountType", "discountValue", "minOrderAmount", "active"]
     },
     "order": {
         "title": "Order",
@@ -118,7 +135,11 @@
                     "required": ["menuItemId", "name", "quantity", "price"]
                 }
             },
-            "total": { "type": "number", "description": "Total price in Indian Rupees (INR)." },
+            "subtotal": { "type": "number" },
+            "gst": { "type": "number" },
+            "deliveryFee": { "type": "number" },
+            "discount": { "type": "number" },
+            "total": { "type": "number", "description": "Final payable amount in INR." },
             "status": { "type": "string", "enum": ["New", "Preparing", "Out for Delivery", "Completed", "Cancelled"] },
             "createdAt": { "type": "string", "format": "date-time" },
             "outletId": { "type": "string" }
@@ -142,21 +163,21 @@
         "schema": { "$ref": "#/entities/outlet" },
         "description": "List of all Zapizza outlets."
     },
-    "/categories/{categoryId}": {
-        "schema": { "$ref": "#/entities/category" },
-        "description": "Global menu categories."
+    "/settings/global": {
+      "schema": { "$ref": "#/entities/globalSettings" },
+      "description": "Central business configuration."
+    },
+    "/coupons/{couponId}": {
+      "schema": { "$ref": "#/entities/coupon" },
+      "description": "Promotional codes list."
     },
     "/menuItems/{menuItemId}": {
         "schema": { "$ref": "#/entities/menuItem" },
         "description": "Global menu items."
     },
-    "/outlets/{outletId}/menuAvailability/{menuItemId}": {
-        "schema": { "$ref": "#/entities/outletMenuAvailability" },
-        "description": "Tracks availability of a menu item for a specific outlet."
-    },
     "/orders/{orderId}": {
         "schema": { "$ref": "#/entities/order" },
-        "description": "All customer orders from all outlets."
+        "description": "All customer orders."
     }
   }
 }
