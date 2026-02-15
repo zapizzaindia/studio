@@ -15,6 +15,11 @@ export function MobileNav() {
   const pathname = usePathname();
   const { totalItems } = useCart();
 
+  // Hide navigation on checkout and success pages to focus user on the transaction
+  if (pathname === '/home/checkout' || pathname === '/home/checkout/success') {
+    return null;
+  }
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
       <nav className="container mx-auto flex max-w-full items-center justify-around px-4 h-16">

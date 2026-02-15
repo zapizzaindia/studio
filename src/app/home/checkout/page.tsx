@@ -127,7 +127,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-32">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-48">
       <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-6 w-6" />
@@ -242,7 +242,7 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        <div className="bg-[#14532d] p-4 rounded-xl flex items-center gap-3 shadow-lg">
+        <div className="bg-[#14532d] p-4 rounded-xl flex items-center gap-3 shadow-lg mb-8">
            <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
               <Crown className="h-6 w-6 text-white" />
            </div>
@@ -255,7 +255,8 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-40">
+      {/* Fixed Pay Footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-[#14532d]" />
