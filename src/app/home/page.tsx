@@ -143,39 +143,31 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      {/* Welcome Header */}
+      {/* Welcome Header with Manual GIF Background Slot */}
       <div className="relative bg-[#14532d] text-white px-6 pt-6 pb-12 rounded-b-[40px] shadow-lg overflow-hidden">
-        {/* Dynamic Background Effect */}
+        {/* ANIMATED BACKGROUND / GIF SLOT */}
         <div className="absolute inset-0 z-0">
           <motion.div 
-            animate={{ scale: [1, 1.05, 1], rotate: [0, 1, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             className="absolute inset-0"
           >
-            <Image 
-              src={placeholderImageMap.get('header_bg')?.imageUrl || "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80"}
-              alt="Header Background" 
-              fill 
-              className="object-cover opacity-20"
-              priority
+            {/* REPLACE THE SRC BELOW WITH YOUR OWN GIF URL */}
+            <img 
+              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif"
+              alt="Dynamic Header" 
+              className="w-full h-full object-cover opacity-20 grayscale brightness-150"
             />
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/40 via-[#14532d]/80 to-[#14532d]" />
           
-          {/* Animated Food Icons */}
+          {/* Decorative Floating Icons */}
           <motion.div 
             animate={{ y: [0, -15, 0], rotate: [0, 15, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-10 right-10 opacity-10"
           >
             <Pizza className="w-24 h-24" />
-          </motion.div>
-          <motion.div 
-            animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -left-10 bottom-10 opacity-10"
-          >
-            <Utensils className="w-32 h-32" />
           </motion.div>
         </div>
 
@@ -204,7 +196,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Search Section (Pulled up) */}
+      {/* Search Section */}
       <div className="px-6 -mt-6">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-[#14532d] transition-colors" />
@@ -242,7 +234,7 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Explore Menu Grid */}
+      {/* Explore Menu Circular Grid */}
       <div className="mt-10 px-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Explore Menu</h2>
@@ -252,14 +244,14 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-3 gap-4">
           {categoriesLoading ? Array.from({length: 6}).map((_, i) => (
-            <Skeleton key={i} className="aspect-square rounded-3xl" />
+            <Skeleton key={i} className="aspect-square rounded-full" />
           )) : categories?.map((cat) => (
             <div 
               key={cat.id} 
               className="flex flex-col items-center gap-2 group cursor-pointer"
               onClick={() => router.push(`/home/menu?category=${cat.id}`)}
             >
-              <div className="relative aspect-square w-full rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-[#14532d] transition-all shadow-md active:scale-95">
+              <div className="relative aspect-square w-full rounded-full overflow-hidden border-2 border-transparent group-hover:border-[#14532d] transition-all shadow-md active:scale-95">
                 <Image src={`https://picsum.photos/seed/${cat.id}/300/300`} alt={cat.name} fill className="object-cover" />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
               </div>
@@ -305,7 +297,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Bestsellers Vertical List */}
+      {/* Bestsellers Vertical List (Horizontal Cards) */}
       <div className="mt-12 px-6">
         <div className="flex items-center gap-2 mb-6">
           <Star className="h-5 w-5 text-[#14532d] fill-[#14532d]" />
@@ -347,7 +339,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Franchise Inquiry Section */}
+      {/* Franchise Inquiry Banner */}
       <div className="mt-16 px-6">
         <div className="bg-[#14532d] p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
           <div className="relative z-10">
@@ -359,14 +351,13 @@ export default function HomePage() {
               ENQUIRE NOW
             </Button>
           </div>
-          {/* Decorative Store Icon */}
           <div className="absolute top-0 right-0 opacity-5 translate-x-1/4 -translate-y-1/4">
             <Store className="h-48 w-48" />
           </div>
         </div>
       </div>
 
-      {/* Trust & Safety Banner */}
+      {/* Trust & Safety Section */}
       <div className="mt-12 px-6">
         <div className="bg-white border-2 border-dashed border-gray-200 p-6 rounded-[32px] flex items-center gap-5">
           <div className="bg-accent/10 p-4 rounded-3xl">
@@ -379,16 +370,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Awards Section */}
-      <div className="mt-12 px-6">
-        <div className="bg-blue-50/50 p-8 rounded-[40px] border border-blue-100 flex flex-col items-center text-center">
-          <Award className="h-12 w-12 text-blue-600 mb-4" />
-          <h3 className="text-lg font-black text-blue-900 uppercase italic mb-2">Times Food Awards</h3>
-          <p className="text-[10px] font-bold text-blue-800/60 uppercase tracking-widest">Voted Best Pizza Chain 2024</p>
-        </div>
-      </div>
-
-      {/* Loyalty Status (Bottom Home) */}
+      {/* Loyalty Progress Tracker (Bottom Home) */}
       <div className="mt-12 px-6">
         <div className="bg-white text-[#14532d] p-6 rounded-[32px] shadow-lg border border-[#14532d]/10 relative overflow-hidden">
           <div className="flex justify-between items-center mb-4">
@@ -411,15 +393,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Quote Section */}
-      <div className="py-16 px-10 text-center">
-        <p className="text-[#14532d]/30 text-sm font-black italic uppercase leading-relaxed mb-4">
-          "The secret of success in life is to eat what you like and let the food fight it out inside."
-        </p>
-        <p className="text-[10px] font-black text-[#14532d]/20 uppercase tracking-widest">— Mark Twain</p>
-      </div>
-
-      {/* Footer Branding */}
       <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
         Zapizza
       </div>
@@ -442,7 +415,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Customization Dialog (Re-integrated) */}
+      {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-3xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
           {customizingItem && (
