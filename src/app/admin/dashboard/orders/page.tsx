@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, BellRing, Volume2, VolumeX, Timer, AlertTriangle, MapPin, Phone, Eye, Package } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, BellRing, Volume2, VolumeX, Timer, AlertTriangle, MapPin, Phone, Eye, Package, IndianRupee, Crown } from 'lucide-react';
 import { useAuth, useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -66,6 +66,7 @@ export default function AdminOrdersPage() {
   const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   const outletId = userProfile?.outletId;
   const { data: orders, loading: ordersLoading } = useCollection<Order>('orders', { where: outletId ? ['outletId', '==', outletId] : undefined });
+  const { data: globalSettings } = useDoc<any>('settings', 'global');
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -272,9 +273,41 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-dashed flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-muted-foreground">Grand Total (Incl. Tax)</span>
-                  <span className="text-lg font-black text-[#14532d]">₹{selectedOrder.total.toFixed(2)}</span>
+                <div className="pt-4 border-t border-dashed space-y-2">
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
+                    <span>Item Total</span>
+                    <span>₹{selectedOrder.subtotal?.toFixed(2) || selectedOrder.total.toFixed(2)}</span>
+                  </div>
+                  {selectedOrder.deliveryFee > 0 && (
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
+                      <span>Delivery Fee</span>
+                      <span>₹{selectedOrder.deliveryFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {selectedOrder.gst > 0 && (
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
+                      <span>Taxes (GST)</span>
+                      <span>₹{selectedOrder.gst.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {selectedOrder.discount > 0 && (
+                    <div className="flex justify-between text-[10px] font-black text-green-600 uppercase">
+                      <span>Coupon Discount</span>
+                      <span>-₹{selectedOrder.discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t border-dashed flex justify-between items-center">
+                    <span className="text-xs font-black uppercase text-[#333333]">Amount Paid (Online)</span>
+                    <span className="text-lg font-black text-[#14532d]">₹{selectedOrder.total.toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="mt-2 pt-2 bg-[#14532d]/5 p-3 rounded-xl flex items-center justify-between border border-dashed border-[#14532d]/20">
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-3 w-3 text-[#14532d]" />
+                      <span className="text-[9px] font-black text-[#14532d] uppercase">Loyalty Points Earned</span>
+                    </div>
+                    <span className="text-[10px] font-black text-[#14532d]">+{Math.floor((selectedOrder.subtotal / 100) * (globalSettings?.loyaltyRatio || 1))} PTS</span>
+                  </div>
                 </div>
               </div>
               <div className="p-6 bg-muted/50 border-t flex gap-3">
