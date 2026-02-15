@@ -23,7 +23,9 @@ import {
   ChevronRight,
   TrendingUp,
   MapPin,
-  Clock
+  Clock,
+  Bike,
+  ShoppingBasket
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -60,6 +62,7 @@ export default function HomePage() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
 
   // Customization State
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
@@ -147,8 +150,22 @@ export default function HomePage() {
             <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Welcome Back,</p>
             <h1 className="text-2xl font-black italic tracking-tight">{user?.displayName?.split(' ')[0] || 'Gourmet'}!</h1>
           </div>
-          <div className="bg-white/10 p-2 rounded-2xl backdrop-blur-md">
-            <ShoppingBag className="h-6 w-6 text-white" />
+          
+          <div className="flex bg-white/10 p-1 rounded-2xl backdrop-blur-md">
+            <button 
+              onClick={() => setOrderType("delivery")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all ${orderType === "delivery" ? 'bg-white text-[#14532d]' : 'text-white/60'}`}
+            >
+              <Bike className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Delivery</span>
+            </button>
+            <button 
+              onClick={() => setOrderType("takeaway")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all ${orderType === "takeaway" ? 'bg-white text-[#14532d]' : 'text-white/60'}`}
+            >
+              <ShoppingBasket className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Takeaway</span>
+            </button>
           </div>
         </div>
 
@@ -157,7 +174,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-primary fill-primary" />
-              <span className="font-black text-xs uppercase tracking-widest">ACE Level Status</span>
+              <span className="font-black text-xs uppercase tracking-widest">Loyalty Progress</span>
             </div>
             <span className="text-[10px] font-bold opacity-60">GOLD MEMBER</span>
           </div>
