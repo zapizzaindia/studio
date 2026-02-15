@@ -3,158 +3,200 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Mail, Shield, Camera, Save, Crown } from "lucide-react";
+import { 
+  ArrowLeft, 
+  ShoppingBag, 
+  Wallet, 
+  MapPin, 
+  HelpCircle, 
+  RefreshCcw, 
+  AlertCircle, 
+  Share2, 
+  Star, 
+  ShieldCheck, 
+  FileText, 
+  Truck,
+  Phone,
+  Navigation,
+  Facebook,
+  Instagram,
+  ChevronRight
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUser, useFirestore } from "@/firebase";
-import { doc, updateDoc } from "firebase/firestore";
-import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+import { useUser, useDoc, useFirestore } from "@/firebase";
+import type { UserProfile, Outlet } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { toast } = useToast();
-  const { user, loading } = useUser();
-  const db = useFirestore();
+  const { user, loading: userLoading } = useUser();
+  const { data: profile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  const { data: outlet } = useDoc<Outlet>('outlets', profile?.outletId || 'andheri');
 
-  const [displayName, setDisplayName] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setDisplayName(user.displayName || "");
-    }
-  }, [user]);
+    setIsHydrated(true);
+  }, []);
 
-  const handleSave = async () => {
-    if (!user || !db) return;
-
-    setIsSaving(true);
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, { displayName });
-      
-      // Update local session too for demo purposes
-      const sessionString = localStorage.getItem('zapizza-mock-session');
-      if (sessionString) {
-        const session = JSON.parse(sessionString);
-        session.displayName = displayName;
-        localStorage.setItem('zapizza-mock-session', JSON.stringify(session));
-      }
-
-      toast({ title: "Profile updated successfully" });
-    } catch (e: any) {
-      toast({ title: "Update failed", description: e.message, variant: "destructive" });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('zapizza-mock-session');
+    window.location.href = '/login';
   };
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (!isHydrated || userLoading || profileLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#f8f9fa] items-center justify-center p-6">
+        <Skeleton className="h-12 w-12 rounded-full animate-spin mb-4" />
+        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Loading Profile...</p>
+      </div>
+    );
+  }
+
+  const menuItems = [
+    { label: "My Orders", icon: <ShoppingBag className="h-5 w-5" />, href: "/home/orders" },
+    { label: "LP Rewards", icon: <Wallet className="h-5 w-5" />, href: "#" },
+    { label: "Manage Addresses", icon: <MapPin className="h-5 w-5" />, href: "/home/addresses" },
+    { label: "FAQs", icon: <HelpCircle className="h-5 w-5" />, href: "#" },
+    { label: "How to track my Refund?", icon: <RefreshCcw className="h-5 w-5" />, href: "#" },
+    { label: "Raise a Concern", icon: <AlertCircle className="h-5 w-5" />, href: "#" },
+    { label: "Share this App", icon: <Share2 className="h-5 w-5" />, href: "#" },
+    { label: "Rate Us", icon: <Star className="h-5 w-5" />, href: "#" },
+    { label: "Privacy Policy", icon: <ShieldCheck className="h-5 w-5" />, href: "#" },
+    { label: "Terms & Conditions", icon: <FileText className="h-5 w-5" />, href: "#" },
+    { label: "Shipping Policy", icon: <Truck className="h-5 w-5" />, href: "#" },
+  ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24">
-      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-6 w-6" />
-        </Button>
-        <h1 className="text-xl font-black text-[#14532d] uppercase tracking-widest">My Profile</h1>
-      </div>
-
-      <div className="p-4 space-y-6 container max-w-lg mx-auto">
-        <div className="flex flex-col items-center gap-4 py-6">
-          <div className="relative">
-            <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-              <AvatarImage src={user?.photoURL || undefined} />
-              <AvatarFallback className="bg-[#14532d] text-white text-2xl font-black">
-                {user?.displayName?.charAt(0) || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <button className="absolute bottom-0 right-0 p-2 bg-[#14532d] text-white rounded-full shadow-lg">
-              <Camera className="h-4 w-4" />
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-12">
+      {/* Header Section */}
+      <div className="bg-[#14532d] text-white px-6 pt-12 pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden">
+        <div className="relative z-10 flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => router.push('/home')}
+              className="h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 border border-white/10"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <button className="text-[10px] font-black uppercase tracking-widest border-b border-white/40 pb-0.5">
+              EDIT
             </button>
           </div>
-          <div className="text-center">
-            <h2 className="text-xl font-black text-[#333333] uppercase">{user?.displayName || 'Gourmet User'}</h2>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{user?.email}</p>
+
+          <div className="flex justify-between items-end">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight italic uppercase">{profile?.displayName || 'Gourmet'}</h1>
+              <p className="text-sm font-bold text-white/70 mt-1">+91-{user?.phoneNumber?.slice(-10) || '9131024724'}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/80">
+              <span>Complete your profile</span>
+              <span>60%</span>
+            </div>
+            <div className="relative h-2.5 w-full bg-black/20 rounded-full overflow-hidden border border-white/5">
+              <Progress value={60} className="h-full bg-white" />
+            </div>
           </div>
         </div>
+        
+        {/* Decorative element */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+      </div>
 
-        {/* Loyalty Section */}
-        <Card className="border-none shadow-sm overflow-hidden bg-[#14532d] text-white">
-          <CardHeader className="py-4 border-b border-white/10">
-            <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-              <Crown className="h-4 w-4 text-accent fill-accent" /> Loyalty Level
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black uppercase tracking-tighter opacity-70 text-white">Current Status</span>
-              <Badge variant="secondary" className="bg-white text-[#14532d] font-black text-[9px] uppercase">GOLD MEMBER</Badge>
+      <div className="px-4 -mt-6 space-y-4 relative z-20">
+        {/* Action Menu Card */}
+        <Card className="border-none shadow-xl rounded-[32px] overflow-hidden">
+          <CardContent className="p-0">
+            <div className="divide-y divide-gray-50">
+              {menuItems.map((item, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => item.href !== '#' && router.push(item.href)}
+                  className="w-full flex items-center justify-between p-5 hover:bg-gray-50 active:bg-gray-100 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="text-gray-400 group-hover:text-[#14532d] transition-colors">
+                      {item.icon}
+                    </div>
+                    <span className="text-[13px] font-bold text-[#333333] uppercase tracking-tight">{item.label}</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-300" />
+                </button>
+              ))}
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-[10px] font-black uppercase">
-                <span>ACE PROGRESS</span>
-                <span>65%</span>
-              </div>
-              <Progress value={65} className="h-3 bg-white/20" />
-              <p className="text-[10px] font-bold opacity-80 leading-snug">
-                Spend <span className="text-accent">₹1000</span> more to reach <span className="italic font-black underline">ACE LEVEL</span> and unlock exclusive rewards!
+          </CardContent>
+        </Card>
+
+        {/* Outlet Card */}
+        <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+          <CardContent className="p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-black text-[#14532d] uppercase italic tracking-tighter">
+                Zapizza {outlet?.name.split('Zapizza')[1] || 'Andheri West'}
+              </h3>
+              <p className="text-[11px] font-bold text-muted-foreground mt-1 leading-relaxed uppercase">
+                {outlet?.name || 'Zapizza Outlet'}, first floor infront of PNB bank, Near janta inter college {outlet?.cityId || 'Mumbai'}
               </p>
             </div>
+            
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-50">
+              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2">
+                <Phone className="h-3.5 w-3.5" /> Call Outlet
+              </Button>
+              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2">
+                <Navigation className="h-3.5 w-3.5" /> Get Directions
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-sm font-black text-[#14532d] uppercase tracking-widest flex items-center gap-2">
-              <User className="h-4 w-4" /> Basic Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4 bg-white">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Display Name</Label>
-              <Input 
-                value={displayName} 
-                onChange={(e) => setDisplayName(e.target.value)} 
-                className="font-bold border-gray-200 focus:border-[#14532d] focus:ring-[#14532d]"
-              />
-            </div>
-            <div className="space-y-2 opacity-60">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input value={user?.email || ""} disabled className="pl-10 font-bold bg-muted" />
+        {/* Social Card */}
+        <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+          <CardContent className="p-0 flex divide-x divide-gray-100">
+            <button className="flex-1 p-6 flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors">
+              <div className="h-12 w-12 rounded-2xl bg-[#1877F2]/10 flex items-center justify-center text-[#1877F2]">
+                <Facebook className="h-6 w-6 fill-current" />
               </div>
-              <p className="text-[9px] text-muted-foreground">Email cannot be changed for this account.</p>
+              <div className="text-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Like Us on</p>
+                <p className="text-sm font-black text-[#333333] uppercase">Facebook</p>
+              </div>
+            </button>
+            <button className="flex-1 p-6 flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors">
+              <div className="h-12 w-12 rounded-2xl bg-[#E4405F]/10 flex items-center justify-center text-[#E4405F]">
+                <Instagram className="h-6 w-6" />
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Follow Us on</p>
+                <p className="text-sm font-black text-[#333333] uppercase">Instagram</p>
+              </div>
+            </button>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="py-10 text-center space-y-4">
+          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">v2.8.1 (2.7.8)</p>
+          <div className="flex flex-col items-center gap-1 opacity-40">
+            <span className="text-[9px] font-bold text-[#333333] uppercase tracking-widest">Powered by</span>
+            <div className="flex items-center gap-1 text-[#14532d] font-black italic text-sm">
+              <ShoppingBag className="h-4 w-4" /> Zapizza
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-sm font-black text-[#14532d] uppercase tracking-widest flex items-center gap-2">
-              <Shield className="h-4 w-4" /> Account Security
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4 bg-white">
-             <Button variant="outline" className="w-full justify-between font-black uppercase text-[11px] tracking-widest h-12">
-               CHANGE PASSWORD <ArrowLeft className="h-4 w-4 rotate-180" />
-             </Button>
-          </CardContent>
-        </Card>
-
-        <Button 
-          onClick={handleSave} 
-          disabled={isSaving}
-          className="w-full h-14 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl shadow-lg flex items-center justify-center gap-2"
-        >
-          {isSaving ? "SAVING..." : <>SAVE CHANGES <Save className="h-5 w-5" /></>}
-        </Button>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="text-xs font-black text-red-500 uppercase tracking-widest pt-4 block w-full"
+          >
+            Log Out
+          </button>
+        </div>
       </div>
     </div>
   );
