@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, BellRing } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, BellRing, Volume2, VolumeX } from 'lucide-react';
 import { useAuth, useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -24,6 +24,7 @@ const statusIcons: Record<OrderStatus, React.ReactNode> = {
   "Cancelled": <XCircle className="h-4 w-4 text-red-500" />,
 };
 
+const ALERT_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3";
 
 export default function AdminOrdersPage() {
   const { user } = useUser();
@@ -32,6 +33,33 @@ export default function AdminOrdersPage() {
   const { data: orders, loading: ordersLoading } = useCollection<Order>('orders', { where: outletId ? ['outletId', '==', outletId] : undefined });
   const firestore = useFirestore();
   const { toast } = useToast();
+
+  const [isMuted, setIsMuted] = useState(false);
+  const prevNewOrdersCount = useRef<number>(0);
+
+  // Sound Notification Logic
+  useEffect(() => {
+    if (!orders || ordersLoading) return;
+
+    const newOrders = orders.filter(o => o.status === 'New');
+    const currentCount = newOrders.length;
+
+    // If a new order has arrived (count increased)
+    if (currentCount > prevNewOrdersCount.current) {
+      if (!isMuted) {
+        const audio = new Audio(ALERT_SOUND_URL);
+        audio.play().catch(e => console.log("Autoplay blocked or audio failed", e));
+      }
+      
+      toast({
+        title: "NEW ORDER RECEIVED!",
+        description: `Order #${newOrders[0].id.substring(0,7).toUpperCase()} is waiting for acceptance.`,
+        variant: "default",
+      });
+    }
+
+    prevNewOrdersCount.current = currentCount;
+  }, [orders, ordersLoading, isMuted, toast]);
 
   const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
     if (!firestore) return;
@@ -139,15 +167,32 @@ export default function AdminOrdersPage() {
             </div>
             <p className="text-muted-foreground text-sm">Managing live orders for <span className="font-black text-[#14532d] uppercase tracking-widest text-[10px]">{userProfile?.outletId || 'Local Outlet'}</span></p>
         </div>
-        <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-100 animate-pulse">
-            <div className="h-2 w-2 rounded-full bg-green-500" />
-            <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">System Online</span>
+        <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-full h-10 w-10 p-0 border-[#14532d]/20 text-[#14532d]"
+              onClick={() => setIsMuted(!isMuted)}
+            >
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </Button>
+            <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-100 animate-pulse">
+                <div className="h-2 w-2 rounded-full bg-green-500" />
+                <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">System Online</span>
+            </div>
         </div>
       </div>
       
       <Tabs defaultValue="New" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-6 bg-white p-1 rounded-xl shadow-sm h-14 border">
-          <TabsTrigger value="New" className="font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-[#14532d] data-[state=active]:text-white">New Orders</TabsTrigger>
+          <TabsTrigger value="New" className="relative font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-[#14532d] data-[state=active]:text-white">
+            New Orders
+            {orders?.filter(o => o.status === 'New').length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] text-white animate-bounce">
+                {orders.filter(o => o.status === 'New').length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="Preparing" className="font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-[#14532d] data-[state=active]:text-white">Preparing</TabsTrigger>
           <TabsTrigger value="Out for Delivery" className="font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-[#14532d] data-[state=active]:text-white">Delivery</TabsTrigger>
           <TabsTrigger value="Completed" className="font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-[#14532d] data-[state=active]:text-white">Done</TabsTrigger>
