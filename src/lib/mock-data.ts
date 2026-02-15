@@ -1,3 +1,4 @@
+
 import { City, Category, MenuItem, Outlet, UserProfile, Order, Banner, Coupon } from './types';
 import { Timestamp } from 'firebase/firestore';
 
@@ -113,9 +114,33 @@ export const MOCK_BANNERS: Banner[] = [
 ];
 
 export const MOCK_COUPONS: Coupon[] = [
-  { id: 'cpn-1', code: 'ZAPIZZA50', discountType: 'percentage', discountValue: 50, minOrderAmount: 500, active: true },
-  { id: 'cpn-2', code: 'WELCOME100', discountType: 'fixed', discountValue: 100, minOrderAmount: 300, active: true },
-  { id: 'cpn-3', code: 'PIZZALOVE', discountType: 'percentage', discountValue: 20, minOrderAmount: 0, active: true },
+  { 
+    id: 'cpn-1', 
+    code: 'ZAPIZZA50', 
+    discountType: 'percentage', 
+    discountValue: 50, 
+    minOrderAmount: 500, 
+    active: true,
+    description: 'Get 50% Off on your order above ₹500. Valid Only on Regular, Medium and Large Pizza.'
+  },
+  { 
+    id: 'cpn-2', 
+    code: 'WELCOME100', 
+    discountType: 'fixed', 
+    discountValue: 100, 
+    minOrderAmount: 300, 
+    active: true,
+    description: 'Flat ₹100 Off on your first order above ₹300. Welcome to the Zapizza family!'
+  },
+  { 
+    id: 'cpn-3', 
+    code: 'PIZZALOVE', 
+    discountType: 'percentage', 
+    discountValue: 20, 
+    minOrderAmount: 0, 
+    active: true,
+    description: '20% Off on all orders. Because we love pizza as much as you do!'
+  },
 ];
 
 export const MOCK_USERS: Record<string, UserProfile> = {

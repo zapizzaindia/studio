@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Coupon } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function FranchiseCouponsPage() {
     const { data: coupons, loading } = useCollection<Coupon>('coupons');
@@ -27,6 +29,7 @@ export default function FranchiseCouponsPage() {
     const [newType, setNewType] = useState<'percentage' | 'fixed'>('percentage');
     const [newValue, setNewValue] = useState("");
     const [newMinOrder, setNewMinOrder] = useState("");
+    const [newDescription, setNewDescription] = useState("");
 
     const handleAddCoupon = async () => {
         if (!firestore || !newCode || !newValue) return;
@@ -36,14 +39,15 @@ export default function FranchiseCouponsPage() {
             discountType: newType,
             discountValue: Number(newValue),
             minOrderAmount: Number(newMinOrder) || 0,
-            active: true
+            active: true,
+            description: newDescription
         };
 
         try {
             await addDoc(collection(firestore, 'coupons'), couponData);
             toast({ title: "Coupon Created", description: `${newCode} is now active.` });
             setIsAddOpen(false);
-            setNewCode(""); setNewValue(""); setNewMinOrder("");
+            setNewCode(""); setNewValue(""); setNewMinOrder(""); setNewDescription("");
         } catch (e: any) {
             toast({ variant: 'destructive', title: "Error", description: e.message });
         }
@@ -72,7 +76,7 @@ export default function FranchiseCouponsPage() {
                             <Plus className="mr-2 h-4 w-4" /> New Coupon
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
                                 <Ticket className="h-5 w-5" /> Create Promo Code
@@ -118,9 +122,18 @@ export default function FranchiseCouponsPage() {
                                     onChange={e => setNewMinOrder(e.target.value)}
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label>Description (Shown to Customer)</Label>
+                                <Textarea 
+                                    placeholder="e.g. Get 50% Off on your order above ₹500. Valid Only on Regular, Medium and Large Pizza." 
+                                    value={newDescription} 
+                                    onChange={e => setNewDescription(e.target.value)}
+                                    className="h-24"
+                                />
+                            </div>
                         </div>
                         <DialogFooter>
-                            <Button onClick={handleAddCoupon} className="w-full h-12">Publish Coupon</Button>
+                            <Button onClick={handleAddCoupon} className="w-full h-12 bg-[#14532d] hover:bg-[#0f4023]">Publish Coupon</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

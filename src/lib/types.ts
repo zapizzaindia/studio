@@ -50,6 +50,7 @@ export type Coupon = {
   discountValue: number;
   minOrderAmount: number;
   active: boolean;
+  description?: string;
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';

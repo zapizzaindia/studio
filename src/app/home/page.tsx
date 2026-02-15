@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -17,7 +18,8 @@ import {
   ShoppingBag,
   PlusCircle,
   Clock,
-  Ticket
+  Ticket,
+  Copy
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -37,18 +39,20 @@ import {
   type CarouselApi
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { AnimatePresence, motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
 
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const { addItem, totalItems, totalPrice } = useCart();
+  const { toast } = useToast();
   
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
@@ -61,6 +65,9 @@ export default function HomePage() {
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
+
+  // Offer Modal State
+  const [selectedOffer, setSelectedOffer] = useState<Coupon | null>(null);
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -121,6 +128,11 @@ export default function HomePage() {
     }
   };
 
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({ title: "Code Copied!", description: `${code} is now in your clipboard.` });
+  };
+
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
     const base = selectedVariation ? selectedVariation.price : customizingItem.price;
@@ -148,7 +160,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      {/* Welcome Header - Optimized Green Design */}
+      {/* Welcome Header */}
       <div className="bg-[#14532d] text-white px-6 pt-10 pb-16 rounded-b-[40px] shadow-lg relative overflow-hidden">
         <div className="relative z-10 flex justify-between items-end">
           <div className="flex flex-col">
@@ -158,7 +170,6 @@ export default function HomePage() {
             </h1>
           </div>
           
-          {/* Native-feeling Segmented Control */}
           <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
             <button 
               onClick={() => setOrderType("delivery")}
@@ -177,7 +188,6 @@ export default function HomePage() {
           </div>
         </div>
         
-        {/* Decorative elements */}
         <div className="absolute -top-4 -right-4 opacity-5 rotate-[15deg]">
           <Pizza className="w-40 h-48" />
         </div>
@@ -221,7 +231,7 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Circular Explore Menu - Small Scrollable */}
+      {/* Explore Menu */}
       <div className="mt-10">
         <div className="px-6 flex justify-between items-center mb-4">
           <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Explore Menu</h2>
@@ -248,43 +258,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Trending Items Scroll */}
-      <div className="mt-12">
-        <div className="px-6 mb-6">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="h-5 w-5 text-[#14532d]" />
-            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Trending Now</h2>
-          </div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">The community's favorites</p>
-        </div>
-        <div className="flex overflow-x-auto px-6 space-x-5 scrollbar-hide pb-4">
-          {menuItems?.slice(0, 5).map((item) => (
-            <div key={item.id} className="relative w-48 flex-shrink-0 bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden flex flex-col group">
-              <div className="relative h-32 w-full">
-                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
-                <div className="absolute top-3 left-3">
-                  <div className={`h-3 w-3 border flex items-center justify-center bg-white rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center text-center">
-                <h4 className="text-[11px] font-black text-[#333333] uppercase leading-tight line-clamp-1 mb-1">{item.name}</h4>
-                <p className="text-[14px] font-black text-[#14532d] mb-3">₹{item.price}</p>
-                <Button 
-                  size="sm" 
-                  onClick={() => handleAddClick(item)}
-                  className="w-full h-8 bg-white border-2 border-[#14532d] text-[#14532d] font-black text-[10px] rounded-xl uppercase hover:bg-[#14532d] hover:text-white transition-all shadow-md"
-                >
-                  ADD +
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Top Offers Section */}
+      {/* TOP OFFERS */}
       <div className="mt-12">
         <div className="px-6 mb-6">
           <div className="flex items-center gap-2 mb-1">
@@ -297,7 +271,11 @@ export default function HomePage() {
           {couponsLoading ? Array.from({length: 3}).map((_, i) => (
             <Skeleton key={i} className="h-24 w-64 rounded-2xl flex-shrink-0" />
           )) : coupons?.map((coupon) => (
-            <div key={coupon.id} className="relative w-64 flex-shrink-0 bg-white rounded-2xl border-2 border-dashed border-[#14532d]/20 p-4 flex items-center gap-4 group active:scale-95 transition-transform overflow-hidden">
+            <div 
+              key={coupon.id} 
+              onClick={() => setSelectedOffer(coupon)}
+              className="relative w-64 flex-shrink-0 bg-white rounded-2xl border-2 border-dashed border-[#14532d]/20 p-4 flex items-center gap-4 group active:scale-95 transition-transform overflow-hidden cursor-pointer"
+            >
               <div className="bg-[#14532d]/5 p-3 rounded-xl">
                 <Ticket className="h-6 w-6 text-[#14532d]" />
               </div>
@@ -309,7 +287,6 @@ export default function HomePage() {
                   {coupon.minOrderAmount > 0 && ` on ₹${coupon.minOrderAmount}+`}
                 </p>
               </div>
-              {/* Semi-circles for coupon look */}
               <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-4 h-4 bg-[#f8f9fa] rounded-full border-r-2 border-dashed border-[#14532d]/20" />
               <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-4 h-4 bg-[#f8f9fa] rounded-full border-l-2 border-dashed border-[#14532d]/20" />
             </div>
@@ -317,7 +294,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Bestseller Vertical List */}
+      {/* Bestsellers */}
       <div className="mt-12 px-6">
         <div className="flex items-center gap-2 mb-6">
           <Star className="h-5 w-5 text-[#14532d] fill-[#14532d]" />
@@ -359,57 +336,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Franchise & Trust */}
-      <div className="mt-16 px-6 space-y-12">
-        <div className="bg-[#14532d] p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-white text-2xl font-black uppercase italic leading-tight mb-2 tracking-tighter">
-              ENQUIRE ABOUT<br />ZAPIZZA FRANCHISE
-            </h2>
-            <p className="text-white/70 text-xs font-bold mb-6 max-w-[200px]">Join India's fastest growing pizza chain. 700+ Outlets across the globe.</p>
-            <Button className="bg-white text-[#14532d] font-black uppercase text-[10px] tracking-widest rounded-2xl h-12 px-8 shadow-xl hover:bg-gray-100 transition-all">
-              ENQUIRE NOW
-            </Button>
-          </div>
-          <div className="absolute top-0 right-0 opacity-5 translate-x-1/4 -translate-y-1/4">
-            <Store className="h-48 w-48" />
-          </div>
-        </div>
-
-        <div className="bg-white border-2 border-dashed border-gray-200 p-6 rounded-[32px] flex items-center gap-5">
-          <div className="bg-accent/10 p-4 rounded-3xl">
-            <ShieldAlert className="h-8 w-8 text-accent" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-[#333333] uppercase mb-1 tracking-tighter">Beware of Scams!</h3>
-            <p className="text-[10px] font-bold text-muted-foreground leading-snug">Zapizza never asks for payments or OTPs on unofficial calls or messages.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Loyalty Progress Tracker (Bottom Reminder) */}
-      <div className="mt-12 px-6">
-        <div className="bg-white text-[#14532d] p-6 rounded-[32px] shadow-lg border border-[#14532d]/10 relative overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-primary fill-primary" />
-              <span className="font-black text-sm uppercase tracking-widest">Loyalty Progress</span>
-            </div>
-            <Badge className="bg-[#14532d] text-white text-[9px] font-black uppercase">GOLD MEMBER</Badge>
-          </div>
-          <p className="text-xs font-bold mb-4 leading-snug text-[#333333]">
-            You're close! Just <span className="font-black">₹1000</span> more to unlock <span className="font-black italic text-[#14532d]">ACE LEVEL</span> rewards.
-          </p>
-          <div className="space-y-2">
-            <Progress value={65} className="h-3 bg-[#14532d]/10" />
-            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter opacity-50">
-              <span>₹0</span>
-              <span>₹1000 to ACE</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
         Zapizza
       </div>
@@ -431,6 +357,55 @@ export default function HomePage() {
           </Button>
         </div>
       )}
+
+      {/* Offer Details Dialog */}
+      <Dialog open={!!selectedOffer} onOpenChange={(open) => !open && setSelectedOffer(null)}>
+        <DialogContent className="max-w-[90vw] rounded-3xl p-6 bg-white border-none shadow-2xl">
+          {selectedOffer && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="px-4 py-2 border-2 border-dashed border-[#14532d] rounded-xl bg-[#14532d]/5">
+                  <span className="text-xl font-black text-[#14532d] tracking-widest uppercase">{selectedOffer.code}</span>
+                </div>
+                <button 
+                  onClick={() => handleCopyCode(selectedOffer.code)}
+                  className="text-xs font-black text-[#14532d] uppercase tracking-widest flex items-center gap-1.5 hover:underline"
+                >
+                  <Copy className="h-4 w-4" /> COPY
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-black text-[#333333] uppercase italic leading-tight">
+                  {selectedOffer.discountType === 'percentage' ? `${selectedOffer.discountValue}% OFF` : `₹${selectedOffer.discountValue} OFF`} on your order
+                </h3>
+                {selectedOffer.description ? (
+                  <div className="space-y-4">
+                    <p className="text-sm font-bold text-muted-foreground leading-relaxed uppercase">
+                      {selectedOffer.description}
+                    </p>
+                    <Separator className="bg-gray-100" />
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase leading-relaxed">
+                      {selectedOffer.description}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm font-bold text-muted-foreground uppercase leading-relaxed">
+                    Valid on all orders above ₹{selectedOffer.minOrderAmount}. Apply this code at checkout to redeem the offer.
+                  </p>
+                )}
+              </div>
+
+              <Button 
+                onClick={() => setSelectedOffer(null)}
+                className="w-full h-14 bg-[#14532d] hover:bg-[#0f4023] text-white font-black uppercase tracking-widest rounded-2xl shadow-xl border-none"
+              >
+                GOT IT
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>

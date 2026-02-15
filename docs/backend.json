@@ -111,7 +111,8 @@
         "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
         "discountValue": { "type": "number" },
         "minOrderAmount": { "type": "number" },
-        "active": { "type": "boolean" }
+        "active": { "type": "boolean" },
+        "description": { "type": "string" }
       },
       "required": ["code", "discountType", "discountValue", "minOrderAmount", "active"]
     },
