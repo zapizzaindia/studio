@@ -47,6 +47,12 @@
       "description": "Decadent chocolate cake with a molten lava center",
       "imageUrl": "https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y2hvY29sYXRlJTIwY2FrZXxlbnwwfHx8fDE3Njk4Njk4NzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "chocolate cake"
+    },
+    {
+      "id": "header_bg",
+      "description": "Animated-style background for the welcome header",
+      "imageUrl": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80",
+      "imageHint": "pizza header"
     }
   ]
 }

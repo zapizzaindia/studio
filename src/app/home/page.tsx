@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -143,8 +144,42 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header */}
-      <div className="bg-[#14532d] text-white px-6 pt-6 pb-12 rounded-b-[40px] shadow-lg">
-        <div className="flex justify-between items-start mb-2">
+      <div className="relative bg-[#14532d] text-white px-6 pt-6 pb-12 rounded-b-[40px] shadow-lg overflow-hidden">
+        {/* Dynamic Background Effect */}
+        <div className="absolute inset-0 z-0">
+          <motion.div 
+            animate={{ scale: [1, 1.05, 1], rotate: [0, 1, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0"
+          >
+            <Image 
+              src={placeholderImageMap.get('header_bg')?.imageUrl || "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80"}
+              alt="Header Background" 
+              fill 
+              className="object-cover opacity-20"
+              priority
+            />
+          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/40 via-[#14532d]/80 to-[#14532d]" />
+          
+          {/* Animated Food Icons */}
+          <motion.div 
+            animate={{ y: [0, -15, 0], rotate: [0, 15, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-10 right-10 opacity-10"
+          >
+            <Pizza className="w-24 h-24" />
+          </motion.div>
+          <motion.div 
+            animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -left-10 bottom-10 opacity-10"
+          >
+            <Utensils className="w-32 h-32" />
+          </motion.div>
+        </div>
+
+        <div className="relative z-10 flex justify-between items-start mb-2">
           <div>
             <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Welcome Back,</p>
             <h1 className="text-2xl font-black italic tracking-tight">{user?.displayName?.split(' ')[0] || 'Gourmet'}!</h1>
