@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Clock, ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, XCircle, AlertCircle, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCollection, useUser } from "@/firebase";
@@ -84,13 +84,18 @@ export default function OrdersPage() {
                       <span>{order.createdAt.toDate().toLocaleDateString()} at {order.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
-                  <Badge 
-                    variant={order.status === 'Completed' ? 'secondary' : order.status === 'Cancelled' ? 'destructive' : 'default'}
-                    className="uppercase text-[9px] font-black tracking-widest flex gap-1 items-center"
-                  >
-                    {statusIcons[order.status]}
-                    {order.status}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge 
+                      variant={order.status === 'Completed' ? 'secondary' : order.status === 'Cancelled' ? 'destructive' : 'default'}
+                      className="uppercase text-[9px] font-black tracking-widest flex gap-1 items-center"
+                    >
+                      {statusIcons[order.status]}
+                      {order.status}
+                    </Badge>
+                    {(order as any).cancellationReason && (
+                      <span className="text-[8px] font-bold text-red-500 uppercase">Timeout</span>
+                    )}
+                  </div>
                 </div>
                 <div className="p-4 bg-white flex justify-between items-center">
                   <div className="text-lg font-black text-[#14532d]">
@@ -127,6 +132,22 @@ export default function OrdersPage() {
               </DialogHeader>
 
               <div className="p-6 space-y-6">
+                {selectedOrder.status === 'Cancelled' && (
+                  <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-black text-red-900 uppercase">Order Cancelled</p>
+                      <p className="text-[10px] font-medium text-red-700 leading-tight uppercase mt-1">
+                        {(selectedOrder as any).cancellationReason || "The kitchen was unable to process your order in time."}
+                      </p>
+                      <div className="mt-2 flex items-center gap-1.5 text-blue-600">
+                        <RefreshCcw className="h-3 w-3 animate-spin" />
+                        <span className="text-[9px] font-black uppercase">Refund Initiated to Original Source</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Your Items</h4>
                   <div className="space-y-3">

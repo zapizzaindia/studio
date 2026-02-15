@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, BellRing, Volume2, VolumeX } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, BellRing, Volume2, VolumeX, Timer, AlertTriangle } from 'lucide-react';
 import { useAuth, useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -25,6 +25,39 @@ const statusIcons: Record<OrderStatus, React.ReactNode> = {
 };
 
 const ALERT_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3";
+const ACCEPTANCE_TIMEOUT_MS = 5 * 60 * 1000; // 5 Minutes
+
+// Internal Countdown Component for New Orders
+const OrderTimer = ({ createdAt, orderId, onTimeout }: { createdAt: any, orderId: string, onTimeout: (id: string) => void }) => {
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  useEffect(() => {
+    const calculate = () => {
+      const start = createdAt.toMillis();
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, ACCEPTANCE_TIMEOUT_MS - elapsed);
+      setTimeLeft(remaining);
+      
+      if (remaining === 0) {
+        onTimeout(orderId);
+      }
+    };
+
+    calculate();
+    const interval = setInterval(calculate, 1000);
+    return () => clearInterval(interval);
+  }, [createdAt, orderId, onTimeout]);
+
+  const minutes = Math.floor(timeLeft / 60000);
+  const seconds = Math.floor((timeLeft % 60000) / 1000);
+
+  return (
+    <div className={`flex items-center gap-1.5 font-black text-[10px] tabular-nums tracking-tighter ${timeLeft < 60000 ? 'text-red-600 animate-pulse' : 'text-orange-600'}`}>
+      <Timer className="h-3 w-3" />
+      {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
+    </div>
+  );
+};
 
 export default function AdminOrdersPage() {
   const { user } = useUser();
@@ -44,7 +77,6 @@ export default function AdminOrdersPage() {
     const newOrders = orders.filter(o => o.status === 'New');
     const currentCount = newOrders.length;
 
-    // If a new order has arrived (count increased)
     if (currentCount > prevNewOrdersCount.current) {
       if (!isMuted) {
         const audio = new Audio(ALERT_SOUND_URL);
@@ -61,22 +93,33 @@ export default function AdminOrdersPage() {
     prevNewOrdersCount.current = currentCount;
   }, [orders, ordersLoading, isMuted, toast]);
 
-  const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
+  const handleUpdateStatus = (orderId: string, status: OrderStatus, reason?: string) => {
     if (!firestore) return;
     const orderRef = doc(firestore, 'orders', orderId);
     
-    updateDoc(orderRef, { status })
+    const updateData: any = { status };
+    if (reason) updateData.cancellationReason = reason;
+    if (status === 'Cancelled') updateData.paymentStatus = 'Refund Initiated';
+
+    updateDoc(orderRef, updateData)
       .then(() => {
-        toast({ title: 'Success', description: `Order status updated to ${status}` });
+        toast({ 
+          title: status === 'Cancelled' ? 'Order Cancelled' : 'Success', 
+          description: status === 'Cancelled' ? `Order #${orderId.substring(0,7)} timed out. Refund processed.` : `Order status updated to ${status}` 
+        });
       })
       .catch((error) => {
         const permissionError = new FirestorePermissionError({
           path: orderRef.path,
           operation: 'update',
-          requestResourceData: { status }
+          requestResourceData: updateData
         });
         errorEmitter.emit('permission-error', permissionError);
       });
+  };
+
+  const handleAutoCancel = (orderId: string) => {
+    handleUpdateStatus(orderId, 'Cancelled', 'Auto-cancelled: Kitchen Timeout');
   };
   
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
@@ -107,7 +150,14 @@ export default function AdminOrdersPage() {
                 {sortedOrders && sortedOrders.length > 0 ? (
                   sortedOrders.map((order) => (
                   <TableRow key={order.id} className="hover:bg-muted/30">
-                    <TableCell className="font-black text-[#14532d]">#{order.id.substring(0,7).toUpperCase()}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-black text-[#14532d]">#{order.id.substring(0,7).toUpperCase()}</span>
+                        {order.status === 'New' && (
+                          <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="font-medium">{order.customerName}</TableCell>
                     <TableCell className="max-w-[200px]">
                       <div className="flex flex-col gap-0.5">
@@ -123,16 +173,21 @@ export default function AdminOrdersPage() {
                     <TableCell>
                        <div className="flex items-center gap-2">
                           {statusIcons[order.status]}
-                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest py-0">
-                            {order.status}
-                          </Badge>
+                          <div className="flex flex-col items-start">
+                            <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest py-0 ${order.status === 'Cancelled' ? 'border-red-200 text-red-600 bg-red-50' : ''}`}>
+                              {order.status}
+                            </Badge>
+                            {(order as any).paymentStatus === 'Refund Initiated' && (
+                              <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest mt-0.5">Refunded</span>
+                            )}
+                          </div>
                         </div>
                     </TableCell>
                     <TableCell className="text-right">
                       {order.status === 'New' && (
                         <div className="flex gap-2 justify-end">
                           <Button size="sm" className="bg-[#14532d] hover:bg-[#0f4023] font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept</Button>
-                          <Button variant="outline" size="sm" className="text-red-600 border-red-100 hover:bg-red-50 font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Cancelled')}>Reject</Button>
+                          <Button variant="outline" size="sm" className="text-red-600 border-red-100 hover:bg-red-50 font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
                         </div>
                       )}
                       {order.status === 'Preparing' && (
@@ -165,7 +220,12 @@ export default function AdminOrdersPage() {
                 <BellRing className="h-5 w-5 text-[#14532d]" />
                 <h1 className="font-headline text-3xl font-bold">Kitchen Pipeline</h1>
             </div>
-            <p className="text-muted-foreground text-sm">Managing live orders for <span className="font-black text-[#14532d] uppercase tracking-widest text-[10px]">{userProfile?.outletId || 'Local Outlet'}</span></p>
+            <p className="text-muted-foreground text-sm flex items-center gap-2">
+              Managing live orders for <span className="font-black text-[#14532d] uppercase tracking-widest text-[10px]">{userProfile?.outletId || 'Local Outlet'}</span>
+              <span className="text-[10px] text-orange-600 font-black uppercase flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> 5m Acceptance Window Active
+              </span>
+            </p>
         </div>
         <div className="flex items-center gap-4">
             <Button 
