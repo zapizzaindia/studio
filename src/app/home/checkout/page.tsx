@@ -125,7 +125,9 @@ export default function CheckoutPage() {
         flatNo: selectedAddress.flatNo,
         area: selectedAddress.area,
         landmark: selectedAddress.landmark,
-        city: selectedAddress.city
+        city: selectedAddress.city,
+        latitude: selectedAddress.latitude,
+        longitude: selectedAddress.longitude
       },
       paymentMethod: "Online",
       paymentStatus: "Pending"
@@ -185,7 +187,12 @@ export default function CheckoutPage() {
           <CardContent className="p-4 bg-white">
             {selectedAddress ? (
               <div>
-                <Badge variant="secondary" className="bg-[#14532d]/10 text-[#14532d] text-[8px] font-black uppercase mb-2">{selectedAddress.label}</Badge>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary" className="bg-[#14532d]/10 text-[#14532d] text-[8px] font-black uppercase">{selectedAddress.label}</Badge>
+                  {selectedAddress.latitude && (
+                    <Badge variant="outline" className="text-blue-600 border-blue-200 text-[8px] font-black uppercase">GPS PINNED</Badge>
+                  )}
+                </div>
                 <p className="text-xs font-bold text-[#333333] leading-snug">{selectedAddress.flatNo}, {selectedAddress.area}</p>
                 {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Landmark: {selectedAddress.landmark}</p>}
               </div>

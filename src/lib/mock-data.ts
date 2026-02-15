@@ -1,3 +1,4 @@
+
 import { City, Category, MenuItem, Outlet, UserProfile, Order, Banner, Coupon } from './types';
 import { Timestamp } from 'firebase/firestore';
 
@@ -251,7 +252,9 @@ export const MOCK_ORDERS: Order[] = [
       flatNo: 'Tech Hub, Level 4',
       area: 'Bandra Kurla Complex',
       city: 'Mumbai',
-      landmark: 'ICICI Bank'
+      landmark: 'ICICI Bank',
+      latitude: 19.0760,
+      longitude: 72.8777
     }
   }
 ];

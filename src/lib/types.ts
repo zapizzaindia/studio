@@ -138,3 +138,8 @@ export type Banner = {
   imageId: string;
   active: boolean;
 };
+
+export type OutletMenuAvailability = {
+  id: string; // matches menuItemId
+  isAvailable: boolean;
+};
