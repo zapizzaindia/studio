@@ -147,37 +147,38 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      {/* Welcome Header - Compact Green Design */}
-      <div className="bg-[#14532d] text-white px-6 pt-12 pb-20 rounded-b-[40px] shadow-lg relative overflow-hidden">
-        <div className="relative z-10 flex justify-between items-start mb-2">
-          <div>
-            <p className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Welcome Back,</p>
-            <h1 className="text-2xl font-black italic tracking-tighter">
+      {/* Welcome Header - Optimized Green Design */}
+      <div className="bg-[#14532d] text-white px-6 pt-10 pb-16 rounded-b-[40px] shadow-lg relative overflow-hidden">
+        <div className="relative z-10 flex justify-between items-end">
+          <div className="flex flex-col">
+            <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">Welcome Back,</p>
+            <h1 className="text-2xl font-black italic tracking-tighter leading-none">
               {user?.displayName?.split(' ')[0] || 'Gourmet'}!
             </h1>
           </div>
           
-          <div className="flex bg-white/10 p-1 rounded-2xl backdrop-blur-md border border-white/10">
+          {/* Native-feeling Segmented Control */}
+          <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
             <button 
               onClick={() => setOrderType("delivery")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-300 ${orderType === "delivery" ? 'bg-white text-[#14532d] shadow-sm' : 'text-white'}`}
+              className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${orderType === "delivery" ? 'bg-white text-[#14532d] shadow-sm' : 'text-white/80'}`}
             >
               <Bike className="h-3.5 w-3.5" />
               <span className="text-[10px] font-black uppercase tracking-widest">Delivery</span>
             </button>
             <button 
               onClick={() => setOrderType("takeaway")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-300 ${orderType === "takeaway" ? 'bg-white text-[#14532d] shadow-sm' : 'text-white'}`}
+              className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${orderType === "takeaway" ? 'bg-white text-[#14532d] shadow-sm' : 'text-white/80'}`}
             >
               <ShoppingBasket className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Takeaway</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Pickup</span>
             </button>
           </div>
         </div>
         
-        {/* Decorative Pizza Icon */}
-        <div className="absolute top-4 right-[-20px] opacity-10 rotate-[15deg]">
-          <Pizza className="w-32 h-32" />
+        {/* Decorative elements */}
+        <div className="absolute -top-4 -right-4 opacity-5 rotate-[15deg]">
+          <Pizza className="w-40 h-48" />
         </div>
       </div>
 
