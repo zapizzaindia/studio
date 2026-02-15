@@ -275,22 +275,33 @@ export default function HomePage() {
                     className="object-cover"
                     data-ai-hint="pizza promotion"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
-                      <span className="text-white text-[10px] font-bold uppercase tracking-widest mb-1">{banner.subtitle}</span>
-                      <h2 className="text-white text-2xl font-black uppercase italic leading-none mb-2">{banner.title}</h2>
-                      <div className="flex items-center gap-4">
-                          <div className="text-white">
-                              <span className="text-[10px] font-bold block opacity-80 uppercase">Starting @</span>
-                              <span className="text-2xl font-black">₹{banner.price}</span>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            className="bg-primary text-white font-bold h-8 rounded-full px-4 group"
-                            onClick={() => router.push('/home/menu')}
-                          >
-                              ORDER NOW <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
-                          </Button>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-6 md:p-10">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="max-w-2xl"
+                    >
+                      <Badge className="mb-2 bg-primary text-white border-none font-black uppercase text-[10px] tracking-widest px-3 py-1">
+                        {banner.subtitle}
+                      </Badge>
+                      <h2 className="text-white text-3xl md:text-5xl font-black uppercase italic leading-tight mb-4 tracking-tighter drop-shadow-2xl">
+                        {banner.title}
+                      </h2>
+                      <div className="flex items-center gap-6">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-white/60 uppercase tracking-widest leading-none mb-1">Starting @</span>
+                          <span className="text-3xl font-black text-white leading-none">₹{banner.price}</span>
+                        </div>
+                        <Button 
+                          size="lg" 
+                          className="bg-white text-[#14532d] hover:bg-gray-100 font-black h-14 rounded-2xl px-10 shadow-2xl transition-all active:scale-95 group border-none"
+                          onClick={() => router.push('/home/menu')}
+                        >
+                          ORDER NOW <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
+                        </Button>
                       </div>
+                    </motion.div>
                   </div>
                 </div>
               </CarouselItem>
@@ -509,6 +520,47 @@ export default function HomePage() {
 
       <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
         Zapizza
+      </div>
+    </div>
+  );
+}
+
+function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
+  const hasOptions = (item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0);
+
+  return (
+    <div className="flex gap-5">
+      <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
+        <Image
+          src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+          alt={item.name}
+          fill
+          className="object-cover"
+        />
+      </div>
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className={`h-4 w-4 border-2 mb-1.5 flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
+              <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+            </div>
+            <h4 className="text-[14px] font-black text-[#333333] leading-tight uppercase tracking-tight">{item.name}</h4>
+            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed font-medium">{item.description}</p>
+          </div>
+        </div>
+        <div className="mt-auto flex items-center justify-between pt-3">
+          <div className="flex flex-col">
+            <span className="text-[15px] font-black text-[#14532d]">₹{item.price}</span>
+            {hasOptions && <span className="text-[8px] font-bold text-muted-foreground uppercase">Options available</span>}
+          </div>
+          <Button 
+            size="sm" 
+            onClick={onAdd}
+            className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors"
+          >
+            {hasOptions ? 'CUSTOMIZE' : 'ADD'}
+          </Button>
+        </div>
       </div>
     </div>
   );
