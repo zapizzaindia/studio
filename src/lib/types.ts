@@ -78,6 +78,9 @@ export type Order = {
   status: OrderStatus;
   createdAt: Timestamp;
   outletId: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  cancellationReason?: string;
 };
 
 export type Outlet = {

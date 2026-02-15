@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MenuItem, Category, MenuItemVariation, MenuItemAddon } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket } from 'lucide-react';
+import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee } from 'lucide-react';
 import { useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -651,7 +651,7 @@ export default function FranchiseMenuPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1">
-                                            <span className="text-xs font-bold text-muted-foreground">₹</span>
+                                            <IndianRupee className="h-3 w-3 text-muted-foreground" />
                                             <Input type="number" defaultValue={item.price.toFixed(2)} className="w-24 h-8" />
                                         </div>
                                     </TableCell>

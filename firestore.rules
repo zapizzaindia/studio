@@ -3,76 +3,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
+    // For prototyping with mock auth, we allow broader access.
+    // In production, these should be locked down using request.auth and role checks.
     
-    function getUserData(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data;
-    }
-
-    function isFranchiseOwner(userId) {
-      return isAuthenticated() && getUserData(userId).role == 'franchise-owner';
-    }
-
-    function isOutletAdmin(userId, outletId) {
-      let data = getUserData(userId);
-      return isAuthenticated() && data.role == 'outlet-admin' && data.outletId == outletId;
-    }
-    
-    // Default deny all
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
 
     // USERS
     match /users/{userId} {
-      allow read, update: if isOwner(userId);
-      allow create: if isAuthenticated();
-      allow list: if isFranchiseOwner(request.auth.uid);
+      allow read, write: if true;
     }
     
-    // PUBLIC DATA (Cities, Outlets, Categories, Menu Items)
+    // PUBLIC DATA
     match /cities/{cityId} {
-        allow read: if true;
-        allow write: if isFranchiseOwner(request.auth.uid);
+        allow read, write: if true;
     }
     match /outlets/{outletId} {
-        allow read: if true;
-        allow write: if isFranchiseOwner(request.auth.uid);
+        allow read, write: if true;
     }
     match /categories/{categoryId} {
-        allow read: if true;
-        allow write: if isFranchiseOwner(request.auth.uid);
+        allow read, write: if true;
     }
     match /menuItems/{menuItemId} {
-        allow read: if true;
-        allow write: if isFranchiseOwner(request.auth.uid);
-    }
-
-    // OUTLET MENU AVAILABILITY
-    match /outlets/{outletId}/menuAvailability/{menuItemId} {
-        allow read: if true;
-        allow write: if isFranchiseOwner(request.auth.uid) || isOutletAdmin(request.auth.uid, outletId);
+        allow read, write: if true;
     }
 
     // ORDERS
     match /orders/{orderId} {
-        allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid;
-        allow read: if isAuthenticated() && (
-            resource.data.customerId == request.auth.uid || 
-            isOutletAdmin(request.auth.uid, resource.data.outletId) ||
-            isFranchiseOwner(request.auth.uid)
-        );
-        allow update: if isAuthenticated() && (
-            isOutletAdmin(request.auth.uid, resource.data.outletId) ||
-            isFranchiseOwner(request.auth.uid)
-        );
+        allow read, write: if true;
     }
   }
 }
