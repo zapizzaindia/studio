@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type City = {
@@ -10,6 +11,16 @@ export type Category = {
   name: string;
 };
 
+export type MenuItemVariation = {
+  name: string;
+  price: number;
+};
+
+export type MenuItemAddon = {
+  name: string;
+  price: number;
+};
+
 export type MenuItem = {
   id: string;
   name: string;
@@ -20,6 +31,8 @@ export type MenuItem = {
   imageId: string;
   isAvailable: boolean;
   isAvailableGlobally: boolean;
+  variations?: MenuItemVariation[];
+  addons?: MenuItemAddon[];
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';

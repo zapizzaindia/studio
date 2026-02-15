@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { MenuItem, Category } from '@/lib/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { MenuItem, Category, MenuItemVariation, MenuItemAddon } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap, PlaceHolderImages } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Save, Layers, Upload, ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Layers, Upload, ImageIcon, PlusCircle, Settings2 } from 'lucide-react';
 import { useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -36,6 +37,8 @@ export default function FranchiseMenuPage() {
   const [newItemIsVeg, setNewItemIsVeg] = useState(true);
   const [newItemImageId, setNewItemImageId] = useState("margherita");
   const [newItemGlobal, setNewItemGlobal] = useState(true);
+  const [newItemVariations, setNewItemVariations] = useState<MenuItemVariation[]>([]);
+  const [newItemAddons, setNewItemAddons] = useState<MenuItemAddon[]>([]);
   const [customImage, setCustomImage] = useState<string | null>(null);
 
   // New Category State
@@ -55,9 +58,37 @@ export default function FranchiseMenuPage() {
     }
   };
 
+  const handleAddVariation = () => {
+    setNewItemVariations([...newItemVariations, { name: "", price: 0 }]);
+  };
+
+  const handleRemoveVariation = (index: number) => {
+    setNewItemVariations(newItemVariations.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateVariation = (index: number, field: keyof MenuItemVariation, value: string | number) => {
+    const updated = [...newItemVariations];
+    updated[index] = { ...updated[index], [field]: value };
+    setNewItemVariations(updated);
+  };
+
+  const handleAddAddon = () => {
+    setNewItemAddons([...newItemAddons, { name: "", price: 0 }]);
+  };
+
+  const handleRemoveAddon = (index: number) => {
+    setNewItemAddons(newItemAddons.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateAddon = (index: number, field: keyof MenuItemAddon, value: string | number) => {
+    const updated = [...newItemAddons];
+    updated[index] = { ...updated[index], [field]: value };
+    setNewItemAddons(updated);
+  };
+
   const handleAddItem = () => {
-    if (!newItemName || !newItemPrice || !newItemCategory) {
-        toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out Name, Price and Category.' });
+    if (!newItemName || (!newItemPrice && newItemVariations.length === 0) || !newItemCategory) {
+        toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out Name, Price (or Variations) and Category.' });
         return;
     }
 
@@ -75,6 +106,8 @@ export default function FranchiseMenuPage() {
     setNewItemIsVeg(true);
     setNewItemImageId("margherita");
     setNewItemGlobal(true);
+    setNewItemVariations([]);
+    setNewItemAddons([]);
     setCustomImage(null);
     setIsAddDialogOpen(false);
   };
@@ -162,102 +195,213 @@ export default function FranchiseMenuPage() {
                 <DialogTrigger asChild>
                     <Button className="bg-[#14532d] hover:bg-[#0f4023]"><Plus className="mr-2 h-4 w-4" /> Add New Item</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Add Global Menu Item</DialogTitle>
-                        <DialogDescription>Create a new product for all Zapizza outlets.</DialogDescription>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none rounded-2xl shadow-2xl">
+                    <DialogHeader className="p-6 bg-[#14532d] text-white">
+                        <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-2">
+                          <PlusCircle className="h-6 w-6" /> Add Global Menu Item
+                        </DialogTitle>
+                        <DialogDescription className="text-white/70">Create a new product with full customization for all Zapizza outlets.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="name">Item Name</Label>
-                            <Input id="name" value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder="e.g. Paneer Tikka Pizza" />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea id="description" value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Tell us what makes it delicious..." />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
+                    
+                    <div className="p-6">
+                      <Tabs defaultValue="general" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 p-1 rounded-xl">
+                          <TabsTrigger value="general" className="font-black uppercase text-[10px] tracking-widest">General</TabsTrigger>
+                          <TabsTrigger value="variations" className="font-black uppercase text-[10px] tracking-widest">Variations</TabsTrigger>
+                          <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest">Add-ons</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="general" className="space-y-4">
+                          <div className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="price">Price (₹)</Label>
-                                <Input id="price" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} placeholder="0.00" />
+                                <Label htmlFor="name" className="text-[10px] font-black uppercase text-muted-foreground">Item Name</Label>
+                                <Input id="name" value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder="e.g. Paneer Tikka Pizza" className="font-bold" />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="category">Category</Label>
-                                <Select onValueChange={setNewItemCategory} value={newItemCategory}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories?.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="description" className="text-[10px] font-black uppercase text-muted-foreground">Description</Label>
+                                <Textarea id="description" value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Tell us what makes it delicious..." className="font-medium" />
                             </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label>Placeholder Image</Label>
-                                <Select onValueChange={(val) => { setNewItemImageId(val); setCustomImage(null); }} value={newItemImageId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select image" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {PlaceHolderImages.map(img => (
-                                            <SelectItem key={img.id} value={img.id}>{img.id.replace(/_/g, ' ').toUpperCase()}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="upload-item">Or Upload Photo</Label>
-                                <div className="relative">
-                                    <Input 
-                                        id="upload-item" 
-                                        type="file" 
-                                        accept="image/*" 
-                                        className="hidden" 
-                                        onChange={handleFileChange}
-                                    />
-                                    <Button 
-                                        variant="outline" 
-                                        className="w-full" 
-                                        onClick={() => document.getElementById('upload-item')?.click()}
-                                    >
-                                        <Upload className="mr-2 h-4 w-4" /> Upload
-                                    </Button>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="price" className="text-[10px] font-black uppercase text-muted-foreground">Base Price (₹)</Label>
+                                    <Input id="price" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} placeholder="0.00" className="font-black text-[#14532d]" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="category" className="text-[10px] font-black uppercase text-muted-foreground">Category</Label>
+                                    <Select onValueChange={setNewItemCategory} value={newItemCategory}>
+                                        <SelectTrigger className="font-bold">
+                                            <SelectValue placeholder="Select" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {categories?.map(cat => (
+                                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
-                        </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Placeholder Image</Label>
+                                    <Select onValueChange={(val) => { setNewItemImageId(val); setCustomImage(null); }} value={newItemImageId}>
+                                        <SelectTrigger className="font-bold">
+                                            <SelectValue placeholder="Select image" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {PlaceHolderImages.map(img => (
+                                                <SelectItem key={img.id} value={img.id}>{img.id.replace(/_/g, ' ').toUpperCase()}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="upload-item" className="text-[10px] font-black uppercase text-muted-foreground">Or Upload Photo</Label>
+                                    <div className="relative">
+                                        <Input 
+                                            id="upload-item" 
+                                            type="file" 
+                                            accept="image/*" 
+                                            className="hidden" 
+                                            onChange={handleFileChange}
+                                        />
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full font-black uppercase text-[10px] h-10 tracking-widest" 
+                                            onClick={() => document.getElementById('upload-item')?.click()}
+                                        >
+                                            <Upload className="mr-2 h-4 w-4" /> Upload
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted/20 flex items-center justify-center group">
-                            <Image 
-                                src={customImage || placeholderImageMap.get(newItemImageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
-                                alt="Preview" 
-                                fill 
-                                className="object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="text-white font-black uppercase text-xs tracking-widest flex gap-2 items-center">
-                                    <ImageIcon className="h-4 w-4" /> Item Preview
-                                </span>
+                            <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted/20 flex items-center justify-center group">
+                                <Image 
+                                    src={customImage || placeholderImageMap.get(newItemImageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
+                                    alt="Preview" 
+                                    fill 
+                                    className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="text-white font-black uppercase text-xs tracking-widest flex gap-2 items-center">
+                                        <ImageIcon className="h-4 w-4" /> Item Preview
+                                    </span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center space-x-4 pt-2">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="isVeg" checked={newItemIsVeg} onCheckedChange={(val: boolean) => setNewItemIsVeg(val)} />
-                                <Label htmlFor="isVeg">Vegetarian</Label>
+                            <div className="flex items-center space-x-6 pt-2 bg-muted/30 p-4 rounded-xl">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="isVeg" checked={newItemIsVeg} onCheckedChange={(val: boolean) => setNewItemIsVeg(val)} />
+                                    <Label htmlFor="isVeg" className="text-xs font-black uppercase tracking-widest text-[#14532d]">Vegetarian</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="isGlobal" checked={newItemGlobal} onCheckedChange={(val: boolean) => setNewItemGlobal(val)} />
+                                    <Label htmlFor="isGlobal" className="text-xs font-black uppercase tracking-widest text-[#14532d]">Global Availability</Label>
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="isGlobal" checked={newItemGlobal} onCheckedChange={(val: boolean) => setNewItemGlobal(val)} />
-                                <Label htmlFor="isGlobal">Global Availability</Label>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="variations" className="space-y-4">
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Size & Pricing Variations</h4>
+                              <Button variant="outline" size="sm" onClick={handleAddVariation} className="h-8 font-black uppercase text-[10px] tracking-widest text-[#14532d]">
+                                <PlusCircle className="mr-1 h-3 w-3" /> Add Variation
+                              </Button>
                             </div>
-                        </div>
+                            
+                            <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                              {newItemVariations.length === 0 ? (
+                                <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
+                                  <Settings2 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No variations defined.</p>
+                                </div>
+                              ) : (
+                                newItemVariations.map((v, i) => (
+                                  <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-xl border shadow-sm">
+                                    <div className="flex-1 space-y-1">
+                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Name</Label>
+                                      <Input 
+                                        placeholder="e.g. Medium" 
+                                        value={v.name} 
+                                        onChange={e => handleUpdateVariation(i, 'name', e.target.value)}
+                                        className="h-8 font-bold"
+                                      />
+                                    </div>
+                                    <div className="w-24 space-y-1">
+                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Price (₹)</Label>
+                                      <Input 
+                                        type="number" 
+                                        placeholder="0" 
+                                        value={v.price} 
+                                        onChange={e => handleUpdateVariation(i, 'price', Number(e.target.value))}
+                                        className="h-8 font-black text-[#14532d]"
+                                      />
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveVariation(i)} className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="addons" className="space-y-4">
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Extra Toppings & Add-ons</h4>
+                              <Button variant="outline" size="sm" onClick={handleAddAddon} className="h-8 font-black uppercase text-[10px] tracking-widest text-[#14532d]">
+                                <PlusCircle className="mr-1 h-3 w-3" /> Add Add-on
+                              </Button>
+                            </div>
+
+                            <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                              {newItemAddons.length === 0 ? (
+                                <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
+                                  <Settings2 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No add-ons defined.</p>
+                                </div>
+                              ) : (
+                                newItemAddons.map((a, i) => (
+                                  <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-xl border shadow-sm">
+                                    <div className="flex-1 space-y-1">
+                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Add-on Name</Label>
+                                      <Input 
+                                        placeholder="e.g. Extra Cheese" 
+                                        value={a.name} 
+                                        onChange={e => handleUpdateAddon(i, 'name', e.target.value)}
+                                        className="h-8 font-bold"
+                                      />
+                                    </div>
+                                    <div className="w-24 space-y-1">
+                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Price (₹)</Label>
+                                      <Input 
+                                        type="number" 
+                                        placeholder="0" 
+                                        value={a.price} 
+                                        onChange={e => handleUpdateAddon(i, 'price', Number(e.target.value))}
+                                        className="h-8 font-black text-[#14532d]"
+                                      />
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveAddon(i)} className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </div>
-                    <DialogFooter>
-                        <Button onClick={handleAddItem} className="bg-[#14532d] hover:bg-[#0f4023] w-full">Save Product</Button>
+
+                    <DialogFooter className="p-6 bg-muted/50 rounded-b-2xl border-t gap-3 sm:gap-0">
+                        <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="font-black uppercase text-xs tracking-widest h-12">Cancel</Button>
+                        <Button onClick={handleAddItem} className="bg-[#14532d] hover:bg-[#0f4023] font-black uppercase text-xs tracking-widest h-12 px-10">Save Product</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -302,6 +446,15 @@ export default function FranchiseMenuPage() {
                                     <TableCell>
                                         <p className="font-medium">{item.name}</p>
                                         <p className="text-sm text-muted-foreground hidden md:block line-clamp-1">{item.description}</p>
+                                        {item.variations && item.variations.length > 0 && (
+                                          <div className="flex gap-1 mt-1">
+                                            {item.variations.map((v, idx) => (
+                                              <span key={idx} className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-muted rounded-full">
+                                                {v.name}: ₹{v.price}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1">

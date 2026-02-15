@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "userProfile": {
@@ -64,7 +65,27 @@
             "isVeg": { "type": "boolean" },
             "categoryId": { "type": "string" },
             "imageId": { "type": "string" },
-            "isAvailableGlobally": {"type": "boolean", "description": "If the item is available across all outlets (franchise controlled)."}
+            "isAvailableGlobally": {"type": "boolean", "description": "If the item is available across all outlets (franchise controlled)."},
+            "variations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "price": { "type": "number" }
+                }
+              }
+            },
+            "addons": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "price": { "type": "number" }
+                }
+              }
+            }
         },
         "required": ["name", "price", "isVeg", "categoryId", "isAvailableGlobally"]
     },
