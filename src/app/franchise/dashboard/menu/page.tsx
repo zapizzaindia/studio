@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MenuItem, Category, MenuItemVariation, MenuItemAddon } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap, PlaceHolderImages } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Save, Layers, Upload, ImageIcon, PlusCircle, Settings2 } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket } from 'lucide-react';
 import { useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -39,6 +39,7 @@ export default function FranchiseMenuPage() {
   const [newItemGlobal, setNewItemGlobal] = useState(true);
   const [newItemVariations, setNewItemVariations] = useState<MenuItemVariation[]>([]);
   const [newItemAddons, setNewItemAddons] = useState<MenuItemAddon[]>([]);
+  const [newItemSides, setNewItemSides] = useState<string[]>([]);
   const [customImage, setCustomImage] = useState<string | null>(null);
 
   // New Category State
@@ -86,6 +87,12 @@ export default function FranchiseMenuPage() {
     setNewItemAddons(updated);
   };
 
+  const handleToggleSide = (itemId: string) => {
+    setNewItemSides(prev => 
+      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
+    );
+  };
+
   const handleAddItem = () => {
     if (!newItemName || (!newItemPrice && newItemVariations.length === 0) || !newItemCategory) {
         toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out Name, Price (or Variations) and Category.' });
@@ -108,6 +115,7 @@ export default function FranchiseMenuPage() {
     setNewItemGlobal(true);
     setNewItemVariations([]);
     setNewItemAddons([]);
+    setNewItemSides([]);
     setCustomImage(null);
     setIsAddDialogOpen(false);
   };
@@ -205,10 +213,11 @@ export default function FranchiseMenuPage() {
                     
                     <div className="p-6">
                       <Tabs defaultValue="general" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50 p-1 rounded-xl">
+                        <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50 p-1 rounded-xl">
                           <TabsTrigger value="general" className="font-black uppercase text-[10px] tracking-widest">General</TabsTrigger>
                           <TabsTrigger value="variations" className="font-black uppercase text-[10px] tracking-widest">Variations</TabsTrigger>
                           <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest">Add-ons</TabsTrigger>
+                          <TabsTrigger value="sides" className="font-black uppercase text-[10px] tracking-widest">Sides</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="general" className="space-y-4">
@@ -292,11 +301,11 @@ export default function FranchiseMenuPage() {
 
                             <div className="flex items-center space-x-6 pt-2 bg-muted/30 p-4 rounded-xl">
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="isVeg" checked={newItemIsVeg} onCheckedChange={(val: boolean) => setNewItemIsVeg(val)} />
+                                    <Checkbox id="isVeg" checked={newItemIsVeg} onCheckedChange={(val: any) => setNewItemIsVeg(!!val)} />
                                     <Label htmlFor="isVeg" className="text-xs font-black uppercase tracking-widest text-[#14532d]">Vegetarian</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="isGlobal" checked={newItemGlobal} onCheckedChange={(val: boolean) => setNewItemGlobal(val)} />
+                                    <Checkbox id="isGlobal" checked={newItemGlobal} onCheckedChange={(val: any) => setNewItemGlobal(!!val)} />
                                     <Label htmlFor="isGlobal" className="text-xs font-black uppercase tracking-widest text-[#14532d]">Global Availability</Label>
                                 </div>
                             </div>
@@ -395,6 +404,47 @@ export default function FranchiseMenuPage() {
                               )}
                             </div>
                           </div>
+                        </TabsContent>
+
+                        <TabsContent value="sides" className="space-y-4">
+                           <div className="space-y-4">
+                             <div className="flex justify-between items-center">
+                               <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Recommended Side Items</h4>
+                             </div>
+                             
+                             <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
+                               {menuItems?.length === 0 ? (
+                                 <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
+                                   <ShoppingBasket className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No side items found.</p>
+                                 </div>
+                               ) : (
+                                 menuItems?.map(item => (
+                                   <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-xl border shadow-sm hover:border-[#14532d] transition-colors">
+                                      <div className="flex items-center gap-3">
+                                         <div className="h-8 w-8 relative rounded overflow-hidden flex-shrink-0">
+                                            <Image 
+                                              src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
+                                              alt={item.name} 
+                                              fill 
+                                              className="object-cover" 
+                                            />
+                                         </div>
+                                         <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-[#14532d]">{item.name}</span>
+                                            <span className="text-[9px] font-black text-muted-foreground uppercase">₹{item.price}</span>
+                                         </div>
+                                      </div>
+                                      <Checkbox 
+                                        id={`side-${item.id}`} 
+                                        checked={newItemSides.includes(item.id)} 
+                                        onCheckedChange={() => handleToggleSide(item.id)} 
+                                      />
+                                   </div>
+                                 ))
+                               )}
+                             </div>
+                           </div>
                         </TabsContent>
                       </Tabs>
                     </div>

@@ -1,5 +1,5 @@
 
-import type { Timestamp } from 'firebase/firestore';
+import type { { Timestamp } } from 'firebase/firestore';
 
 export type City = {
   id: string;
@@ -33,6 +33,7 @@ export type MenuItem = {
   isAvailableGlobally: boolean;
   variations?: MenuItemVariation[];
   addons?: MenuItemAddon[];
+  recommendedSides?: string[];
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';
