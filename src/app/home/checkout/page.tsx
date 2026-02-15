@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -100,10 +100,13 @@ export default function CheckoutPage() {
       total: calculations.finalTotal,
       status: "New",
       createdAt: serverTimestamp(),
-      outletId: outlet.id
+      outletId: outlet.id,
+      paymentMethod: "Online"
     };
 
     try {
+      // Simulate Razorpay trigger for demo purposes
+      await new Promise(resolve => setTimeout(resolve, 1500));
       await addDoc(collection(db, 'orders'), orderData);
       clearCart();
       router.push('/home/checkout/success');
@@ -259,8 +262,11 @@ export default function CheckoutPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-[#14532d]" />
-            <span className="text-[11px] font-black uppercase text-[#333333]">Cash on Delivery</span>
+            <ShieldCheck className="h-5 w-5 text-[#14532d]" />
+            <div className="flex flex-col">
+              <span className="text-[11px] font-black uppercase text-[#333333]">Secure Online Payment</span>
+              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">100% Secure Checkout</span>
+            </div>
           </div>
         </div>
         <Button 
@@ -268,7 +274,7 @@ export default function CheckoutPage() {
           disabled={isPlacing}
           className="w-full h-14 bg-[#e31837] hover:bg-[#c61430] text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg"
         >
-          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : `PAY ₹${Math.round(calculations.finalTotal)}`}
+          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : `PROCEED TO PAY ₹${Math.round(calculations.finalTotal)}`}
         </Button>
       </div>
     </div>
