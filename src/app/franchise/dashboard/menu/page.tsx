@@ -29,6 +29,7 @@ export default function FranchiseMenuPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   
   // New Item State
   const [newItemName, setNewItemName] = useState("");
@@ -46,6 +47,7 @@ export default function FranchiseMenuPage() {
   // New Category State
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
+  const [categoryCustomImage, setCategoryCustomImage] = useState<string | null>(null);
 
   const isLoading = menuItemsLoading || categoriesLoading;
   const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
@@ -75,6 +77,24 @@ export default function FranchiseMenuPage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCategoryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCategoryCustomImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditCategory = (cat: Category) => {
+    setEditingCategory(cat);
+    setNewCategoryName(cat.name);
+    setNewCategoryImageId(cat.imageId || "cat_veg");
+    setCategoryCustomImage(null);
   };
 
   const handleAddVariation = () => {
@@ -163,12 +183,14 @@ export default function FranchiseMenuPage() {
     if (!newCategoryName) return;
 
     toast({
-        title: "Category updated (Demo Mode)",
-        description: `"${newCategoryName}" is now active with its assigned image.`
+        title: editingCategory ? "Category updated (Demo Mode)" : "Category created (Demo Mode)",
+        description: `"${newCategoryName}" is now active.`
     });
 
     setNewCategoryName("");
     setNewCategoryImageId("cat_veg");
+    setCategoryCustomImage(null);
+    setEditingCategory(null);
   };
 
   const handleDeleteCategory = (catName: string) => {
@@ -187,7 +209,7 @@ export default function FranchiseMenuPage() {
         </div>
         
         <div className="flex gap-2">
-            <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+            <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) setEditingCategory(null); }}>
                 <DialogTrigger asChild>
                     <Button variant="outline"><Layers className="mr-2 h-4 w-4" /> Manage Categories</Button>
                 </DialogTrigger>
@@ -196,7 +218,7 @@ export default function FranchiseMenuPage() {
                         <DialogTitle>Menu Categories</DialogTitle>
                         <DialogDescription>View and manage your menu organization and imagery.</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="space-y-6 py-4">
                         <div className="space-y-2">
                             <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Existing Categories</Label>
                             <div className="grid grid-cols-1 gap-2 border rounded-md p-2 max-h-48 overflow-y-auto bg-muted/20">
@@ -213,14 +235,19 @@ export default function FranchiseMenuPage() {
                                             </div>
                                             <span className="font-bold text-[#14532d]">{cat.name}</span>
                                         </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => handleDeleteCategory(cat.name)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex gap-1">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(cat)}>
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                onClick={() => handleDeleteCategory(cat.name)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 )) : <p className="text-center py-4 text-xs text-muted-foreground">No categories found.</p>}
                             </div>
@@ -228,19 +255,39 @@ export default function FranchiseMenuPage() {
                         
                         <Separator />
                         
-                        <div className="space-y-3">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Add/Update Category</Label>
-                            <div className="space-y-2">
-                                <Input 
-                                    placeholder="Category Name (e.g. Sides & Dips)" 
-                                    value={newCategoryName} 
-                                    onChange={e => setNewCategoryName(e.target.value)} 
-                                    className="font-bold"
-                                />
-                                <div className="flex gap-2">
-                                    <Select value={newCategoryImageId} onValueChange={setNewCategoryImageId}>
-                                        <SelectTrigger className="flex-1 font-bold">
-                                            <SelectValue placeholder="Select Image" />
+                        <div className="space-y-4 bg-muted/30 p-4 rounded-xl border">
+                            <Label className="text-xs font-black uppercase tracking-widest text-[#14532d]">
+                                {editingCategory ? 'Edit Category' : 'Add New Category'}
+                            </Label>
+                            
+                            <div className="flex items-center gap-4">
+                                <div className="relative h-16 w-16 rounded-xl overflow-hidden border bg-white shadow-inner flex-shrink-0 flex items-center justify-center">
+                                    <Image 
+                                        src={categoryCustomImage || placeholderImageMap.get(newCategoryImageId)?.imageUrl || ''} 
+                                        alt="Preview" 
+                                        fill 
+                                        className="object-cover" 
+                                    />
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                    <Input 
+                                        type="file" 
+                                        id="cat-img-upload" 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                        onChange={handleCategoryFileChange} 
+                                    />
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="w-full h-8 text-[10px] font-black uppercase tracking-widest"
+                                        onClick={() => document.getElementById('cat-img-upload')?.click()}
+                                    >
+                                        <Upload className="mr-2 h-3.5 w-3.5" /> Upload Photo
+                                    </Button>
+                                    <Select value={newCategoryImageId} onValueChange={(v) => { setNewCategoryImageId(v); setCategoryCustomImage(null); }}>
+                                        <SelectTrigger className="h-8 text-[10px] font-bold">
+                                            <SelectValue placeholder="Or Pick Placeholder" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {PlaceHolderImages.filter(img => img.id.startsWith('cat_')).map(img => (
@@ -248,8 +295,24 @@ export default function FranchiseMenuPage() {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <Button onClick={handleAddCategory} className="bg-[#14532d] hover:bg-[#0f4023]">Save</Button>
                                 </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <Input 
+                                    placeholder="Category Name (e.g. Sides & Dips)" 
+                                    value={newCategoryName} 
+                                    onChange={e => setNewCategoryName(e.target.value)} 
+                                    className="font-bold h-10"
+                                />
+                                <Button onClick={handleAddCategory} className="w-full bg-[#14532d] hover:bg-[#0f4023] h-10 font-black uppercase text-xs tracking-widest">
+                                    {editingCategory ? 'Update and Save' : 'Create Category'}
+                                </Button>
+                                {editingCategory && (
+                                    <Button variant="ghost" className="w-full h-8 text-[9px] uppercase font-bold" onClick={() => { setEditingCategory(null); setNewCategoryName(""); }}>
+                                        Cancel Edit
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
