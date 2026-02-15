@@ -258,6 +258,44 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Trending Now */}
+      <div className="mt-12">
+        <div className="px-6 flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-[#14532d]" />
+            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Trending Now</h2>
+          </div>
+        </div>
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
+          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
+            <Skeleton key={i} className="h-52 w-40 rounded-[24px] flex-shrink-0" />
+          )) : menuItems?.slice(0, 5).map((item) => (
+            <div 
+              key={item.id} 
+              className="flex flex-col gap-3 w-40 flex-shrink-0 group cursor-pointer"
+              onClick={() => handleAddClick(item)}
+            >
+              <div className="relative h-40 w-full rounded-[24px] overflow-hidden shadow-lg group-active:scale-95 transition-transform">
+                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
+                   <PlusCircle className="h-5 w-5 text-[#14532d]" />
+                </div>
+              </div>
+              <div className="px-1">
+                <h4 className="text-[11px] font-black text-[#333333] uppercase leading-tight line-clamp-1">{item.name}</h4>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[12px] font-black text-[#14532d]">₹{item.price}</span>
+                  <div className="flex items-center gap-0.5 text-[#14532d]">
+                    <Star className="h-2.5 w-2.5 fill-current" />
+                    <span className="text-[9px] font-bold text-muted-foreground">4.8</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* TOP OFFERS */}
       <div className="mt-12">
         <div className="px-6 mb-6">
