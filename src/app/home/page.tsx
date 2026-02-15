@@ -278,7 +278,12 @@ export default function HomePage() {
               onClick={() => router.push(`/home/menu?category=${cat.id}`)}
             >
               <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-[#14532d] transition-all shadow-md active:scale-95">
-                <Image src={`https://picsum.photos/seed/${cat.id}/300/300`} alt={cat.name} fill className="object-cover" />
+                <Image 
+                    src={placeholderImageMap.get(cat.imageId || 'cat_veg')?.imageUrl || `https://picsum.photos/seed/${cat.id}/300/300`} 
+                    alt={cat.name} 
+                    fill 
+                    className="object-cover" 
+                />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
               </div>
               <span className="text-[10px] font-black text-[#14532d] uppercase tracking-tighter text-center max-w-[80px] line-clamp-1">{cat.name}</span>

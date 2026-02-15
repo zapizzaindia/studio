@@ -16,17 +16,11 @@ export const MOCK_OUTLETS: Outlet[] = [
 ];
 
 export const MOCK_CATEGORIES: Category[] = [
-  { id: 'veg-pizzas', name: 'Veg Pizzas' },
-  { id: 'non-veg-pizzas', name: 'Non-Veg Pizzas' },
-  { id: 'beverages', name: 'Beverages' },
-  { id: 'desserts', name: 'Desserts' },
+  { id: 'veg-pizzas', name: 'Veg Pizzas', imageId: 'cat_veg', order: 1 },
+  { id: 'non-veg-pizzas', name: 'Non-Veg Pizzas', imageId: 'cat_nonveg', order: 2 },
+  { id: 'beverages', name: 'Beverages', imageId: 'cat_beverages', order: 3 },
+  { id: 'desserts', name: 'Desserts', imageId: 'cat_desserts', order: 4 },
 ];
-
-// Add order property to categories for sorting
-(MOCK_CATEGORIES[0] as any).order = 1;
-(MOCK_CATEGORIES[1] as any).order = 2;
-(MOCK_CATEGORIES[2] as any).order = 3;
-(MOCK_CATEGORIES[3] as any).order = 4;
 
 export const MOCK_MENU_ITEMS: MenuItem[] = [
   {
@@ -44,7 +38,7 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
         name: 'Regular', 
         price: 249,
         addons: [
-          { name: 'Extra Cheese', price: 75 },
+          { name: 'Extra Cheese (Reg)', price: 75 },
           { name: 'Fresh Basil', price: 20 }
         ]
       },
@@ -52,16 +46,8 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
         name: 'Medium', 
         price: 449,
         addons: [
-          { name: 'Large Mozzarella Scoop', price: 120 },
-          { name: 'Olive Oil Drizzle', price: 40 },
-          { name: 'Extra Cheese', price: 100 }
-        ]
-      },
-      { 
-        name: 'Large', 
-        price: 649,
-        addons: [
-          { name: 'Party Pack Toppings', price: 200 }
+          { name: 'Double Cheese (Med)', price: 120 },
+          { name: 'Olive Oil Drizzle', price: 40 }
         ]
       }
     ],

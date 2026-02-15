@@ -45,6 +45,7 @@ export default function FranchiseMenuPage() {
 
   // New Category State
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
 
   const isLoading = menuItemsLoading || categoriesLoading;
   const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
@@ -138,13 +139,11 @@ export default function FranchiseMenuPage() {
         return;
     }
 
-    // Demo Mode Mock
     toast({ 
         title: editingItem ? "Item updated successfully (Demo Mode)" : "Item added successfully (Demo Mode)", 
         description: `${newItemName} has been ${editingItem ? 'updated in' : 'added to'} the global menu.` 
     });
 
-    // Reset Form
     setNewItemName("");
     setNewItemDesc("");
     setNewItemPrice("");
@@ -163,13 +162,13 @@ export default function FranchiseMenuPage() {
   const handleAddCategory = () => {
     if (!newCategoryName) return;
 
-    // Demo Mode Mock
     toast({
-        title: "Category created (Demo Mode)",
-        description: `"${newCategoryName}" is now available for menu organization.`
+        title: "Category updated (Demo Mode)",
+        description: `"${newCategoryName}" is now active with its assigned image.`
     });
 
     setNewCategoryName("");
+    setNewCategoryImageId("cat_veg");
   };
 
   const handleDeleteCategory = (catName: string) => {
@@ -195,7 +194,7 @@ export default function FranchiseMenuPage() {
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Menu Categories</DialogTitle>
-                        <DialogDescription>View and manage your menu organization.</DialogDescription>
+                        <DialogDescription>View and manage your menu organization and imagery.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -203,7 +202,17 @@ export default function FranchiseMenuPage() {
                             <div className="grid grid-cols-1 gap-2 border rounded-md p-2 max-h-48 overflow-y-auto bg-muted/20">
                                 {sortedCategories.length > 0 ? sortedCategories.map(cat => (
                                     <div key={cat.id} className="flex justify-between items-center text-sm p-3 bg-white border rounded-lg shadow-sm">
-                                        <span className="font-bold text-[#14532d]">{cat.name}</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative h-8 w-8 rounded-full overflow-hidden border">
+                                                <Image 
+                                                    src={placeholderImageMap.get(cat.imageId || 'cat_veg')?.imageUrl || ''} 
+                                                    alt={cat.name} 
+                                                    fill 
+                                                    className="object-cover" 
+                                                />
+                                            </div>
+                                            <span className="font-bold text-[#14532d]">{cat.name}</span>
+                                        </div>
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
@@ -220,16 +229,27 @@ export default function FranchiseMenuPage() {
                         <Separator />
                         
                         <div className="space-y-3">
-                            <Label htmlFor="new-cat" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Add New Category</Label>
-                            <div className="flex gap-2">
+                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Add/Update Category</Label>
+                            <div className="space-y-2">
                                 <Input 
-                                    id="new-cat" 
-                                    placeholder="e.g. Sides & Dips" 
+                                    placeholder="Category Name (e.g. Sides & Dips)" 
                                     value={newCategoryName} 
                                     onChange={e => setNewCategoryName(e.target.value)} 
                                     className="font-bold"
                                 />
-                                <Button onClick={handleAddCategory} className="bg-[#14532d] hover:bg-[#0f4023]">Add</Button>
+                                <div className="flex gap-2">
+                                    <Select value={newCategoryImageId} onValueChange={setNewCategoryImageId}>
+                                        <SelectTrigger className="flex-1 font-bold">
+                                            <SelectValue placeholder="Select Image" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {PlaceHolderImages.filter(img => img.id.startsWith('cat_')).map(img => (
+                                                <SelectItem key={img.id} value={img.id}>{img.id.replace('cat_', '').toUpperCase()}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button onClick={handleAddCategory} className="bg-[#14532d] hover:bg-[#0f4023]">Save</Button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -300,7 +320,7 @@ export default function FranchiseMenuPage() {
                                             <SelectValue placeholder="Select image" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {PlaceHolderImages.map(img => (
+                                            {PlaceHolderImages.filter(img => !img.id.startsWith('banner_') && !img.id.startsWith('cat_')).map(img => (
                                                 <SelectItem key={img.id} value={img.id}>{img.id.replace(/_/g, ' ').toUpperCase()}</SelectItem>
                                             ))}
                                         </SelectContent>
@@ -542,7 +562,17 @@ export default function FranchiseMenuPage() {
         ))
       ) : sortedCategories.map(category => (
         <div key={category.id} id={`cat-${category.id}`} className="mb-8">
-            <h2 className="font-headline text-2xl font-bold mb-4">{category.name}</h2>
+            <div className="flex items-center gap-3 mb-4">
+                <div className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-primary shadow-sm">
+                    <Image 
+                        src={placeholderImageMap.get(category.imageId || 'cat_veg')?.imageUrl || ''} 
+                        alt={category.name} 
+                        fill 
+                        className="object-cover" 
+                    />
+                </div>
+                <h2 className="font-headline text-2xl font-bold">{category.name}</h2>
+            </div>
             <Card>
                 <CardContent className="p-0">
                     <Table>

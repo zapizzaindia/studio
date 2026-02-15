@@ -9,6 +9,8 @@ export type City = {
 export type Category = {
   id: string;
   name: string;
+  imageId?: string;
+  order?: number;
 };
 
 export type MenuItemVariation = {

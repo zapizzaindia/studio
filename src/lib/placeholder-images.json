@@ -49,10 +49,28 @@
       "imageHint": "chocolate cake"
     },
     {
-      "id": "header_bg",
-      "description": "Animated-style background for the welcome header",
-      "imageUrl": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80",
-      "imageHint": "pizza header"
+      "id": "cat_veg",
+      "description": "Vegetarian pizza category image",
+      "imageUrl": "https://images.unsplash.com/photo-1574071318508-1cdbad80ad38?auto=format&fit=crop&q=80&w=300",
+      "imageHint": "veg pizza"
+    },
+    {
+      "id": "cat_nonveg",
+      "description": "Non-vegetarian pizza category image",
+      "imageUrl": "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&q=80&w=300",
+      "imageHint": "meat pizza"
+    },
+    {
+      "id": "cat_beverages",
+      "description": "Beverages category image",
+      "imageUrl": "https://images.unsplash.com/photo-1544145945-f904253db0ad?auto=format&fit=crop&q=80&w=300",
+      "imageHint": "soft drinks"
+    },
+    {
+      "id": "cat_desserts",
+      "description": "Desserts category image",
+      "imageUrl": "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=300",
+      "imageHint": "sweet dessert"
     }
   ]
 }
