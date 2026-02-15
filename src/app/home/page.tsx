@@ -135,53 +135,56 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header with Custom GIF Background */}
-      <div className="relative bg-[#14532d] text-white px-6 pt-12 pb-64 rounded-b-[40px] shadow-lg overflow-hidden">
-        {/* CUSTOM GIF SLOT - Update the src URL with your direct GIF link */}
+      <div className="relative bg-black text-white px-6 pt-12 pb-48 rounded-b-[40px] shadow-lg overflow-hidden">
+        {/* CUSTOM GIF SLOT - Ensure the URL is a direct link to the .gif file */}
         <div className="absolute inset-0 z-0">
           <motion.div 
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            animate={{ scale: [1, 1.02, 1] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
             className="absolute inset-0"
           >
             <img 
               src="https://jumpshare.com/s/SLpdAMrhVcxT9ckCqvFB"
               alt="Custom Promotional Background" 
-              className="w-full h-full object-cover opacity-70 grayscale brightness-125"
+              className="w-full h-full object-cover opacity-100"
               onError={(e) => {
                 // Fallback to placeholder if GIF link fails
-                e.currentTarget.src = "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80";
+                e.currentTarget.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExOWdvNzZnM2xxZjNldWxhcjk4OTlzbXN1NzVhbjhsZm55MnFpMGR6NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ppPgn2ofMpx2P0YWWH/giphy.gif";
               }}
             />
           </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/20 via-[#14532d]/60 to-[#14532d]" />
+          {/* Transparent bottom gradient for text contrast without obscuring the image */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
           
           {/* Decorative Floating Icon */}
           <motion.div 
-            animate={{ y: [0, -15, 0], rotate: [0, 15, 0] }}
+            animate={{ y: [0, -10, 0], rotate: [0, 10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-10 right-10 opacity-10"
+            className="absolute top-10 right-10 opacity-20"
           >
-            <Pizza className="w-24 h-24" />
+            <Pizza className="w-16 h-16" />
           </motion.div>
         </div>
 
         <div className="relative z-10 flex justify-between items-start mb-2">
           <div>
-            <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Welcome Back,</p>
-            <h1 className="text-2xl font-black italic tracking-tight">{user?.displayName?.split(' ')[0] || 'Gourmet'}!</h1>
+            <p className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Welcome Back,</p>
+            <h1 className="text-2xl font-black italic tracking-tighter drop-shadow-md">
+              {user?.displayName?.split(' ')[0] || 'Gourmet'}!
+            </h1>
           </div>
           
-          <div className="flex bg-white/10 p-1 rounded-2xl backdrop-blur-md">
+          <div className="flex bg-white/20 p-1 rounded-2xl backdrop-blur-xl border border-white/10 shadow-2xl">
             <button 
               onClick={() => setOrderType("delivery")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all ${orderType === "delivery" ? 'bg-white text-[#14532d]' : 'text-white/60'}`}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-300 ${orderType === "delivery" ? 'bg-white text-[#14532d] shadow-sm' : 'text-white'}`}
             >
               <Bike className="h-3.5 w-3.5" />
               <span className="text-[10px] font-black uppercase tracking-widest">Delivery</span>
             </button>
             <button 
               onClick={() => setOrderType("takeaway")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all ${orderType === "takeaway" ? 'bg-white text-[#14532d]' : 'text-white/60'}`}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-300 ${orderType === "takeaway" ? 'bg-white text-[#14532d] shadow-sm' : 'text-white'}`}
             >
               <ShoppingBasket className="h-3.5 w-3.5" />
               <span className="text-[10px] font-black uppercase tracking-widest">Takeaway</span>
@@ -191,7 +194,7 @@ export default function HomePage() {
       </div>
 
       {/* Search Section */}
-      <div className="px-6 -mt-10">
+      <div className="px-6 -mt-8">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-[#14532d] transition-colors" />
           <Input 
