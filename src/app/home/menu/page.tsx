@@ -1,13 +1,12 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ShoppingBag, List, X, Search } from "lucide-react";
+import { ArrowLeft, ShoppingBag, List, X, Search, Check, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { Category, MenuItem } from "@/lib/types";
+import type { Category, MenuItem, MenuItemVariation, MenuItemAddon } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCollection } from "@/firebase";
@@ -15,6 +14,11 @@ import { placeholderImageMap } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
 import { AnimatePresence, motion } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 export default function MenuPage() {
   const router = useRouter();
@@ -27,6 +31,11 @@ export default function MenuPage() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Customization State
+  const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
+  const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
   useEffect(() => {
     if (initialCategory && !categoriesLoading) {
@@ -45,6 +54,23 @@ export default function MenuPage() {
     setIsMenuOpen(false);
   };
 
+  const handleAddClick = (item: MenuItem) => {
+    if ((item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0)) {
+      setCustomizingItem(item);
+      setSelectedVariation(item.variations?.[0] || null);
+      setSelectedAddons([]);
+    } else {
+      addItem(item);
+    }
+  };
+
+  const handleConfirmCustomization = () => {
+    if (customizingItem) {
+      addItem(customizingItem, selectedVariation || undefined, selectedAddons);
+      setCustomizingItem(null);
+    }
+  };
+
   const filteredMenuItems = useMemo(() => {
     if (!menuItems) return [];
     if (!searchQuery) return menuItems;
@@ -53,6 +79,13 @@ export default function MenuPage() {
       item.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [menuItems, searchQuery]);
+
+  const currentCustomPrice = useMemo(() => {
+    if (!customizingItem) return 0;
+    const base = selectedVariation ? selectedVariation.price : customizingItem.price;
+    const addons = selectedAddons.reduce((sum, a) => sum + a.price, 0);
+    return base + addons;
+  }, [customizingItem, selectedVariation, selectedAddons]);
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-white relative">
@@ -98,13 +131,8 @@ export default function MenuPage() {
              </h3>
              <div className="space-y-8">
                 {filteredMenuItems.map((item) => (
-                  <MenuItemCard key={item.id} item={item} onAdd={() => addItem(item)} />
+                  <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} />
                 ))}
-                {filteredMenuItems.length === 0 && (
-                  <div className="text-center py-20">
-                    <p className="text-muted-foreground font-medium italic">Oops! No pizzas found for "{searchQuery}"</p>
-                  </div>
-                )}
              </div>
           </div>
         ) : (
@@ -120,7 +148,7 @@ export default function MenuPage() {
                 </h3>
                 <div className="space-y-8">
                   {categoryItems.map((item) => (
-                    <MenuItemCard key={item.id} item={item} onAdd={() => addItem(item)} />
+                    <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} />
                   ))}
                 </div>
               </div>
@@ -128,6 +156,102 @@ export default function MenuPage() {
           })
         )}
       </div>
+
+      {/* Customization Dialog */}
+      <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
+        <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
+          {customizingItem && (
+            <>
+              <div className="relative h-48 w-full flex-shrink-0">
+                <Image 
+                  src={placeholderImageMap.get(customizingItem.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
+                  alt={customizingItem.name} 
+                  fill 
+                  className="object-cover" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
+                   <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center ${customizingItem.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
+                      <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+                   </div>
+                   <h2 className="text-xl font-black text-white uppercase tracking-tight italic">{customizingItem.name}</h2>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto space-y-8 flex-1">
+                {/* Variations (Sizes) */}
+                {customizingItem.variations && customizingItem.variations.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Select Size</h3>
+                      <Badge variant="secondary" className="text-[9px] uppercase font-black bg-[#14532d]/10 text-[#14532d]">Required</Badge>
+                    </div>
+                    <RadioGroup 
+                      value={selectedVariation?.name} 
+                      onValueChange={(val) => setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null)}
+                      className="space-y-3"
+                    >
+                      {customizingItem.variations.map((v) => (
+                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer">
+                            <span className="text-sm font-bold text-[#333333] uppercase">{v.name}</span>
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black text-[#14532d]">₹{v.price}</span>
+                            <RadioGroupItem value={v.name} id={`v-${v.name}`} className="border-[#14532d]" />
+                          </div>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Add-ons */}
+                {customizingItem.addons && customizingItem.addons.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Extra Toppings</h3>
+                    <div className="space-y-3">
+                      {customizingItem.addons.map((addon) => (
+                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                          <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
+                            <span className="text-sm font-bold text-[#333333] uppercase">{addon.name}</span>
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black text-[#14532d]">₹{addon.price}</span>
+                            <Checkbox 
+                              id={`a-${addon.name}`} 
+                              checked={selectedAddons.some(a => a.name === addon.name)}
+                              onCheckedChange={(checked) => {
+                                if (checked) setSelectedAddons([...selectedAddons, addon]);
+                                else setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
+                              }}
+                              className="border-[#14532d]"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Final Price</span>
+                  <span className="text-2xl font-black text-[#14532d]">₹{currentCustomPrice}</span>
+                </div>
+                <Button 
+                  onClick={handleConfirmCustomization}
+                  className="bg-[#14532d] hover:bg-[#0f4023] text-white px-10 h-14 rounded-xl font-black uppercase tracking-widest shadow-xl flex-1"
+                >
+                  ADD TO CART
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Floating Menu Button */}
       {!searchQuery && (
@@ -200,6 +324,8 @@ export default function MenuPage() {
 }
 
 function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
+  const hasOptions = (item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0);
+
   return (
     <div className="flex gap-5">
       <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
@@ -221,16 +347,27 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
           </div>
         </div>
         <div className="mt-auto flex items-center justify-between pt-3">
-          <span className="text-[15px] font-black text-[#14532d]">₹{item.price}</span>
+          <div className="flex flex-col">
+            <span className="text-[15px] font-black text-[#14532d]">₹{item.price}</span>
+            {hasOptions && <span className="text-[8px] font-bold text-muted-foreground uppercase">Options available</span>}
+          </div>
           <Button 
             size="sm" 
             onClick={onAdd}
             className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors"
           >
-            ADD
+            {hasOptions ? 'CUSTOMIZE' : 'ADD'}
           </Button>
         </div>
       </div>
     </div>
+  );
+}
+
+function Badge({ children, variant = "default", className = "" }: { children: React.ReactNode, variant?: string, className?: string }) {
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] ${className}`}>
+      {children}
+    </span>
   );
 }

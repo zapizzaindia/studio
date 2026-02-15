@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -67,7 +66,7 @@ export default function CheckoutPage() {
       return;
     }
     setAppliedCoupon(found);
-    toast({ title: "Coupon Applied!", description: `You saved ₹${found.discountType === 'percentage' ? found.discountValue + '%' : found.discountValue}.` });
+    toast({ title: "Coupon Applied!", description: `You saved ₹${found.discountValue}${found.discountType === 'percentage' ? '%' : ''}.` });
   };
 
   const handlePlaceOrder = async () => {
@@ -90,7 +89,9 @@ export default function CheckoutPage() {
         menuItemId: i.id,
         name: i.name,
         quantity: i.quantity,
-        price: i.price
+        price: i.price,
+        variation: i.selectedVariation?.name,
+        addons: i.selectedAddons?.map(a => a.name)
       })),
       subtotal: calculations.subtotal,
       gst: calculations.gstTotal,
@@ -142,20 +143,28 @@ export default function CheckoutPage() {
           </CardHeader>
           <CardContent className="p-0 bg-white">
             {items.map((item) => (
-              <div key={item.id} className="p-4 border-b last:border-0 flex items-center justify-between">
+              <div key={item.cartId} className="p-4 border-b last:border-0 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
                     <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
                   </div>
                   <div>
                     <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
-                    <span className="text-[11px] font-bold text-[#14532d] mt-1 block">₹{item.price * item.quantity}</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {item.selectedVariation && (
+                        <span className="text-[9px] font-bold bg-[#f1f2f6] text-[#666666] px-1.5 py-0.5 rounded uppercase">{item.selectedVariation.name}</span>
+                      )}
+                      {item.selectedAddons?.map(addon => (
+                        <span key={addon.name} className="text-[9px] font-bold bg-[#14532d]/5 text-[#14532d] px-1.5 py-0.5 rounded uppercase">+{addon.name}</span>
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-black text-[#14532d] mt-1.5 block">₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
-                  <button onClick={() => updateQuantity(item.id, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
+                  <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
                   <span className="text-sm font-black min-w-[20px] text-center">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
+                  <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
                 </div>
               </div>
             ))}

@@ -1,16 +1,19 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { MenuItem } from '@/lib/types';
+import type { MenuItem, MenuItemVariation, MenuItemAddon } from '@/lib/types';
 
 export interface CartItem extends MenuItem {
+  cartId: string; // Unique ID for this specific configuration
+  selectedVariation?: MenuItemVariation;
+  selectedAddons?: MenuItemAddon[];
   quantity: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: MenuItem) => void;
-  removeItem: (itemId: string) => void;
-  updateQuantity: (itemId: string, delta: number) => void;
+  addItem: (item: MenuItem, variation?: MenuItemVariation, addons?: MenuItemAddon[]) => void;
+  removeItem: (cartId: string) => void;
+  updateQuantity: (cartId: string, delta: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -36,27 +39,45 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('zapizza-cart', JSON.stringify(items));
   }, [items]);
 
-  const addItem = (item: MenuItem) => {
+  const addItem = (item: MenuItem, variation?: MenuItemVariation, addons: MenuItemAddon[] = []) => {
+    // Generate a unique ID for this specific configuration (Item + Variation + Addons)
+    const variationKey = variation?.name || 'base';
+    const addonsKey = addons.map(a => a.name).sort().join('|') || 'none';
+    const cartId = `${item.id}-${variationKey}-${addonsKey}`;
+
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const existing = prev.find((i) => i.cartId === cartId);
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.cartId === cartId ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { ...item, quantity: 1 }];
+      
+      // Calculate specific price for this item
+      const basePrice = variation ? variation.price : item.price;
+      const addonsTotal = addons.reduce((sum, a) => sum + a.price, 0);
+      const finalPrice = basePrice + addonsTotal;
+
+      return [...prev, { 
+        ...item, 
+        cartId, 
+        price: finalPrice, 
+        selectedVariation: variation, 
+        selectedAddons: addons, 
+        quantity: 1 
+      }];
     });
   };
 
-  const removeItem = (itemId: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== itemId));
+  const removeItem = (cartId: string) => {
+    setItems((prev) => prev.filter((i) => i.cartId !== cartId));
   };
 
-  const updateQuantity = (itemId: string, delta: number) => {
+  const updateQuantity = (cartId: string, delta: number) => {
     setItems((prev) =>
       prev
         .map((i) => {
-          if (i.id === itemId) {
+          if (i.cartId === cartId) {
             const newQty = i.quantity + delta;
             return newQty > 0 ? { ...i, quantity: newQty } : i;
           }
