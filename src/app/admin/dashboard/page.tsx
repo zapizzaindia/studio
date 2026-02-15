@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, ShoppingBag, List, AlertCircle } from "lucide-react";
+import { IndianRupee, ShoppingBag, List, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useCollection, useUser, useDoc } from "@/firebase";
@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Today's Revenue</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <IndianRupee className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">₹{todaysRevenue.toFixed(2)}</div>
