@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -12,6 +13,7 @@ import { doc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import type { GlobalSettings, Coupon } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import Script from "next/script";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -37,7 +39,6 @@ export default function CheckoutPage() {
     const deliveryFee = subtotal >= freeThreshold ? 0 : baseDelivery;
     const gstTotal = (subtotal * gstRate) / 100;
     
-    // CGST and SGST split (standard Indian practice)
     const cgst = gstTotal / 2;
     const sgst = gstTotal / 2;
 
@@ -69,6 +70,14 @@ export default function CheckoutPage() {
     toast({ title: "Coupon Applied!", description: `You saved ₹${found.discountValue}${found.discountType === 'percentage' ? '%' : ''}.` });
   };
 
+  /**
+   * RAZORPAY INTEGRATION FLOW
+   * 1. Click "Proceed to Pay" -> handlePlaceOrder triggers
+   * 2. Call Server to create Razorpay Order (returns order_id)
+   * 3. Initialize Razorpay Checkout with order_id and key_id
+   * 4. Open Razorpay Modal
+   * 5. On success callback -> Verify payment signature -> Save order to Firestore
+   */
   const handlePlaceOrder = async () => {
     if (!user) {
       toast({ title: "Please login", variant: "destructive" });
@@ -82,6 +91,7 @@ export default function CheckoutPage() {
     const savedOutlet = localStorage.getItem("zapizza-outlet");
     const outlet = savedOutlet ? JSON.parse(savedOutlet) : { id: 'default' };
 
+    // --- STEP 1: PREPARE ORDER DATA ---
     const orderData = {
       customerId: user.uid,
       customerName: user.displayName || user.email || "Customer",
@@ -101,17 +111,32 @@ export default function CheckoutPage() {
       status: "New",
       createdAt: serverTimestamp(),
       outletId: outlet.id,
-      paymentMethod: "Online"
+      paymentMethod: "Online",
+      paymentStatus: "Pending"
     };
 
     try {
-      // Simulate Razorpay trigger for demo purposes
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await addDoc(collection(db, 'orders'), orderData);
+      // --- STEP 2: TRIGGER RAZORPAY (SIMULATED) ---
+      // In production, you would call: const res = await fetch('/api/razorpay', { method: 'POST', body: JSON.stringify({ amount: calculations.finalTotal }) });
+      // const { orderId } = await res.json();
+      
+      toast({ title: "Connecting to Secure Gateway...", description: "Please do not refresh the page." });
+      
+      // Simulate Razorpay SDK latency
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // --- STEP 3: SUCCESSFUL PAYMENT HANDLER ---
+      // In real integration, this happens inside the Razorpay 'handler' callback
+      await addDoc(collection(db, 'orders'), {
+        ...orderData,
+        paymentStatus: "Success",
+        paymentId: `pay_${Math.random().toString(36).substring(7)}`, // Mock ID
+      });
+
       clearCart();
       router.push('/home/checkout/success');
     } catch (e: any) {
-      toast({ title: "Order Failed", description: e.message, variant: "destructive" });
+      toast({ title: "Payment Failed", description: e.message || "An error occurred with the gateway.", variant: "destructive" });
     } finally {
       setIsPlacing(false);
     }
@@ -131,6 +156,9 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-48">
+      {/* Razorpay Script Loader */}
+      <Script id="razorpay-checkout" src="https://checkout.razorpay.com/v1/checkout.js" />
+
       <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-6 w-6" />
