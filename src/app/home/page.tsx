@@ -144,7 +144,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header with Manual GIF Background Slot */}
-      <div className="relative bg-[#14532d] text-white px-6 pt-6 pb-12 rounded-b-[40px] shadow-lg overflow-hidden">
+      <div className="relative bg-[#14532d] text-white px-6 pt-12 pb-48 rounded-b-[40px] shadow-lg overflow-hidden">
         {/* ANIMATED BACKGROUND / GIF SLOT */}
         <div className="absolute inset-0 z-0">
           <motion.div 
@@ -156,10 +156,10 @@ export default function HomePage() {
             <img 
               src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif"
               alt="Dynamic Header" 
-              className="w-full h-full object-cover opacity-20 grayscale brightness-150"
+              className="w-full h-full object-cover opacity-40 grayscale brightness-125"
             />
           </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/40 via-[#14532d]/80 to-[#14532d]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/20 via-[#14532d]/60 to-[#14532d]" />
           
           {/* Decorative Floating Icons */}
           <motion.div 
@@ -197,7 +197,7 @@ export default function HomePage() {
       </div>
 
       {/* Search Section */}
-      <div className="px-6 -mt-6">
+      <div className="px-6 -mt-10">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-[#14532d] transition-colors" />
           <Input 
@@ -238,7 +238,7 @@ export default function HomePage() {
       <div className="mt-10 px-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Explore Menu</h2>
-          <Button variant="ghost" size="sm" className="text-xs font-black uppercase text-[#14532d] gap-1 pr-0">
+          <Button variant="ghost" size="sm" className="text-xs font-black uppercase text-[#14532d] gap-1 pr-0" onClick={() => router.push('/home/menu')}>
             See All <ChevronRight className="h-3 w-3" />
           </Button>
         </div>
@@ -343,7 +343,7 @@ export default function HomePage() {
       <div className="mt-16 px-6">
         <div className="bg-[#14532d] p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-white text-2xl font-black uppercase italic italic leading-tight mb-2 tracking-tighter">
+            <h2 className="text-white text-2xl font-black uppercase italic leading-tight mb-2 tracking-tighter">
               ENQUIRE ABOUT<br />ZAPIZZA FRANCHISE
             </h2>
             <p className="text-white/70 text-xs font-bold mb-6 max-w-[200px]">Join India's fastest growing pizza chain. 700+ Outlets across the globe.</p>
