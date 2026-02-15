@@ -14,6 +14,7 @@ export type Category = {
 export type MenuItemVariation = {
   name: string;
   price: number;
+  addons?: MenuItemAddon[];
 };
 
 export type MenuItemAddon = {

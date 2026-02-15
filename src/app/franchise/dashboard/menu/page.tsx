@@ -60,16 +60,38 @@ export default function FranchiseMenuPage() {
   };
 
   const handleAddVariation = () => {
-    setNewItemVariations([...newItemVariations, { name: "", price: 0 }]);
+    setNewItemVariations([...newItemVariations, { name: "", price: 0, addons: [] }]);
   };
 
   const handleRemoveVariation = (index: number) => {
     setNewItemVariations(newItemVariations.filter((_, i) => i !== index));
   };
 
-  const handleUpdateVariation = (index: number, field: keyof MenuItemVariation, value: string | number) => {
+  const handleUpdateVariation = (index: number, field: keyof MenuItemVariation, value: any) => {
     const updated = [...newItemVariations];
     updated[index] = { ...updated[index], [field]: value };
+    setNewItemVariations(updated);
+  };
+
+  const handleAddAddonToVariation = (vIndex: number) => {
+    const updated = [...newItemVariations];
+    const addons = updated[vIndex].addons || [];
+    updated[vIndex].addons = [...addons, { name: "", price: 0 }];
+    setNewItemVariations(updated);
+  };
+
+  const handleUpdateVariationAddon = (vIndex: number, aIndex: number, field: keyof MenuItemAddon, value: any) => {
+    const updated = [...newItemVariations];
+    const addons = [...(updated[vIndex].addons || [])];
+    addons[aIndex] = { ...addons[aIndex], [field]: value };
+    updated[vIndex].addons = addons;
+    setNewItemVariations(updated);
+  };
+
+  const handleRemoveVariationAddon = (vIndex: number, aIndex: number) => {
+    const updated = [...newItemVariations];
+    const addons = (updated[vIndex].addons || []).filter((_, i) => i !== aIndex);
+    updated[vIndex].addons = addons;
     setNewItemVariations(updated);
   };
 
@@ -216,7 +238,7 @@ export default function FranchiseMenuPage() {
                         <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50 p-1 rounded-xl">
                           <TabsTrigger value="general" className="font-black uppercase text-[10px] tracking-widest">General</TabsTrigger>
                           <TabsTrigger value="variations" className="font-black uppercase text-[10px] tracking-widest">Variations</TabsTrigger>
-                          <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest">Add-ons</TabsTrigger>
+                          <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest">Global Add-ons</TabsTrigger>
                           <TabsTrigger value="sides" className="font-black uppercase text-[10px] tracking-widest">Sides</TabsTrigger>
                         </TabsList>
 
@@ -321,7 +343,7 @@ export default function FranchiseMenuPage() {
                               </Button>
                             </div>
                             
-                            <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                            <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
                               {newItemVariations.length === 0 ? (
                                 <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
                                   <Settings2 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
@@ -329,29 +351,60 @@ export default function FranchiseMenuPage() {
                                 </div>
                               ) : (
                                 newItemVariations.map((v, i) => (
-                                  <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-xl border shadow-sm">
-                                    <div className="flex-1 space-y-1">
-                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Name</Label>
-                                      <Input 
-                                        placeholder="e.g. Medium" 
-                                        value={v.name} 
-                                        onChange={e => handleUpdateVariation(i, 'name', e.target.value)}
-                                        className="h-8 font-bold"
-                                      />
+                                  <div key={i} className="space-y-3 bg-white p-4 rounded-xl border shadow-sm">
+                                    <div className="flex gap-3 items-center">
+                                      <div className="flex-1 space-y-1">
+                                        <Label className="text-[9px] font-black uppercase text-muted-foreground">Variation Name</Label>
+                                        <Input 
+                                          placeholder="e.g. Medium" 
+                                          value={v.name} 
+                                          onChange={e => handleUpdateVariation(i, 'name', e.target.value)}
+                                          className="h-8 font-bold"
+                                        />
+                                      </div>
+                                      <div className="w-24 space-y-1">
+                                        <Label className="text-[9px] font-black uppercase text-muted-foreground">Price (₹)</Label>
+                                        <Input 
+                                          type="number" 
+                                          placeholder="0" 
+                                          value={v.price} 
+                                          onChange={e => handleUpdateVariation(i, 'price', Number(e.target.value))}
+                                          className="h-8 font-black text-[#14532d]"
+                                        />
+                                      </div>
+                                      <Button variant="ghost" size="icon" onClick={() => handleRemoveVariation(i)} className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
                                     </div>
-                                    <div className="w-24 space-y-1">
-                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Price (₹)</Label>
-                                      <Input 
-                                        type="number" 
-                                        placeholder="0" 
-                                        value={v.price} 
-                                        onChange={e => handleUpdateVariation(i, 'price', Number(e.target.value))}
-                                        className="h-8 font-black text-[#14532d]"
-                                      />
+                                    
+                                    <div className="pl-4 border-l-2 border-[#14532d]/20 space-y-2">
+                                      <div className="flex justify-between items-center">
+                                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Variation-Specific Add-ons</Label>
+                                        <Button variant="link" size="sm" onClick={() => handleAddAddonToVariation(i)} className="h-auto p-0 text-[8px] font-black uppercase text-[#14532d]">
+                                          + Add Add-on
+                                        </Button>
+                                      </div>
+                                      {v.addons?.map((va, ai) => (
+                                        <div key={ai} className="flex gap-2 items-center">
+                                          <Input 
+                                            placeholder="Topping Name" 
+                                            value={va.name} 
+                                            onChange={e => handleUpdateVariationAddon(i, ai, 'name', e.target.value)}
+                                            className="h-7 text-[10px] font-bold"
+                                          />
+                                          <Input 
+                                            type="number" 
+                                            placeholder="Price" 
+                                            value={va.price} 
+                                            onChange={e => handleUpdateVariationAddon(i, ai, 'price', Number(e.target.value))}
+                                            className="h-7 w-20 text-[10px] font-black text-[#14532d]"
+                                          />
+                                          <Button variant="ghost" size="icon" onClick={() => handleRemoveVariationAddon(i, ai)} className="h-7 w-7 text-red-400">
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ))}
                                     </div>
-                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveVariation(i)} className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
                                   </div>
                                 ))
                               )}
@@ -362,7 +415,7 @@ export default function FranchiseMenuPage() {
                         <TabsContent value="addons" className="space-y-4">
                           <div className="space-y-4">
                             <div className="flex justify-between items-center">
-                              <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Extra Toppings & Add-ons</h4>
+                              <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Global Extra Toppings & Add-ons</h4>
                               <Button variant="outline" size="sm" onClick={handleAddAddon} className="h-8 font-black uppercase text-[10px] tracking-widest text-[#14532d]">
                                 <PlusCircle className="mr-1 h-3 w-3" /> Add Add-on
                               </Button>
@@ -372,7 +425,7 @@ export default function FranchiseMenuPage() {
                               {newItemAddons.length === 0 ? (
                                 <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
                                   <Settings2 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No add-ons defined.</p>
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No global add-ons defined.</p>
                                 </div>
                               ) : (
                                 newItemAddons.map((a, i) => (

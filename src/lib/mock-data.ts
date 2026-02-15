@@ -40,9 +40,30 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
     isAvailable: true,
     isAvailableGlobally: true,
     variations: [
-      { name: 'Regular', price: 249 },
-      { name: 'Medium', price: 449 },
-      { name: 'Large', price: 649 }
+      { 
+        name: 'Regular', 
+        price: 249,
+        addons: [
+          { name: 'Extra Cheese', price: 75 },
+          { name: 'Fresh Basil', price: 20 }
+        ]
+      },
+      { 
+        name: 'Medium', 
+        price: 449,
+        addons: [
+          { name: 'Large Mozzarella Scoop', price: 120 },
+          { name: 'Olive Oil Drizzle', price: 40 },
+          { name: 'Extra Cheese', price: 100 }
+        ]
+      },
+      { 
+        name: 'Large', 
+        price: 649,
+        addons: [
+          { name: 'Party Pack Toppings', price: 200 }
+        ]
+      }
     ],
     addons: [
       { name: 'Extra Cheese', price: 75 },
@@ -61,8 +82,21 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
     isAvailable: true,
     isAvailableGlobally: true,
     variations: [
-      { name: 'Medium', price: 499 },
-      { name: 'Large', price: 699 }
+      { 
+        name: 'Medium', 
+        price: 499,
+        addons: [
+          { name: 'Double Pepperoni', price: 120 },
+          { name: 'Jalapenos', price: 45 }
+        ]
+      },
+      { 
+        name: 'Large', 
+        price: 699,
+        addons: [
+          { name: 'Pepperoni Overload', price: 180 }
+        ]
+      }
     ]
   },
   {

@@ -64,7 +64,8 @@ export default function MenuPage() {
 
     if (hasOptions) {
       setCustomizingItem(item);
-      setSelectedVariation(item.variations?.[0] || null);
+      const firstVar = item.variations?.[0] || null;
+      setSelectedVariation(firstVar);
       setSelectedAddons([]);
     } else {
       addItem(item);
@@ -93,6 +94,15 @@ export default function MenuPage() {
     const addons = selectedAddons.reduce((sum, a) => sum + a.price, 0);
     return base + addons;
   }, [customizingItem, selectedVariation, selectedAddons]);
+
+  // Determine which addons to show
+  const availableAddons = useMemo(() => {
+    if (!customizingItem) return [];
+    if (selectedVariation?.addons && selectedVariation.addons.length > 0) {
+      return selectedVariation.addons;
+    }
+    return customizingItem.addons || [];
+  }, [customizingItem, selectedVariation]);
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-white relative">
@@ -194,7 +204,11 @@ export default function MenuPage() {
                     </div>
                     <RadioGroup 
                       value={selectedVariation?.name} 
-                      onValueChange={(val) => setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null)}
+                      onValueChange={(val) => {
+                        const newVar = customizingItem.variations?.find(v => v.name === val) || null;
+                        setSelectedVariation(newVar);
+                        setSelectedAddons([]); // Reset addons when variation changes
+                      }}
                       className="space-y-3"
                     >
                       {customizingItem.variations.map((v) => (
@@ -215,11 +229,11 @@ export default function MenuPage() {
                 <Separator />
 
                 {/* Add-ons */}
-                {customizingItem.addons && customizingItem.addons.length > 0 && (
+                {availableAddons.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Extra Toppings</h3>
                     <div className="space-y-3">
-                      {customizingItem.addons.map((addon) => (
+                      {availableAddons.map((addon) => (
                         <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
                           <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
                             <span className="text-sm font-bold text-[#333333] uppercase">{addon.name}</span>
