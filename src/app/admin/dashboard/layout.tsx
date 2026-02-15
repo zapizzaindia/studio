@@ -75,9 +75,9 @@ export default function AdminDashboardLayout({
     <SidebarProvider>
         <Sidebar>
             <SidebarHeader>
-              <div className="flex items-center gap-2 p-2">
-                <ZapizzaLogo className="h-8 w-8 text-primary" />
-                <h1 className="font-headline text-xl font-bold text-primary">
+              <div className="flex flex-col items-start gap-2 p-4">
+                <ZapizzaLogo className="h-10 w-10 text-primary" />
+                <h1 className="font-headline text-xl font-bold text-primary leading-tight">
                     Zapizza Admin
                 </h1>
               </div>
