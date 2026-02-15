@@ -28,6 +28,7 @@ export default function FranchiseMenuPage() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   
   // New Item State
   const [newItemName, setNewItemName] = useState("");
@@ -47,6 +48,22 @@ export default function FranchiseMenuPage() {
 
   const isLoading = menuItemsLoading || categoriesLoading;
   const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
+
+  const handleEditClick = (item: MenuItem) => {
+    setEditingItem(item);
+    setNewItemName(item.name);
+    setNewItemDesc(item.description || "");
+    setNewItemPrice(item.price.toString());
+    setNewItemCategory(item.category);
+    setNewItemIsVeg(item.isVeg);
+    setNewItemImageId(item.imageId);
+    setNewItemGlobal(item.isAvailableGlobally);
+    setNewItemVariations(item.variations || []);
+    setNewItemAddons(item.addons || []);
+    setNewItemSides(item.recommendedSides || []);
+    setCustomImage(null);
+    setIsAddDialogOpen(true);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -123,8 +140,8 @@ export default function FranchiseMenuPage() {
 
     // Demo Mode Mock
     toast({ 
-        title: "Item added successfully (Demo Mode)", 
-        description: `${newItemName} has been added to the global menu.` 
+        title: editingItem ? "Item updated successfully (Demo Mode)" : "Item added successfully (Demo Mode)", 
+        description: `${newItemName} has been ${editingItem ? 'updated in' : 'added to'} the global menu.` 
     });
 
     // Reset Form
@@ -139,6 +156,7 @@ export default function FranchiseMenuPage() {
     setNewItemAddons([]);
     setNewItemSides([]);
     setCustomImage(null);
+    setEditingItem(null);
     setIsAddDialogOpen(false);
   };
 
@@ -221,16 +239,18 @@ export default function FranchiseMenuPage() {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setEditingItem(null); }}>
                 <DialogTrigger asChild>
                     <Button className="bg-[#14532d] hover:bg-[#0f4023]"><Plus className="mr-2 h-4 w-4" /> Add New Item</Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none rounded-2xl shadow-2xl">
                     <DialogHeader className="p-6 bg-[#14532d] text-white">
                         <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-2">
-                          <PlusCircle className="h-6 w-6" /> Add Global Menu Item
+                          <PlusCircle className="h-6 w-6" /> {editingItem ? 'Edit Global Menu Item' : 'Add Global Menu Item'}
                         </DialogTitle>
-                        <DialogDescription className="text-white/70">Create a new product with full customization for all Zapizza outlets.</DialogDescription>
+                        <DialogDescription className="text-white/70">
+                          {editingItem ? `Update details for ${editingItem.name}.` : 'Create a new product with full customization for all Zapizza outlets.'}
+                        </DialogDescription>
                     </DialogHeader>
                     
                     <div className="p-6">
@@ -504,7 +524,9 @@ export default function FranchiseMenuPage() {
 
                     <DialogFooter className="p-6 bg-muted/50 rounded-b-2xl border-t gap-3 sm:gap-0">
                         <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="font-black uppercase text-xs tracking-widest h-12">Cancel</Button>
-                        <Button onClick={handleAddItem} className="bg-[#14532d] hover:bg-[#0f4023] font-black uppercase text-xs tracking-widest h-12 px-10">Save Product</Button>
+                        <Button onClick={handleAddItem} className="bg-[#14532d] hover:bg-[#0f4023] font-black uppercase text-xs tracking-widest h-12 px-10">
+                          {editingItem ? 'Update Product' : 'Save Product'}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -573,7 +595,7 @@ export default function FranchiseMenuPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex gap-2 justify-end">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="h-4 w-4"/></Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(item)}><Edit className="h-4 w-4"/></Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4"/></Button>
                                         </div>
                                     </TableCell>

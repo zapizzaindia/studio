@@ -23,11 +23,22 @@ export default function FranchiseBannersPage() {
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newSubtitle, setNewSubtitle] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newImageId, setNewImageId] = useState("banner_1");
   const [customImage, setCustomImage] = useState<string | null>(null);
+
+  const handleEditClick = (banner: Banner) => {
+    setEditingBanner(banner);
+    setNewTitle(banner.title || "");
+    setNewSubtitle(banner.subtitle || "");
+    setNewPrice(banner.price || "");
+    setNewImageId(banner.imageId);
+    setCustomImage(null);
+    setIsAddDialogOpen(true);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,7 +60,7 @@ export default function FranchiseBannersPage() {
 
     // Mock successful addition
     toast({ 
-      title: "Banner created (Demo Mode)", 
+      title: editingBanner ? "Banner updated (Demo Mode)" : "Banner created (Demo Mode)", 
       description: newTitle ? `"${newTitle}" is now live.` : "Image-only banner is now live." 
     });
 
@@ -58,6 +69,7 @@ export default function FranchiseBannersPage() {
     setNewPrice("");
     setNewImageId("banner_1");
     setCustomImage(null);
+    setEditingBanner(null);
     setIsAddDialogOpen(false);
   };
 
@@ -76,13 +88,13 @@ export default function FranchiseBannersPage() {
           <h1 className="font-headline text-3xl font-bold">Global Banners</h1>
           <p className="text-muted-foreground">Manage the promotional carousel on the customer home page.</p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setEditingBanner(null); }}>
           <DialogTrigger asChild>
             <Button className="bg-[#14532d] hover:bg-[#0f4023]"><Plus className="mr-2 h-4 w-4" /> Create New Banner</Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Promotional Banner</DialogTitle>
+              <DialogTitle>{editingBanner ? 'Edit Promotional Banner' : 'Add Promotional Banner'}</DialogTitle>
               <DialogDescription>Banners appear in the hero section of the mobile app. Text details are optional.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -147,7 +159,9 @@ export default function FranchiseBannersPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleAddBanner} className="bg-[#14532d] hover:bg-[#0f4023] w-full">Save and Publish</Button>
+              <Button onClick={handleAddBanner} className="bg-[#14532d] hover:bg-[#0f4023] w-full">
+                {editingBanner ? 'Update and Publish' : 'Save and Publish'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -193,7 +207,9 @@ export default function FranchiseBannersPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(banner)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
