@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -82,50 +81,50 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm p-4">
-      <div className="mb-6 flex flex-col items-center text-center">
-        <ZapizzaLogo className="mb-3 h-14 w-14 text-primary" />
-        <h1 className="font-headline text-2xl font-bold text-primary">Welcome to Zapizza</h1>
-        <p className="text-sm text-muted-foreground">Sign in to continue</p>
+      <div className="mb-8 flex flex-col items-center text-center">
+        <ZapizzaLogo className="mb-4 h-12 w-12 text-primary" />
+        <h1 className="font-headline text-3xl font-black text-[#14532d] uppercase tracking-tighter italic">Zapizza</h1>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Sign in to feed your hunger</p>
       </div>
 
       <AnimatePresence mode="wait">
         {step === 'phone' && (
           <motion.div key="phone" initial="hidden" animate="visible" exit="exit" variants={variants}>
             <Form {...phoneForm}>
-              <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-3">
+              <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-4">
                 <FormField
                   control={phoneForm.control}
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Mobile Number</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Number</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground text-sm">+91</span>
-                          <Input placeholder="98765 43210" {...field} className="pl-12 h-11" />
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-muted-foreground text-sm font-bold">+91</span>
+                          <Input placeholder="98765 43210" {...field} className="pl-12 h-12 rounded-xl border-gray-200 font-bold focus:ring-primary" />
                         </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-11 bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
+                <Button type="submit" className="w-full h-12 bg-[#14532d] text-white hover:bg-[#0f4023] font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95">
                   Send OTP
                 </Button>
                 
-                <div className="relative my-3">
+                <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                    <span className="w-full border-t border-gray-100" />
                   </div>
-                  <div className="relative flex justify-center text-[10px] uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
+                    <span className="bg-background px-4 text-muted-foreground">Or</span>
                   </div>
                 </div>
 
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="w-full h-11 text-xs" 
+                  className="w-full h-12 text-[10px] font-black uppercase tracking-widest border-gray-200 rounded-xl" 
                   onClick={() => router.push('/home')}
                 >
                   Skip for now
@@ -138,27 +137,27 @@ export default function LoginPage() {
         {step === 'otp' && (
           <motion.div key="otp" initial="hidden" animate="visible" exit="exit" variants={variants}>
             <Form {...otpForm}>
-              <form onSubmit={otpForm.handleSubmit(onOtpSubmit)} className="space-y-3">
+              <form onSubmit={otpForm.handleSubmit(onOtpSubmit)} className="space-y-4">
                 <FormField
                   control={otpForm.control}
                   name="otp"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Enter OTP</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Enter OTP</FormLabel>
                       <FormControl>
-                        <Input placeholder="123456" {...field} className="h-11" />
+                        <Input placeholder="123456" {...field} className="h-12 rounded-xl border-gray-200 font-black text-center text-xl tracking-[0.5em] focus:ring-primary" />
                       </FormControl>
-                      <FormDescription className="text-[10px]">
+                      <FormDescription className="text-[10px] font-medium text-center italic opacity-60">
                         Demo: Any 6 digits will work.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-11 bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
+                <Button type="submit" className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95">
                   Verify & Login
                 </Button>
-                <Button variant="link" size="sm" onClick={() => setStep('phone')} className="w-full text-xs">
+                <Button variant="link" size="sm" onClick={() => setStep('phone')} className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   Change number
                 </Button>
               </form>
@@ -166,15 +165,15 @@ export default function LoginPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="mt-6 text-center text-xs">
-        <p className="text-muted-foreground">
-          Are you an admin or franchise owner?
+      <div className="mt-10 text-center text-[10px] font-bold uppercase tracking-widest border-t border-gray-50 pt-6">
+        <p className="text-muted-foreground/60">
+          Admin or Franchise Partner?
         </p>
-        <div className="mt-2 flex justify-center gap-4">
-          <Button variant="link" asChild className="h-auto p-0 text-xs">
+        <div className="mt-3 flex justify-center gap-6">
+          <Button variant="link" asChild className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-[#14532d]">
             <Link href="/admin/login">Admin Login</Link>
           </Button>
-          <Button variant="link" asChild className="h-auto p-0 text-xs">
+          <Button variant="link" asChild className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-[#14532d]">
             <Link href="/franchise/login">Franchise Login</Link>
           </Button>
         </div>
