@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 export default function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { items, totalPrice, updateQuantity, clearCart } = useCart();
+  const { items, totalPrice, updateQuantity, clearCart, removeItem } = useCart();
   const { user } = useUser();
   const db = useFirestore();
   
@@ -161,10 +161,19 @@ export default function CheckoutPage() {
                     <span className="text-[11px] font-black text-[#14532d] mt-1.5 block">₹{item.price * item.quantity}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
-                  <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
-                  <span className="text-sm font-black min-w-[20px] text-center">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
+                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
+                    <span className="text-sm font-black min-w-[20px] text-center">{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
+                  </div>
+                  <button 
+                    onClick={() => removeItem(item.cartId)} 
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    title="Remove item"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}
