@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -56,7 +57,12 @@ export default function MenuPage() {
   };
 
   const handleAddClick = (item: MenuItem) => {
-    if ((item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0)) {
+    const hasOptions = 
+      (item.variations && item.variations.length > 0) || 
+      (item.addons && item.addons.length > 0) || 
+      (item.recommendedSides && item.recommendedSides.length > 0);
+
+    if (hasOptions) {
       setCustomizingItem(item);
       setSelectedVariation(item.variations?.[0] || null);
       setSelectedAddons([]);
@@ -360,7 +366,10 @@ export default function MenuPage() {
 }
 
 function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
-  const hasOptions = (item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0);
+  const hasOptions = 
+    (item.variations && item.variations.length > 0) || 
+    (item.addons && item.addons.length > 0) || 
+    (item.recommendedSides && item.recommendedSides.length > 0);
 
   return (
     <div className="flex gap-5">

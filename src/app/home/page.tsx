@@ -112,7 +112,11 @@ export default function HomePage() {
   };
 
   const handleAddClick = (item: MenuItem) => {
-    const hasOptions = (item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0);
+    const hasOptions = 
+      (item.variations && item.variations.length > 0) || 
+      (item.addons && item.addons.length > 0) || 
+      (item.recommendedSides && item.recommendedSides.length > 0);
+
     if (hasOptions) {
       setCustomizingItem(item);
       setSelectedVariation(item.variations?.[0] || null);
@@ -533,6 +537,38 @@ export default function HomePage() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recommended Sides */}
+                {customizingItem.recommendedSides && customizingItem.recommendedSides.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Goes well with</h3>
+                    <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
+                      {customizingItem.recommendedSides.map(sideId => {
+                        const side = menuItems?.find(m => m.id === sideId);
+                        if (!side) return null;
+                        return (
+                          <div key={side.id} className="flex-shrink-0 w-32 bg-white border rounded-xl p-2 shadow-sm">
+                            <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
+                              <Image src={placeholderImageMap.get(side.imageId)?.imageUrl || ''} alt={side.name} fill className="object-cover" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase text-[#333333] line-clamp-1 mb-1">{side.name}</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black text-[#14532d]">₹{side.price}</span>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-6 w-6 text-primary"
+                                onClick={() => addItem(side)}
+                              >
+                                <PlusCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

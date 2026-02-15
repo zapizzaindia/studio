@@ -38,7 +38,17 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
     category: 'veg-pizzas',
     imageId: 'margherita',
     isAvailable: true,
-    isAvailableGlobally: true
+    isAvailableGlobally: true,
+    variations: [
+      { name: 'Regular', price: 249 },
+      { name: 'Medium', price: 449 },
+      { name: 'Large', price: 649 }
+    ],
+    addons: [
+      { name: 'Extra Cheese', price: 75 },
+      { name: 'Fresh Mushrooms', price: 50 }
+    ],
+    recommendedSides: ['coke', 'choco-lava']
   },
   {
     id: 'pepperoni',
@@ -49,7 +59,11 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
     category: 'non-veg-pizzas',
     imageId: 'pepperoni',
     isAvailable: true,
-    isAvailableGlobally: true
+    isAvailableGlobally: true,
+    variations: [
+      { name: 'Medium', price: 499 },
+      { name: 'Large', price: 699 }
+    ]
   },
   {
     id: 'veggie-delight',
@@ -60,7 +74,11 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
     category: 'veg-pizzas',
     imageId: 'veggie_delight',
     isAvailable: true,
-    isAvailableGlobally: true
+    isAvailableGlobally: true,
+    addons: [
+      { name: 'Extra Olives', price: 40 },
+      { name: 'Paneer Cubes', price: 80 }
+    ]
   },
   {
     id: 'coke',
