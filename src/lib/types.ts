@@ -109,9 +109,9 @@ export type Address = {
 
 export type Banner = {
   id: string;
-  title: string;
-  subtitle: string;
-  price: string;
+  title?: string;
+  subtitle?: string;
+  price?: string;
   imageId: string;
   active: boolean;
 };

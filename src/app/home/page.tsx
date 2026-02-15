@@ -233,12 +233,26 @@ export default function HomePage() {
             ) : activeBanners.map((banner, index) => (
               <CarouselItem key={index}>
                 <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-lg group">
-                  <Image src={placeholderImageMap.get(banner.imageId)?.imageUrl || ''} alt={banner.title} fill className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#14532d]/90 via-[#14532d]/40 to-transparent flex flex-col justify-center p-6">
-                    <Badge className="w-fit mb-2 bg-accent text-accent-foreground font-black uppercase text-[8px] tracking-widest">{banner.subtitle}</Badge>
-                    <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md">{banner.title}</h2>
-                    <p className="text-white font-black text-lg">₹{banner.price}</p>
-                  </div>
+                  <Image src={placeholderImageMap.get(banner.imageId)?.imageUrl || ''} alt={banner.title || 'Promotion'} fill className="object-cover" />
+                  
+                  {/* Overlay text - only show if at least one field exists */}
+                  {(banner.title || banner.subtitle || banner.price) && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#14532d]/90 via-[#14532d]/40 to-transparent flex flex-col justify-center p-6">
+                      {banner.subtitle && (
+                        <Badge className="w-fit mb-2 bg-accent text-accent-foreground font-black uppercase text-[8px] tracking-widest">
+                          {banner.subtitle}
+                        </Badge>
+                      )}
+                      {banner.title && (
+                        <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md">
+                          {banner.title}
+                        </h2>
+                      )}
+                      {banner.price && (
+                        <p className="text-white font-black text-lg">₹{banner.price}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CarouselItem>
             ))}

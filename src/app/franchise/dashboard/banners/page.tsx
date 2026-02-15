@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -40,15 +41,16 @@ export default function FranchiseBannersPage() {
   };
 
   const handleAddBanner = () => {
-    if (!newTitle || !newSubtitle || !newPrice) {
-      toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out all banner details.' });
+    // Only image is absolutely necessary now
+    if (!newImageId && !customImage) {
+      toast({ variant: 'destructive', title: 'Missing Image', description: 'Please select or upload a banner image.' });
       return;
     }
 
     // Mock successful addition
     toast({ 
       title: "Banner created (Demo Mode)", 
-      description: `"${newTitle}" is now live on the customer home page.` 
+      description: newTitle ? `"${newTitle}" is now live.` : "Image-only banner is now live." 
     });
 
     setNewTitle("");
@@ -63,8 +65,8 @@ export default function FranchiseBannersPage() {
     toast({ title: 'Status updated', description: `Banner is now ${!current ? 'active' : 'inactive'}.` });
   };
 
-  const handleDelete = (title: string) => {
-    toast({ title: 'Banner deleted', description: `"${title}" has been removed.` });
+  const handleDelete = (title?: string) => {
+    toast({ title: 'Banner deleted', description: title ? `"${title}" has been removed.` : "Banner has been removed." });
   };
 
   return (
@@ -81,19 +83,19 @@ export default function FranchiseBannersPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add Promotional Banner</DialogTitle>
-              <DialogDescription>Banners appear in the hero section of the mobile app.</DialogDescription>
+              <DialogDescription>Banners appear in the hero section of the mobile app. Text details are optional.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Banner Title (Major Heading)</Label>
+                <Label htmlFor="title">Banner Title (Optional)</Label>
                 <Input id="title" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. ULTIMATE PIZZA PARTY" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="subtitle">Subtitle (Minor Heading)</Label>
+                <Label htmlFor="subtitle">Subtitle (Optional)</Label>
                 <Input id="subtitle" value={newSubtitle} onChange={e => setNewSubtitle(e.target.value)} placeholder="e.g. Freshly Launched!" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price">Price Tag (Starting @)</Label>
+                <Label htmlFor="price">Price Tag (Optional)</Label>
                 <Input id="price" value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="e.g. 399" />
               </div>
               
@@ -172,17 +174,17 @@ export default function FranchiseBannersPage() {
                     <div className="relative h-16 w-24 rounded-md overflow-hidden border">
                       <Image
                         src={placeholderImageMap.get(banner.imageId)?.imageUrl || ''}
-                        alt={banner.title}
+                        alt={banner.title || 'Banner'}
                         fill
                         className="object-cover"
                       />
                     </div>
                   </TableCell>
                   <TableCell>
-                    <p className="font-bold text-sm">{banner.title}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{banner.subtitle}</p>
+                    <p className="font-bold text-sm">{banner.title || 'Untitled Banner'}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{banner.subtitle || 'NO SUBTITLE'}</p>
                   </TableCell>
-                  <TableCell>₹{banner.price}</TableCell>
+                  <TableCell>{banner.price ? `₹${banner.price}` : 'N/A'}</TableCell>
                   <TableCell>
                     <Switch 
                         checked={banner.active} 
