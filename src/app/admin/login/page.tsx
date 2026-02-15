@@ -46,9 +46,10 @@ export default function AdminLoginPage() {
     
     toast({
       title: "Admin Login Successful (Demo Mode)",
-      description: "Welcome to the Admin Dashboard!",
+      description: "Opening Live Orders...",
     });
-    window.location.href = '/admin/dashboard';
+    // Redirect directly to Orders page as requested
+    window.location.href = '/admin/dashboard/orders';
   }
 
   return (
@@ -56,7 +57,7 @@ export default function AdminLoginPage() {
       <div className="mb-6 flex flex-col items-center text-center">
         <ZapizzaLogo className="mb-3 h-14 w-14 text-primary" />
         <h1 className="font-headline text-2xl font-bold text-primary">Admin Login</h1>
-        <p className="text-sm text-muted-foreground">Sign in to the admin dashboard</p>
+        <p className="text-sm text-muted-foreground">Sign in to manage live orders</p>
       </div>
 
       <Form {...form}>
