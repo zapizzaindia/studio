@@ -147,47 +147,17 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      {/* Welcome Header with Custom GIF Background */}
-      <div className="relative bg-black text-white px-6 pt-12 pb-48 rounded-b-[40px] shadow-lg overflow-hidden">
-        {/* CUSTOM GIF SLOT - Ensure the URL is a direct link to the .gif file */}
-        <div className="absolute inset-0 z-0">
-          <motion.div 
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0"
-          >
-            <img 
-              src="https://jumpshare.com/s/SLpdAMrhVcxT9ckCqvFB"
-              alt="Custom Promotional Background" 
-              className="w-full h-full object-cover opacity-100"
-              onError={(e) => {
-                // Fallback to placeholder if GIF link fails
-                e.currentTarget.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExOWdvNzZnM2xxZjNldWxhcjk4OTlzbXN1NzVhbjhsZm55MnFpMGR6NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ppPgn2ofMpx2P0YWWH/giphy.gif";
-              }}
-            />
-          </motion.div>
-          {/* Transparent bottom gradient for text contrast without obscuring the image */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-          
-          {/* Decorative Floating Icon */}
-          <motion.div 
-            animate={{ y: [0, -10, 0], rotate: [0, 10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-10 right-10 opacity-20"
-          >
-            <Pizza className="w-16 h-16" />
-          </motion.div>
-        </div>
-
+      {/* Welcome Header - Compact Green Design */}
+      <div className="bg-[#14532d] text-white px-6 pt-12 pb-20 rounded-b-[40px] shadow-lg relative overflow-hidden">
         <div className="relative z-10 flex justify-between items-start mb-2">
           <div>
-            <p className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Welcome Back,</p>
-            <h1 className="text-2xl font-black italic tracking-tighter drop-shadow-md">
+            <p className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Welcome Back,</p>
+            <h1 className="text-2xl font-black italic tracking-tighter">
               {user?.displayName?.split(' ')[0] || 'Gourmet'}!
             </h1>
           </div>
           
-          <div className="flex bg-white/20 p-1 rounded-2xl backdrop-blur-xl border border-white/10 shadow-2xl">
+          <div className="flex bg-white/10 p-1 rounded-2xl backdrop-blur-md border border-white/10">
             <button 
               onClick={() => setOrderType("delivery")}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-300 ${orderType === "delivery" ? 'bg-white text-[#14532d] shadow-sm' : 'text-white'}`}
@@ -203,6 +173,11 @@ export default function HomePage() {
               <span className="text-[10px] font-black uppercase tracking-widest">Takeaway</span>
             </button>
           </div>
+        </div>
+        
+        {/* Decorative Pizza Icon */}
+        <div className="absolute top-4 right-[-20px] opacity-10 rotate-[15deg]">
+          <Pizza className="w-32 h-32" />
         </div>
       </div>
 
