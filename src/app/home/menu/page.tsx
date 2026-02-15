@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ShoppingBag, List, X, Search, Check, Info } from "lucide-react";
+import { ArrowLeft, ShoppingBag, List, X, Search, Check, Info, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { Category, MenuItem, MenuItemVariation, MenuItemAddon } from "@/lib/types";
@@ -19,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 export default function MenuPage() {
   const router = useRouter();
@@ -234,6 +235,41 @@ export default function MenuPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Recommended Sides */}
+                {customizingItem.recommendedSides && customizingItem.recommendedSides.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Goes well with</h3>
+                      <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
+                        {customizingItem.recommendedSides.map(sideId => {
+                          const side = menuItems?.find(m => m.id === sideId);
+                          if (!side) return null;
+                          return (
+                            <div key={side.id} className="flex-shrink-0 w-32 bg-white border rounded-xl p-2 shadow-sm">
+                              <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
+                                <Image src={placeholderImageMap.get(side.imageId)?.imageUrl || ''} alt={side.name} fill className="object-cover" />
+                              </div>
+                              <p className="text-[10px] font-black uppercase text-[#333333] line-clamp-1 mb-1">{side.name}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black text-[#14532d]">₹{side.price}</span>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-6 w-6 text-primary"
+                                  onClick={() => addItem(side)}
+                                >
+                                  <PlusCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
@@ -361,13 +397,5 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function Badge({ children, variant = "default", className = "" }: { children: React.ReactNode, variant?: string, className?: string }) {
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-[10px] ${className}`}>
-      {children}
-    </span>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight, Crown, Pizza, Utensils, Star, ShoppingBag, Search, Filter, Flame } from "lucide-react";
+import { ArrowRight, Crown, Pizza, Utensils, Star, ShoppingBag, Search, Filter, Flame, X, Check, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { City, Category, MenuItem, Outlet, Banner } from "@/lib/types";
+import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,12 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { AnimatePresence, motion } from "framer-motion";
 
 const serviceModes = [
   { id: 'delivery', label: 'Delivery', sub: 'NOW' },
@@ -39,6 +45,11 @@ export default function HomePage() {
   const [activeMode, setActiveMode] = useState('delivery');
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Customization State
+  const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
+  const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
   
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -68,6 +79,31 @@ export default function HomePage() {
     setSelectedOutlet(outlet);
     localStorage.setItem("zapizza-outlet", JSON.stringify(outlet));
   };
+
+  const handleAddClick = (item: MenuItem) => {
+    const hasOptions = (item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0);
+    if (hasOptions) {
+      setCustomizingItem(item);
+      setSelectedVariation(item.variations?.[0] || null);
+      setSelectedAddons([]);
+    } else {
+      addItem(item);
+    }
+  };
+
+  const handleConfirmCustomization = () => {
+    if (customizingItem) {
+      addItem(customizingItem, selectedVariation || undefined, selectedAddons);
+      setCustomizingItem(null);
+    }
+  };
+
+  const currentCustomPrice = useMemo(() => {
+    if (!customizingItem) return 0;
+    const base = selectedVariation ? selectedVariation.price : customizingItem.price;
+    const addons = selectedAddons.reduce((sum, a) => sum + a.price, 0);
+    return base + addons;
+  }, [customizingItem, selectedVariation, selectedAddons]);
 
   if (!isHydrated || userLoading) {
     return (
@@ -119,7 +155,11 @@ export default function HomePage() {
                  )}
               </div>
               <div className="absolute bottom-3 right-3">
-                <Button variant="secondary" className="h-6 px-3 bg-black/50 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/70 backdrop-blur-sm">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => handleAddClick(item)}
+                  className="h-6 px-3 bg-black/50 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/70 backdrop-blur-sm"
+                >
                   Customise <ArrowRight className="ml-1 h-2 w-2" />
                 </Button>
               </div>
@@ -143,7 +183,7 @@ export default function HomePage() {
                   <span className="text-[18px] font-black text-[#14532d] leading-none">₹{item.price}</span>
                   <Button 
                     size="sm" 
-                    onClick={() => addItem(item)}
+                    onClick={() => handleAddClick(item)}
                     className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform hover:bg-[#c61430]"
                   >
                     Add +
@@ -318,6 +358,137 @@ export default function HomePage() {
         icon={Utensils} 
         items={menuItems?.filter(i => i.category === 'desserts' || i.category === 'beverages')} 
       />
+
+      {/* Customization Dialog */}
+      <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
+        <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
+          {customizingItem && (
+            <>
+              <div className="relative h-48 w-full flex-shrink-0">
+                <Image 
+                  src={placeholderImageMap.get(customizingItem.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
+                  alt={customizingItem.name} 
+                  fill 
+                  className="object-cover" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
+                   <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center ${customizingItem.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
+                      <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+                   </div>
+                   <h2 className="text-xl font-black text-white uppercase tracking-tight italic">{customizingItem.name}</h2>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto space-y-8 flex-1">
+                {/* Variations (Sizes) */}
+                {customizingItem.variations && customizingItem.variations.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Select Size</h3>
+                      <Badge variant="secondary" className="text-[9px] uppercase font-black bg-[#14532d]/10 text-[#14532d]">Required</Badge>
+                    </div>
+                    <RadioGroup 
+                      value={selectedVariation?.name} 
+                      onValueChange={(val) => setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null)}
+                      className="space-y-3"
+                    >
+                      {customizingItem.variations.map((v) => (
+                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer">
+                            <span className="text-sm font-bold text-[#333333] uppercase">{v.name}</span>
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black text-[#14532d]">₹{v.price}</span>
+                            <RadioGroupItem value={v.name} id={`v-${v.name}`} className="border-[#14532d]" />
+                          </div>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Add-ons */}
+                {customizingItem.addons && customizingItem.addons.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Extra Toppings</h3>
+                    <div className="space-y-3">
+                      {customizingItem.addons.map((addon) => (
+                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                          <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
+                            <span className="text-sm font-bold text-[#333333] uppercase">{addon.name}</span>
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black text-[#14532d]">₹{addon.price}</span>
+                            <Checkbox 
+                              id={`a-${addon.name}`} 
+                              checked={selectedAddons.some(a => a.name === addon.name)}
+                              onCheckedChange={(checked) => {
+                                if (checked) setSelectedAddons([...selectedAddons, addon]);
+                                else setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
+                              }}
+                              className="border-[#14532d]"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recommended Sides */}
+                {customizingItem.recommendedSides && customizingItem.recommendedSides.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Goes well with</h3>
+                      <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
+                        {customizingItem.recommendedSides.map(sideId => {
+                          const side = menuItems?.find(m => m.id === sideId);
+                          if (!side) return null;
+                          return (
+                            <div key={side.id} className="flex-shrink-0 w-32 bg-white border rounded-xl p-2 shadow-sm">
+                              <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
+                                <Image src={placeholderImageMap.get(side.imageId)?.imageUrl || ''} alt={side.name} fill className="object-cover" />
+                              </div>
+                              <p className="text-[10px] font-black uppercase text-[#333333] line-clamp-1 mb-1">{side.name}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black text-[#14532d]">₹{side.price}</span>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-6 w-6 text-primary"
+                                  onClick={() => addItem(side)}
+                                >
+                                  <PlusCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Final Price</span>
+                  <span className="text-2xl font-black text-[#14532d]">₹{currentCustomPrice}</span>
+                </div>
+                <Button 
+                  onClick={handleConfirmCustomization}
+                  className="bg-[#14532d] hover:bg-[#0f4023] text-white px-10 h-14 rounded-xl font-black uppercase tracking-widest shadow-xl flex-1"
+                >
+                  ADD TO CART
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {totalItems > 0 && (
         <div className="fixed bottom-20 left-4 right-4 z-40">
