@@ -232,7 +232,7 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Explore Menu */}
+      {/* Explore Menu - Small Scrollable */}
       <div className="mt-10">
         <div className="px-6 flex justify-between items-center mb-4">
           <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Explore Menu</h2>
@@ -277,10 +277,10 @@ export default function HomePage() {
             <motion.div 
               key={item.id} 
               whileTap={{ scale: 0.95 }}
-              className="flex flex-col gap-3 w-44 flex-shrink-0 cursor-pointer group"
+              className="flex flex-col gap-3 w-44 flex-shrink-0 cursor-pointer group bg-white p-2.5 rounded-[32px] border border-gray-100 shadow-sm"
               onClick={() => handleAddClick(item)}
             >
-              <div className="relative h-44 w-full rounded-[28px] overflow-hidden shadow-xl border border-white/20">
+              <div className="relative h-40 w-full rounded-[24px] overflow-hidden shadow-sm border border-black/5">
                 <Image 
                   src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} 
                   alt={item.name} 
@@ -307,7 +307,7 @@ export default function HomePage() {
                 </div>
               </div>
               
-              <div className="px-2 space-y-0.5">
+              <div className="px-2 pb-1 space-y-0.5">
                 <h4 className="text-[12px] font-black text-[#333333] uppercase leading-tight tracking-tight line-clamp-1">{item.name}</h4>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[14px] font-black text-[#14532d]">₹{item.price}</span>
