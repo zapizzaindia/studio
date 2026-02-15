@@ -3,15 +3,15 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck, MapPinned } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/hooks/use-cart";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
-import { doc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, collection, addDoc, serverTimestamp, query, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import type { GlobalSettings, Coupon } from "@/lib/types";
+import type { GlobalSettings, Coupon, Address } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
 
@@ -25,11 +25,27 @@ export default function CheckoutPage() {
   const { data: settings } = useDoc<GlobalSettings>('settings', 'global');
   const { data: coupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
 
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [isPlacing, setIsPlacing] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
 
-  // Dynamic calculations based on global settings
+  // Fetch addresses
+  useEffect(() => {
+    if (!user || !db) return;
+    const fetchAddresses = async () => {
+      const q = query(collection(db, `users/${user.uid}/addresses`));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Address));
+      setAddresses(data);
+      const defaultAddr = data.find(a => a.isDefault) || data[0];
+      if (defaultAddr) setSelectedAddress(defaultAddr);
+    };
+    fetchAddresses();
+  }, [user, db]);
+
+  // Dynamic calculations
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
     const gstRate = settings?.gstPercentage || 18;
@@ -39,9 +55,6 @@ export default function CheckoutPage() {
     const deliveryFee = subtotal >= freeThreshold ? 0 : baseDelivery;
     const gstTotal = (subtotal * gstRate) / 100;
     
-    const cgst = gstTotal / 2;
-    const sgst = gstTotal / 2;
-
     let discount = 0;
     if (appliedCoupon) {
       if (appliedCoupon.discountType === 'percentage') {
@@ -53,7 +66,7 @@ export default function CheckoutPage() {
 
     const finalTotal = subtotal + gstTotal + deliveryFee - discount;
 
-    return { subtotal, cgst, sgst, deliveryFee, gstTotal, discount, finalTotal };
+    return { subtotal, deliveryFee, gstTotal, discount, finalTotal };
   }, [totalPrice, settings, appliedCoupon]);
 
   const handleApplyCoupon = () => {
@@ -67,21 +80,17 @@ export default function CheckoutPage() {
       return;
     }
     setAppliedCoupon(found);
-    toast({ title: "Coupon Applied!", description: `You saved ₹${found.discountValue}${found.discountType === 'percentage' ? '%' : ''}.` });
+    toast({ title: "Coupon Applied!" });
   };
 
-  /**
-   * RAZORPAY INTEGRATION FLOW
-   * 1. Click "Proceed to Pay" -> handlePlaceOrder triggers
-   * 2. Call Server to create Razorpay Order (returns order_id)
-   * 3. Initialize Razorpay Checkout with order_id and key_id
-   * 4. Open Razorpay Modal
-   * 5. On success callback -> Verify payment signature -> Save order to Firestore
-   */
   const handlePlaceOrder = async () => {
     if (!user) {
-      toast({ title: "Please login", variant: "destructive" });
       router.push('/login');
+      return;
+    }
+
+    if (!selectedAddress) {
+      toast({ variant: 'destructive', title: "Address Required", description: "Please add a delivery address to continue." });
       return;
     }
 
@@ -91,10 +100,10 @@ export default function CheckoutPage() {
     const savedOutlet = localStorage.getItem("zapizza-outlet");
     const outlet = savedOutlet ? JSON.parse(savedOutlet) : { id: 'default' };
 
-    // --- STEP 1: PREPARE ORDER DATA ---
     const orderData = {
       customerId: user.uid,
-      customerName: user.displayName || user.email || "Customer",
+      customerName: user.displayName || "Gourmet Customer",
+      customerPhone: user.phoneNumber || "+91-9876543210",
       items: items.map(i => ({
         menuItemId: i.id,
         name: i.name,
@@ -111,32 +120,31 @@ export default function CheckoutPage() {
       status: "New",
       createdAt: serverTimestamp(),
       outletId: outlet.id,
+      deliveryAddress: {
+        label: selectedAddress.label,
+        flatNo: selectedAddress.flatNo,
+        area: selectedAddress.area,
+        landmark: selectedAddress.landmark,
+        city: selectedAddress.city
+      },
       paymentMethod: "Online",
       paymentStatus: "Pending"
     };
 
     try {
-      // --- STEP 2: TRIGGER RAZORPAY (SIMULATED) ---
-      // In production, you would call: const res = await fetch('/api/razorpay', { method: 'POST', body: JSON.stringify({ amount: calculations.finalTotal }) });
-      // const { orderId } = await res.json();
-      
       toast({ title: "Connecting to Secure Gateway...", description: "Please do not refresh the page." });
-      
-      // Simulate Razorpay SDK latency
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // --- STEP 3: SUCCESSFUL PAYMENT HANDLER ---
-      // In real integration, this happens inside the Razorpay 'handler' callback
       await addDoc(collection(db, 'orders'), {
         ...orderData,
         paymentStatus: "Success",
-        paymentId: `pay_${Math.random().toString(36).substring(7)}`, // Mock ID
+        paymentId: `pay_${Math.random().toString(36).substring(7)}`,
       });
 
       clearCart();
       router.push('/home/checkout/success');
     } catch (e: any) {
-      toast({ title: "Payment Failed", description: e.message || "An error occurred with the gateway.", variant: "destructive" });
+      toast({ title: "Payment Failed", description: e.message, variant: "destructive" });
     } finally {
       setIsPlacing(false);
     }
@@ -156,7 +164,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-48">
-      {/* Razorpay Script Loader */}
       <Script id="razorpay-checkout" src="https://checkout.razorpay.com/v1/checkout.js" />
 
       <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
@@ -167,6 +174,29 @@ export default function CheckoutPage() {
       </div>
 
       <div className="container mx-auto p-4 space-y-4 max-w-lg">
+        {/* Address Selector */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
+            <CardTitle className="text-[10px] font-black text-[#14532d] uppercase tracking-widest flex items-center gap-2">
+              <MapPinned className="h-4 w-4" /> Delivery Address
+            </CardTitle>
+            <Button variant="link" size="sm" onClick={() => router.push('/home/addresses')} className="h-auto p-0 text-[10px] font-black uppercase text-[#14532d]">CHANGE</Button>
+          </CardHeader>
+          <CardContent className="p-4 bg-white">
+            {selectedAddress ? (
+              <div>
+                <Badge variant="secondary" className="bg-[#14532d]/10 text-[#14532d] text-[8px] font-black uppercase mb-2">{selectedAddress.label}</Badge>
+                <p className="text-xs font-bold text-[#333333] leading-snug">{selectedAddress.flatNo}, {selectedAddress.area}</p>
+                {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Landmark: {selectedAddress.landmark}</p>}
+              </div>
+            ) : (
+              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed border-[#14532d] text-[#14532d] font-black uppercase text-xs h-12">
+                + Add Delivery Address
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Order Items */}
         <Card className="border-none shadow-sm">
           <CardHeader className="bg-white border-b py-4">
@@ -192,19 +222,10 @@ export default function CheckoutPage() {
                     <span className="text-[11px] font-black text-[#14532d] mt-1.5 block">₹{item.price * item.quantity}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
-                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
-                    <span className="text-sm font-black min-w-[20px] text-center">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
-                  </div>
-                  <button 
-                    onClick={() => removeItem(item.cartId)} 
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                    title="Remove item"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
+                  <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
+                  <span className="text-sm font-black min-w-[20px] text-center">{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
                 </div>
               </div>
             ))}
@@ -212,7 +233,7 @@ export default function CheckoutPage() {
         </Card>
 
         {/* Coupon Section */}
-        <Card className="border-none shadow-sm overflow-hidden">
+        <Card className="border-none shadow-sm">
           <CardContent className="p-4 bg-white">
             <div className="flex items-center gap-2 mb-3">
                <Ticket className="h-4 w-4 text-[#14532d]" />
@@ -220,10 +241,7 @@ export default function CheckoutPage() {
             </div>
             {appliedCoupon ? (
               <div className="flex items-center justify-between bg-[#14532d]/5 p-3 rounded-lg border border-dashed border-[#14532d]/30">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-[#14532d]" />
-                  <span className="text-xs font-black uppercase text-[#14532d]">{appliedCoupon.code} applied!</span>
-                </div>
+                <span className="text-xs font-black uppercase text-[#14532d]">{appliedCoupon.code} applied!</span>
                 <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600">REMOVE</Button>
               </div>
             ) : (
@@ -232,9 +250,9 @@ export default function CheckoutPage() {
                   placeholder="ENTER PROMO CODE" 
                   value={couponInput}
                   onChange={e => setCouponInput(e.target.value)}
-                  className="h-10 text-xs font-black uppercase tracking-widest"
+                  className="h-10 text-xs font-black"
                 />
-                <Button onClick={handleApplyCoupon} className="bg-[#14532d] text-white font-black text-[10px] px-6">APPLY</Button>
+                <Button onClick={handleApplyCoupon} className="bg-[#14532d] text-white font-black text-[10px]">APPLY</Button>
               </div>
             )}
           </CardContent>
@@ -258,12 +276,10 @@ export default function CheckoutPage() {
             )}
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
               <span>Delivery Partner Fee</span>
-              <span className={calculations.deliveryFee === 0 ? "text-green-600" : ""}>
-                {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}
-              </span>
+              <span className={calculations.deliveryFee === 0 ? "text-green-600" : ""}>{calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}</span>
             </div>
             <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
-              <span>Taxes (CGST + SGST @ {settings?.gstPercentage || 18}%)</span>
+              <span>Taxes (GST @ {settings?.gstPercentage || 18}%)</span>
               <span>₹{calculations.gstTotal.toFixed(2)}</span>
             </div>
             <div className="border-t border-dashed pt-3 flex justify-between text-lg font-black text-[#333333]">
@@ -273,7 +289,7 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        <div className="bg-[#14532d] p-4 rounded-xl flex items-center gap-3 shadow-lg mb-8">
+        <div className="bg-[#14532d] p-4 rounded-xl flex items-center gap-3 shadow-lg">
            <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
               <Crown className="h-6 w-6 text-white" />
            </div>
@@ -286,20 +302,19 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* Fixed Pay Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-[#14532d]" />
             <div className="flex flex-col">
               <span className="text-[11px] font-black uppercase text-[#333333]">Secure Online Payment</span>
-              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">100% Secure Checkout</span>
+              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">100% Encrypted</span>
             </div>
           </div>
         </div>
         <Button 
           onClick={handlePlaceOrder}
-          disabled={isPlacing}
+          disabled={isPlacing || !selectedAddress}
           className="w-full h-14 bg-[#e31837] hover:bg-[#c61430] text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg"
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : `PROCEED TO PAY ₹${Math.round(calculations.finalTotal)}`}

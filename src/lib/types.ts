@@ -63,12 +63,23 @@ export type OrderItem = {
   name: string;
   quantity: number;
   price: number;
+  variation?: string;
+  addons?: string[];
+};
+
+export type DeliveryAddress = {
+  label: string;
+  flatNo: string;
+  area: string;
+  landmark?: string;
+  city: string;
 };
 
 export type Order = {
   id: string;
   customerId: string;
   customerName: string;
+  customerPhone?: string;
   items: OrderItem[];
   subtotal: number;
   gst: number;
@@ -78,8 +89,10 @@ export type Order = {
   status: OrderStatus;
   createdAt: Timestamp;
   outletId: string;
+  deliveryAddress: DeliveryAddress;
   paymentMethod?: string;
   paymentStatus?: string;
+  paymentId?: string;
   cancellationReason?: string;
 };
 
@@ -100,6 +113,7 @@ export type UserProfile = {
     role: 'customer' | 'outlet-admin' | 'franchise-owner';
     outletId?: string;
     loyaltyPoints?: number;
+    phoneNumber?: string;
 };
 
 export type Address = {
