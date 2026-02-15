@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -145,7 +144,7 @@ export default function HomePage() {
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header */}
       <div className="bg-[#14532d] text-white px-6 pt-6 pb-12 rounded-b-[40px] shadow-lg">
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex justify-between items-start mb-2">
           <div>
             <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Welcome Back,</p>
             <h1 className="text-2xl font-black italic tracking-tight">{user?.displayName?.split(' ')[0] || 'Gourmet'}!</h1>
@@ -167,29 +166,6 @@ export default function HomePage() {
               <span className="text-[10px] font-black uppercase tracking-widest">Takeaway</span>
             </button>
           </div>
-        </div>
-
-        {/* ACE Level Upgrade Card */}
-        <div className="bg-white text-[#14532d] p-5 rounded-3xl shadow-2xl relative overflow-hidden">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-primary fill-primary" />
-              <span className="font-black text-xs uppercase tracking-widest">Loyalty Progress</span>
-            </div>
-            <span className="text-[10px] font-bold opacity-60">GOLD MEMBER</span>
-          </div>
-          <p className="text-[11px] font-bold mb-4 leading-snug">
-            Place orders worth <span className="font-black">₹1000</span> more to upgrade your account to <span className="font-black italic">ACE LEVEL</span>
-          </p>
-          <div className="space-y-2">
-            <Progress value={65} className="h-2.5 bg-[#14532d]/10" />
-            <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter opacity-50">
-              <span>₹0</span>
-              <span>₹1000 to ACE</span>
-            </div>
-          </div>
-          {/* Decorative background circle */}
-          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[#14532d]/5 rounded-full" />
         </div>
       </div>
 
@@ -374,6 +350,29 @@ export default function HomePage() {
           <Award className="h-12 w-12 text-blue-600 mb-4" />
           <h3 className="text-lg font-black text-blue-900 uppercase italic mb-2">Times Food Awards</h3>
           <p className="text-[10px] font-bold text-blue-800/60 uppercase tracking-widest">Voted Best Pizza Chain 2024</p>
+        </div>
+      </div>
+
+      {/* Loyalty Status (Bottom Home) */}
+      <div className="mt-12 px-6">
+        <div className="bg-white text-[#14532d] p-6 rounded-[32px] shadow-lg border border-[#14532d]/10 relative overflow-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-primary fill-primary" />
+              <span className="font-black text-sm uppercase tracking-widest">Loyalty Progress</span>
+            </div>
+            <Badge className="bg-[#14532d] text-white text-[9px] font-black uppercase">GOLD MEMBER</Badge>
+          </div>
+          <p className="text-xs font-bold mb-4 leading-snug text-[#333333]">
+            You're close! Just <span className="font-black">₹1000</span> more to unlock <span className="font-black italic text-[#14532d]">ACE LEVEL</span> rewards.
+          </p>
+          <div className="space-y-2">
+            <Progress value={65} className="h-3 bg-[#14532d]/10" />
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter opacity-50">
+              <span>₹0</span>
+              <span>₹1000 to ACE</span>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Mail, Shield, Camera, Save } from "lucide-react";
+import { ArrowLeft, User, Mail, Shield, Camera, Save, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,8 @@ import { useUser, useFirestore } from "@/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -77,6 +79,31 @@ export default function ProfilePage() {
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{user?.email}</p>
           </div>
         </div>
+
+        {/* Loyalty Section */}
+        <Card className="border-none shadow-sm overflow-hidden bg-[#14532d] text-white">
+          <CardHeader className="py-4 border-b border-white/10">
+            <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+              <Crown className="h-4 w-4 text-accent fill-accent" /> Loyalty Level
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase tracking-tighter opacity-70 text-white">Current Status</span>
+              <Badge variant="secondary" className="bg-white text-[#14532d] font-black text-[9px] uppercase">GOLD MEMBER</Badge>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] font-black uppercase">
+                <span>ACE PROGRESS</span>
+                <span>65%</span>
+              </div>
+              <Progress value={65} className="h-3 bg-white/20" />
+              <p className="text-[10px] font-bold opacity-80 leading-snug">
+                Spend <span className="text-accent">₹1000</span> more to reach <span className="italic font-black underline">ACE LEVEL</span> and unlock exclusive rewards!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4">
