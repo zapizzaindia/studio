@@ -1,8 +1,30 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { ArrowRight, Crown, Pizza, Utensils, Star, ShoppingBag, Search, Filter, Flame, X, Check, PlusCircle } from "lucide-react";
+import { 
+  ArrowRight, 
+  Crown, 
+  Pizza, 
+  Utensils, 
+  Star, 
+  ShoppingBag, 
+  Search, 
+  Filter, 
+  Flame, 
+  X, 
+  Check, 
+  PlusCircle, 
+  Info, 
+  ShieldAlert, 
+  Award, 
+  Store,
+  ChevronRight,
+  TrendingUp,
+  MapPin,
+  Clock
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon } from "@/lib/types";
@@ -26,13 +48,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { AnimatePresence, motion } from "framer-motion";
-
-const serviceModes = [
-  { id: 'delivery', label: 'Delivery', sub: 'NOW' },
-  { id: 'takeaway', label: 'Takeaway', sub: 'Select Store' },
-];
-
-const filters = ["All", "Veg", "Non-Veg", "Bestsellers", "New Launches"];
+import { Progress } from "@/components/ui/progress";
 
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
@@ -42,7 +58,6 @@ export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [activeMode, setActiveMode] = useState('delivery');
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -121,187 +136,76 @@ export default function HomePage() {
     return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
   }
 
-  const Section = ({ title, subtitle, icon: Icon, items }: { title: string, subtitle: string, icon: any, items: MenuItem[] | undefined }) => (
-    <div className="bg-white py-8 border-b border-gray-100 last:border-0">
-      <div className="px-6 mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Icon className="h-5 w-5 text-[#14532d]" />
-          <h2 className="text-[16px] font-black text-[#14532d] uppercase tracking-wide leading-none">{title}</h2>
-        </div>
-        <div className="flex justify-between items-center">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{subtitle}</p>
-          <Button variant="link" size="sm" onClick={() => router.push('/home/menu')} className="text-[#14532d] p-0 h-auto text-[10px] font-black uppercase">SEE ALL</Button>
-        </div>
-      </div>
-
-      <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
-        {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
-          <Skeleton key={i} className="h-[360px] w-64 rounded-xl flex-shrink-0" />
-        )) : items?.map((item) => (
-          <div key={item.id} className="relative w-64 flex-shrink-0 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col group">
-            <div className="relative h-44 w-full">
-              <Image
-                src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-                alt={item.name}
-                fill
-                className="object-cover"
-                data-ai-hint="pizza"
-              />
-              <div className="absolute top-3 right-3">
-                 {item.isAvailableGlobally && (
-                   <Badge className="bg-white/90 text-[#14532d] border-none shadow-sm text-[8px] font-black uppercase tracking-tighter flex gap-1 items-center px-1.5 py-0.5">
-                     <Flame className="h-2 w-2 text-primary" /> Popular
-                   </Badge>
-                 )}
-              </div>
-              <div className="absolute bottom-3 right-3">
-                <Button 
-                  variant="secondary" 
-                  onClick={() => handleAddClick(item)}
-                  className="h-6 px-3 bg-black/50 text-white border-0 text-[9px] font-bold rounded-md hover:bg-black/70 backdrop-blur-sm"
-                >
-                  Customise <ArrowRight className="ml-1 h-2 w-2" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="p-4 flex-1 flex flex-col">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-                  <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
-                </div>
-                <h4 className="text-[13px] font-black text-[#333333] uppercase truncate tracking-tight">{item.name}</h4>
-              </div>
-              <p className="text-[10px] text-muted-foreground line-clamp-2 leading-snug font-medium h-8 mb-4">{item.description}</p>
-              
-              <div className="mt-auto">
-                <div className="flex items-center justify-between mb-3 text-[10px] font-bold text-muted-foreground/80 border-b border-dashed pb-2">
-                  <span className="truncate">Regular | New Hand Tossed</span>
-                  <ArrowRight className="h-2 w-2" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[18px] font-black text-[#14532d] leading-none">₹{item.price}</span>
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleAddClick(item)}
-                    className="h-8 px-6 bg-[#e31837] text-white font-black text-[11px] rounded shadow-md uppercase active:scale-95 transition-transform hover:bg-[#c61430]"
-                  >
-                    Add +
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   const activeBanners = banners?.filter(b => b.active) || [];
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#f1f2f6]">
-      {/* Service Modes Tabs */}
-      <div className="flex bg-[#14532d] border-t border-white/10">
-        {serviceModes.map((mode) => (
-          <button
-            key={mode.id}
-            onClick={() => setActiveMode(mode.id)}
-            className={`flex-1 flex flex-col items-center justify-center py-3 transition-all relative ${
-              activeMode === mode.id ? 'bg-white text-[#14532d]' : 'text-white'
-            }`}
-          >
-            <span className="text-[12px] font-bold uppercase tracking-tight">{mode.label}</span>
-            <span className={`text-[9px] ${activeMode === mode.id ? 'text-[#14532d]/60' : 'text-white/60'}`}>{mode.sub}</span>
-            {activeMode === mode.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />}
-          </button>
-        ))}
+    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
+      {/* Welcome Header */}
+      <div className="bg-[#14532d] text-white px-6 pt-6 pb-12 rounded-b-[40px] shadow-lg">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Welcome Back,</p>
+            <h1 className="text-2xl font-black italic tracking-tight">{user?.displayName?.split(' ')[0] || 'Gourmet'}!</h1>
+          </div>
+          <div className="bg-white/10 p-2 rounded-2xl backdrop-blur-md">
+            <ShoppingBag className="h-6 w-6 text-white" />
+          </div>
+        </div>
+
+        {/* ACE Level Upgrade Card */}
+        <div className="bg-white text-[#14532d] p-5 rounded-3xl shadow-2xl relative overflow-hidden">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-primary fill-primary" />
+              <span className="font-black text-xs uppercase tracking-widest">ACE Level Status</span>
+            </div>
+            <span className="text-[10px] font-bold opacity-60">GOLD MEMBER</span>
+          </div>
+          <p className="text-[11px] font-bold mb-4 leading-snug">
+            Place orders worth <span className="font-black">₹1000</span> more to upgrade your account to <span className="font-black italic">ACE LEVEL</span>
+          </p>
+          <div className="space-y-2">
+            <Progress value={65} className="h-2.5 bg-[#14532d]/10" />
+            <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter opacity-50">
+              <span>₹0</span>
+              <span>₹1000 to ACE</span>
+            </div>
+          </div>
+          {/* Decorative background circle */}
+          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[#14532d]/5 rounded-full" />
+        </div>
       </div>
 
-      {/* Search Bar Section */}
-      <div className="bg-white p-4 shadow-sm border-b sticky top-16 z-20">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Search Section (Pulled up) */}
+      <div className="px-6 -mt-6">
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-[#14532d] transition-colors" />
           <Input 
-            placeholder="Search for pizzas, sides..." 
-            className="pl-10 h-12 bg-[#f1f2f6] border-none rounded-xl font-bold placeholder:font-normal"
+            placeholder="Search for deliciousness..." 
+            className="pl-12 h-14 bg-white border-none rounded-2xl shadow-xl font-bold placeholder:font-normal focus-visible:ring-2"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button className="absolute right-3 top-1/2 -translate-y-1/2">
+          <button className="absolute right-4 top-1/2 -translate-y-1/2 bg-[#14532d]/5 p-1.5 rounded-lg">
             <Filter className="h-4 w-4 text-[#14532d]" />
           </button>
         </div>
-        
-        {/* Filter Chips */}
-        <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">
-          {filters.map(filter => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${
-                activeFilter === filter 
-                  ? 'bg-[#14532d] text-white border-[#14532d]' 
-                  : 'bg-white text-[#666666] border-gray-200 hover:border-[#14532d]'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Hero Banner Carousel */}
-      <div className="relative w-full overflow-hidden">
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-        >
+      {/* Hero Banners */}
+      <div className="mt-8 px-6">
+        <Carousel opts={{ loop: true }} className="w-full">
           <CarouselContent>
             {bannersLoading ? (
-              <CarouselItem>
-                <Skeleton className="w-full aspect-[16/9] md:aspect-[21/9]" />
-              </CarouselItem>
+              <CarouselItem><Skeleton className="w-full h-48 rounded-3xl" /></CarouselItem>
             ) : activeBanners.map((banner, index) => (
               <CarouselItem key={index}>
-                <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden">
-                  <Image
-                    src={placeholderImageMap.get(banner.imageId)?.imageUrl || ''}
-                    alt={banner.title}
-                    fill
-                    className="object-cover"
-                    data-ai-hint="pizza promotion"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-6 md:p-10">
-                    <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="max-w-2xl"
-                    >
-                      <Badge className="mb-2 bg-primary text-white border-none font-black uppercase text-[10px] tracking-widest px-3 py-1">
-                        {banner.subtitle}
-                      </Badge>
-                      <h2 className="text-white text-3xl md:text-5xl font-black uppercase italic leading-tight mb-4 tracking-tighter drop-shadow-2xl">
-                        {banner.title}
-                      </h2>
-                      <div className="flex items-center gap-6">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-white/60 uppercase tracking-widest leading-none mb-1">Starting @</span>
-                          <span className="text-3xl font-black text-white leading-none">₹{banner.price}</span>
-                        </div>
-                        <Button 
-                          size="lg" 
-                          className="bg-white text-[#14532d] hover:bg-gray-100 font-black h-14 rounded-2xl px-10 shadow-2xl transition-all active:scale-95 group border-none"
-                          onClick={() => router.push('/home/menu')}
-                        >
-                          ORDER NOW <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
-                        </Button>
-                      </div>
-                    </motion.div>
+                <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-lg group">
+                  <Image src={placeholderImageMap.get(banner.imageId)?.imageUrl || ''} alt={banner.title} fill className="object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#14532d]/90 via-[#14532d]/40 to-transparent flex flex-col justify-center p-6">
+                    <Badge className="w-fit mb-2 bg-accent text-accent-foreground font-black uppercase text-[8px] tracking-widest">{banner.subtitle}</Badge>
+                    <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md">{banner.title}</h2>
+                    <p className="text-white font-black text-lg">₹{banner.price}</p>
                   </div>
                 </div>
               </CarouselItem>
@@ -310,88 +214,199 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Categories Horizontal Scroll */}
-      <div className="py-8 bg-white mt-6 rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-        <h2 className="px-6 text-[14px] font-black text-[#14532d] mb-5 uppercase tracking-wide">What are you craving for?</h2>
-        <div className="flex overflow-x-auto px-6 pb-2 space-x-6 scrollbar-hide">
+      {/* Explore Menu Grid */}
+      <div className="mt-10 px-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Explore Menu</h2>
+          <Button variant="ghost" size="sm" className="text-xs font-black uppercase text-[#14532d] gap-1 pr-0">
+            See All <ChevronRight className="h-3 w-3" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
           {categoriesLoading ? Array.from({length: 6}).map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-3 flex-shrink-0">
-              <Skeleton className="h-20 w-20 rounded-full" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-          )) : categories?.map((category) => (
+            <Skeleton key={i} className="aspect-square rounded-3xl" />
+          )) : categories?.map((cat) => (
             <div 
-              key={category.id} 
-              className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer group"
-              onClick={() => router.push(`/home/menu?category=${category.id}`)}
+              key={cat.id} 
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+              onClick={() => router.push(`/home/menu?category=${cat.id}`)}
             >
-              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-[#f2f2f2] shadow-sm transition-transform active:scale-90 group-hover:border-primary">
-                <Image
-                  src={`https://picsum.photos/seed/${category.id}/200/200`}
-                  alt={category.name}
-                  fill
-                  className="object-cover"
-                  data-ai-hint="pizza category"
-                />
+              <div className="relative aspect-square w-full rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-[#14532d] transition-all shadow-md active:scale-95">
+                <Image src={`https://picsum.photos/seed/${cat.id}/300/300`} alt={cat.name} fill className="object-cover" />
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
               </div>
-              <span className="text-[10px] font-black text-[#666666] text-center w-24 leading-tight uppercase tracking-tighter">
-                {category.name}
-              </span>
+              <span className="text-[10px] font-black text-[#14532d] uppercase tracking-tighter text-center line-clamp-1">{cat.name}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <Section 
-        title="Top 10 Bestsellers" 
-        subtitle="In Your Locality" 
-        icon={Crown} 
-        items={menuItems?.slice(0, 5)} 
-      />
+      {/* Trending Items Horizontal Scroll */}
+      <div className="mt-12">
+        <div className="px-6 mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="h-5 w-5 text-[#14532d]" />
+            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Trending Items</h2>
+          </div>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Most loved by your neighbors</p>
+        </div>
+        <div className="flex overflow-x-auto px-6 space-x-5 scrollbar-hide pb-4">
+          {menuItems?.slice(0, 5).map((item) => (
+            <div key={item.id} className="relative w-48 flex-shrink-0 bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden flex flex-col group">
+              <div className="relative h-32 w-full">
+                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                <div className="absolute top-3 left-3">
+                  <div className={`h-3 w-3 border flex items-center justify-center bg-white rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 flex flex-col items-center text-center">
+                <h4 className="text-[11px] font-black text-[#333333] uppercase leading-tight line-clamp-1 mb-1">{item.name}</h4>
+                <p className="text-[14px] font-black text-[#14532d] mb-3">₹{item.price}</p>
+                <Button 
+                  size="sm" 
+                  onClick={() => handleAddClick(item)}
+                  className="w-full h-8 bg-white border-2 border-[#14532d] text-[#14532d] font-black text-[10px] rounded-xl uppercase hover:bg-[#14532d] hover:text-white transition-all shadow-md"
+                >
+                  ADD +
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      <Section 
-        title="Popular Veg Delights" 
-        subtitle="Free Delivery For Orders Above ₹149" 
-        icon={Star} 
-        items={menuItems?.filter(i => i.isVeg && i.category === 'veg-pizzas')} 
-      />
+      {/* Bestsellers Vertical List */}
+      <div className="mt-12 px-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Star className="h-5 w-5 text-[#14532d] fill-[#14532d]" />
+          <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Bestsellers</h2>
+        </div>
+        <div className="space-y-6">
+          {menuItems?.slice(0, 6).map((item) => (
+            <div key={item.id} className="flex gap-4 bg-white p-4 rounded-[32px] shadow-lg border border-gray-50 group active:scale-[0.98] transition-transform">
+              <div className="relative h-24 w-24 flex-shrink-0 rounded-2xl overflow-hidden shadow-md">
+                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+              </div>
+              <div className="flex-1 flex flex-col justify-center">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className={`h-3 w-3 border flex items-center justify-center bg-white rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+                  </div>
+                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Bestseller</span>
+                </div>
+                <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight tracking-tight mb-1">{item.name}</h4>
+                <div className="flex items-center gap-1 mb-2">
+                  {Array.from({length: 5}).map((_, i) => (
+                    <Star key={i} className={`h-2.5 w-2.5 ${i < 4 ? 'text-accent fill-accent' : 'text-gray-200 fill-gray-200'}`} />
+                  ))}
+                  <span className="text-[9px] font-bold text-muted-foreground ml-1">(120+)</span>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[15px] font-black text-[#14532d]">₹{item.price}</span>
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleAddClick(item)}
+                    className="h-8 px-6 bg-[#14532d] text-white font-black text-[10px] rounded-xl uppercase shadow-md active:scale-95 transition-transform"
+                  >
+                    ADD
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      <Section 
-        title="Non-Veg Favorites" 
-        subtitle="The Meat Lovers Choice" 
-        icon={Pizza} 
-        items={menuItems?.filter(i => !i.isVeg)} 
-      />
+      {/* Franchise Inquiry Section */}
+      <div className="mt-16 px-6">
+        <div className="bg-[#14532d] p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
+          <div className="relative z-10">
+            <h2 className="text-white text-2xl font-black uppercase italic italic leading-tight mb-2 tracking-tighter">
+              ENQUIRE ABOUT<br />ZAPIZZA FRANCHISE
+            </h2>
+            <p className="text-white/70 text-xs font-bold mb-6 max-w-[200px]">Join India's fastest growing pizza chain. 700+ Outlets across the globe.</p>
+            <Button className="bg-white text-[#14532d] font-black uppercase text-[10px] tracking-widest rounded-2xl h-12 px-8 shadow-xl hover:bg-gray-100 transition-all">
+              ENQUIRE NOW
+            </Button>
+          </div>
+          {/* Decorative Store Icon */}
+          <div className="absolute top-0 right-0 opacity-5 translate-x-1/4 -translate-y-1/4">
+            <Store className="h-48 w-48" />
+          </div>
+        </div>
+      </div>
 
-      <Section 
-        title="Sides & Breads" 
-        subtitle="Best Companions To Your Pizza" 
-        icon={Utensils} 
-        items={menuItems?.filter(i => i.category === 'desserts' || i.category === 'beverages')} 
-      />
+      {/* Trust & Safety Banner */}
+      <div className="mt-12 px-6">
+        <div className="bg-white border-2 border-dashed border-gray-200 p-6 rounded-[32px] flex items-center gap-5">
+          <div className="bg-accent/10 p-4 rounded-3xl">
+            <ShieldAlert className="h-8 w-8 text-accent" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-[#333333] uppercase mb-1 tracking-tighter">Beware of Scams!</h3>
+            <p className="text-[10px] font-bold text-muted-foreground leading-snug">Zapizza never asks for payments or OTPs on unofficial calls or messages.</p>
+          </div>
+        </div>
+      </div>
 
-      {/* Customization Dialog */}
+      {/* Awards Section */}
+      <div className="mt-12 px-6">
+        <div className="bg-blue-50/50 p-8 rounded-[40px] border border-blue-100 flex flex-col items-center text-center">
+          <Award className="h-12 w-12 text-blue-600 mb-4" />
+          <h3 className="text-lg font-black text-blue-900 uppercase italic mb-2">Times Food Awards</h3>
+          <p className="text-[10px] font-bold text-blue-800/60 uppercase tracking-widest">Voted Best Pizza Chain 2024</p>
+        </div>
+      </div>
+
+      {/* Quote Section */}
+      <div className="py-16 px-10 text-center">
+        <p className="text-[#14532d]/30 text-sm font-black italic uppercase leading-relaxed mb-4">
+          "The secret of success in life is to eat what you like and let the food fight it out inside."
+        </p>
+        <p className="text-[10px] font-black text-[#14532d]/20 uppercase tracking-widest">— Mark Twain</p>
+      </div>
+
+      {/* Footer Branding */}
+      <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
+        Zapizza
+      </div>
+
+      {/* Floating View Cart Button */}
+      {totalItems > 0 && (
+        <div className="fixed bottom-20 left-4 right-4 z-40">
+          <Button 
+            onClick={() => router.push('/home/checkout')}
+            className="w-full h-16 bg-[#14532d] hover:bg-[#0f4023] text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none"
+          >
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS ADDED</span>
+              <span className="text-xl font-black tracking-tight">₹{totalPrice}</span>
+            </div>
+            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">
+              VIEW CART <ShoppingBag className="h-5 w-5" />
+            </div>
+          </Button>
+        </div>
+      )}
+
+      {/* Customization Dialog (Re-integrated) */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
-        <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-[90vw] rounded-3xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
           {customizingItem && (
             <>
               <div className="relative h-48 w-full flex-shrink-0">
-                <Image 
-                  src={placeholderImageMap.get(customizingItem.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
-                  alt={customizingItem.name} 
-                  fill 
-                  className="object-cover" 
-                />
+                <Image src={placeholderImageMap.get(customizingItem.imageId)?.imageUrl || ''} alt={customizingItem.name} fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
-                   <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center ${customizingItem.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-                      <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+                   <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center bg-white rounded-sm ${customizingItem.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                      <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
                    </div>
-                   <h2 className="text-xl font-black text-white uppercase tracking-tight italic">{customizingItem.name}</h2>
+                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">{customizingItem.name}</h2>
                 </div>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-8 flex-1">
-                {/* Variations (Sizes) */}
+              <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white">
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -404,7 +419,7 @@ export default function HomePage() {
                       className="space-y-3"
                     >
                       {customizingItem.variations.map((v) => (
-                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                        <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-[#14532d]/20 transition-all">
                           <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer">
                             <span className="text-sm font-bold text-[#333333] uppercase">{v.name}</span>
                           </Label>
@@ -418,15 +433,12 @@ export default function HomePage() {
                   </div>
                 )}
 
-                <Separator />
-
-                {/* Add-ons */}
                 {customizingItem.addons && customizingItem.addons.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Extra Toppings</h3>
                     <div className="space-y-3">
                       {customizingItem.addons.map((addon) => (
-                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                        <div key={addon.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-[#14532d]/20 transition-all">
                           <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
                             <span className="text-sm font-bold text-[#333333] uppercase">{addon.name}</span>
                           </Label>
@@ -447,51 +459,16 @@ export default function HomePage() {
                     </div>
                   </div>
                 )}
-
-                {/* Recommended Sides */}
-                {customizingItem.recommendedSides && customizingItem.recommendedSides.length > 0 && (
-                  <>
-                    <Separator />
-                    <div className="space-y-4">
-                      <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Goes well with</h3>
-                      <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
-                        {customizingItem.recommendedSides.map(sideId => {
-                          const side = menuItems?.find(m => m.id === sideId);
-                          if (!side) return null;
-                          return (
-                            <div key={side.id} className="flex-shrink-0 w-32 bg-white border rounded-xl p-2 shadow-sm">
-                              <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
-                                <Image src={placeholderImageMap.get(side.imageId)?.imageUrl || ''} alt={side.name} fill className="object-cover" />
-                              </div>
-                              <p className="text-[10px] font-black uppercase text-[#333333] line-clamp-1 mb-1">{side.name}</p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black text-[#14532d]">₹{side.price}</span>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-6 w-6 text-primary"
-                                  onClick={() => addItem(side)}
-                                >
-                                  <PlusCircle className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
 
               <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Final Price</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Item Total</span>
                   <span className="text-2xl font-black text-[#14532d]">₹{currentCustomPrice}</span>
                 </div>
                 <Button 
                   onClick={handleConfirmCustomization}
-                  className="bg-[#14532d] hover:bg-[#0f4023] text-white px-10 h-14 rounded-xl font-black uppercase tracking-widest shadow-xl flex-1"
+                  className="bg-[#14532d] hover:bg-[#0f4023] text-white px-10 h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl flex-1 border-none"
                 >
                   ADD TO CART
                 </Button>
@@ -500,68 +477,6 @@ export default function HomePage() {
           )}
         </DialogContent>
       </Dialog>
-
-      {totalItems > 0 && (
-        <div className="fixed bottom-20 left-4 right-4 z-40">
-          <Button 
-            onClick={() => router.push('/home/checkout')}
-            className="w-full h-14 bg-[#14532d] hover:bg-[#0f4023] text-white flex items-center justify-between px-6 rounded-xl shadow-2xl animate-in slide-in-from-bottom-10"
-          >
-            <div className="flex flex-col items-start">
-              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
-              <span className="text-lg font-black">₹{totalPrice}</span>
-            </div>
-            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[12px]">
-              VIEW CART <ShoppingBag className="h-5 w-5" />
-            </div>
-          </Button>
-        </div>
-      )}
-
-      <div className="py-12 px-6 text-center text-muted-foreground/30 font-black italic uppercase tracking-widest text-[32px] opacity-10">
-        Zapizza
-      </div>
-    </div>
-  );
-}
-
-function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
-  const hasOptions = (item.variations && item.variations.length > 0) || (item.addons && item.addons.length > 0);
-
-  return (
-    <div className="flex gap-5">
-      <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
-        <Image
-          src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-          alt={item.name}
-          fill
-          className="object-cover"
-        />
-      </div>
-      <div className="flex-1 flex flex-col">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className={`h-4 w-4 border-2 mb-1.5 flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-              <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
-            </div>
-            <h4 className="text-[14px] font-black text-[#333333] leading-tight uppercase tracking-tight">{item.name}</h4>
-            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed font-medium">{item.description}</p>
-          </div>
-        </div>
-        <div className="mt-auto flex items-center justify-between pt-3">
-          <div className="flex flex-col">
-            <span className="text-[15px] font-black text-[#14532d]">₹{item.price}</span>
-            {hasOptions && <span className="text-[8px] font-bold text-muted-foreground uppercase">Options available</span>}
-          </div>
-          <Button 
-            size="sm" 
-            onClick={onAdd}
-            className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors"
-          >
-            {hasOptions ? 'CUSTOMIZE' : 'ADD'}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
