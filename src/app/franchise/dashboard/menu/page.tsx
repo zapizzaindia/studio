@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { MenuItem, Category } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap, PlaceHolderImages } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Save, Layers } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Layers, Upload, ImageIcon } from 'lucide-react';
 import { useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -36,12 +36,24 @@ export default function FranchiseMenuPage() {
   const [newItemIsVeg, setNewItemIsVeg] = useState(true);
   const [newItemImageId, setNewItemImageId] = useState("margherita");
   const [newItemGlobal, setNewItemGlobal] = useState(true);
+  const [customImage, setCustomImage] = useState<string | null>(null);
 
   // New Category State
   const [newCategoryName, setNewCategoryName] = useState("");
 
   const isLoading = menuItemsLoading || categoriesLoading;
   const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAddItem = () => {
     if (!newItemName || !newItemPrice || !newItemCategory) {
@@ -63,6 +75,7 @@ export default function FranchiseMenuPage() {
     setNewItemIsVeg(true);
     setNewItemImageId("margherita");
     setNewItemGlobal(true);
+    setCustomImage(null);
     setIsAddDialogOpen(false);
   };
 
@@ -182,19 +195,56 @@ export default function FranchiseMenuPage() {
                                 </Select>
                             </div>
                         </div>
-                        <div className="grid gap-2">
-                            <Label>Placeholder Image</Label>
-                            <Select onValueChange={setNewItemImageId} value={newItemImageId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select image" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {PlaceHolderImages.map(img => (
-                                        <SelectItem key={img.id} value={img.id}>{img.id.replace(/_/g, ' ').toUpperCase()}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label>Placeholder Image</Label>
+                                <Select onValueChange={(val) => { setNewItemImageId(val); setCustomImage(null); }} value={newItemImageId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select image" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {PlaceHolderImages.map(img => (
+                                            <SelectItem key={img.id} value={img.id}>{img.id.replace(/_/g, ' ').toUpperCase()}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="upload-item">Or Upload Photo</Label>
+                                <div className="relative">
+                                    <Input 
+                                        id="upload-item" 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                        onChange={handleFileChange}
+                                    />
+                                    <Button 
+                                        variant="outline" 
+                                        className="w-full" 
+                                        onClick={() => document.getElementById('upload-item')?.click()}
+                                    >
+                                        <Upload className="mr-2 h-4 w-4" /> Upload
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
+
+                        <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted/20 flex items-center justify-center group">
+                            <Image 
+                                src={customImage || placeholderImageMap.get(newItemImageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
+                                alt="Preview" 
+                                fill 
+                                className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="text-white font-black uppercase text-xs tracking-widest flex gap-2 items-center">
+                                    <ImageIcon className="h-4 w-4" /> Item Preview
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="flex items-center space-x-4 pt-2">
                             <div className="flex items-center space-x-2">
                                 <Checkbox id="isVeg" checked={newItemIsVeg} onCheckedChange={(val: boolean) => setNewItemIsVeg(val)} />
@@ -207,7 +257,7 @@ export default function FranchiseMenuPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button onClick={handleAddItem} className="bg-[#14532d] hover:bg-[#0f4023]">Save Product</Button>
+                        <Button onClick={handleAddItem} className="bg-[#14532d] hover:bg-[#0f4023] w-full">Save Product</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
