@@ -136,7 +136,7 @@ export default function HomePage() {
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header with Custom GIF Background */}
       <div className="relative bg-[#14532d] text-white px-6 pt-12 pb-64 rounded-b-[40px] shadow-lg overflow-hidden">
-        {/* CUSTOM GIF SLOT */}
+        {/* CUSTOM GIF SLOT - Update the src URL with your direct GIF link */}
         <div className="absolute inset-0 z-0">
           <motion.div 
             animate={{ scale: [1, 1.05, 1] }}
@@ -147,6 +147,10 @@ export default function HomePage() {
               src="https://jumpshare.com/s/SLpdAMrhVcxT9ckCqvFB"
               alt="Custom Promotional Background" 
               className="w-full h-full object-cover opacity-70 grayscale brightness-125"
+              onError={(e) => {
+                // Fallback to placeholder if GIF link fails
+                e.currentTarget.src = "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80";
+              }}
             />
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/20 via-[#14532d]/60 to-[#14532d]" />
