@@ -34,6 +34,7 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -54,6 +55,7 @@ export default function HomePage() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
+  const [api, setApi] = useState<CarouselApi>();
 
   // Customization State
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
@@ -76,6 +78,17 @@ export default function HomePage() {
         try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
     }
   }, []);
+
+  // Banner Auto-scroll effect
+  useEffect(() => {
+    if (!api) return;
+
+    const intervalId = setInterval(() => {
+      api.scrollNext();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [api]);
 
   const handleCitySelect = (city: City) => {
     setSelectedCity(city);
@@ -211,7 +224,7 @@ export default function HomePage() {
 
       {/* Hero Banners */}
       <div className="mt-8 px-6">
-        <Carousel opts={{ loop: true }} className="w-full">
+        <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
           <CarouselContent>
             {bannersLoading ? (
               <CarouselItem><Skeleton className="w-full h-48 rounded-3xl" /></CarouselItem>
