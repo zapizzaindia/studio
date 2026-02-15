@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MenuItem, Category, MenuItemVariation, MenuItemAddon } from '@/lib/types';
 import Image from 'next/image';
-import { placeholderImageMap, PlaceHolderImages } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Save, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket } from 'lucide-react';
+import { placeholderImageMap } from '@/lib/placeholder-images';
+import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket } from 'lucide-react';
 import { useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -280,21 +280,11 @@ export default function FranchiseMenuPage() {
                                     <Button 
                                         variant="outline" 
                                         size="sm" 
-                                        className="w-full h-8 text-[10px] font-black uppercase tracking-widest"
+                                        className="w-full h-10 text-[10px] font-black uppercase tracking-widest"
                                         onClick={() => document.getElementById('cat-img-upload')?.click()}
                                     >
-                                        <Upload className="mr-2 h-3.5 w-3.5" /> Upload Photo
+                                        <Upload className="mr-2 h-4 w-4" /> Upload Category Image
                                     </Button>
-                                    <Select value={newCategoryImageId} onValueChange={(v) => { setNewCategoryImageId(v); setCategoryCustomImage(null); }}>
-                                        <SelectTrigger className="h-8 text-[10px] font-bold">
-                                            <SelectValue placeholder="Or Pick Placeholder" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {PlaceHolderImages.filter(img => img.id.startsWith('cat_')).map(img => (
-                                                <SelectItem key={img.id} value={img.id}>{img.id.replace('cat_', '').toUpperCase()}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
                                 </div>
                             </div>
 
@@ -364,7 +354,7 @@ export default function FranchiseMenuPage() {
                                     <Label htmlFor="category" className="text-[10px] font-black uppercase text-muted-foreground">Category</Label>
                                     <Select onValueChange={setNewItemCategory} value={newItemCategory}>
                                         <SelectTrigger className="font-bold">
-                                            <SelectValue placeholder="Select" />
+                                            <SelectValue placeholder="Select Category" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {categories?.map(cat => (
@@ -375,38 +365,23 @@ export default function FranchiseMenuPage() {
                                 </div>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Placeholder Image</Label>
-                                    <Select onValueChange={(val) => { setNewItemImageId(val); setCustomImage(null); }} value={newItemImageId}>
-                                        <SelectTrigger className="font-bold">
-                                            <SelectValue placeholder="Select image" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {PlaceHolderImages.filter(img => !img.id.startsWith('banner_') && !img.id.startsWith('cat_')).map(img => (
-                                                <SelectItem key={img.id} value={img.id}>{img.id.replace(/_/g, ' ').toUpperCase()}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="upload-item" className="text-[10px] font-black uppercase text-muted-foreground">Or Upload Photo</Label>
-                                    <div className="relative">
-                                        <Input 
-                                            id="upload-item" 
-                                            type="file" 
-                                            accept="image/*" 
-                                            className="hidden" 
-                                            onChange={handleFileChange}
-                                        />
-                                        <Button 
-                                            variant="outline" 
-                                            className="w-full font-black uppercase text-[10px] h-10 tracking-widest" 
-                                            onClick={() => document.getElementById('upload-item')?.click()}
-                                        >
-                                            <Upload className="mr-2 h-4 w-4" /> Upload
-                                        </Button>
-                                    </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="upload-item" className="text-[10px] font-black uppercase text-muted-foreground">Product Image</Label>
+                                <div className="relative">
+                                    <Input 
+                                        id="upload-item" 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                        onChange={handleFileChange}
+                                    />
+                                    <Button 
+                                        variant="outline" 
+                                        className="w-full font-black uppercase text-[10px] h-12 tracking-widest" 
+                                        onClick={() => document.getElementById('upload-item')?.click()}
+                                    >
+                                        <Upload className="mr-2 h-4 w-4" /> Upload High-Res Image
+                                    </Button>
                                 </div>
                             </div>
 
