@@ -4,28 +4,20 @@
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { 
-  ArrowRight, 
-  Crown, 
-  Pizza, 
-  Utensils, 
-  Star, 
-  ShoppingBag, 
   Search, 
   Filter, 
-  Flame, 
-  X, 
-  Check, 
-  PlusCircle, 
-  Info, 
-  ShieldAlert, 
-  Award, 
-  Store,
-  ChevronRight,
-  TrendingUp,
-  MapPin,
-  Clock,
-  Bike,
-  ShoppingBasket
+  Pizza, 
+  Star, 
+  TrendingUp, 
+  ChevronRight, 
+  Bike, 
+  ShoppingBasket, 
+  Store, 
+  Crown, 
+  ShieldAlert,
+  ShoppingBag,
+  PlusCircle,
+  Clock
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -44,7 +36,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -60,7 +52,6 @@ export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
 
@@ -144,24 +135,23 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header with Manual GIF Background Slot */}
-      <div className="relative bg-[#14532d] text-white px-6 pt-12 pb-48 rounded-b-[40px] shadow-lg overflow-hidden">
-        {/* ANIMATED BACKGROUND / GIF SLOT */}
+      <div className="relative bg-[#14532d] text-white px-6 pt-12 pb-64 rounded-b-[40px] shadow-lg overflow-hidden">
+        {/* MANUAL GIF SLOT - Update the src URL below */}
         <div className="absolute inset-0 z-0">
           <motion.div 
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             className="absolute inset-0"
           >
-            {/* REPLACE THE SRC BELOW WITH YOUR OWN GIF URL */}
             <img 
-              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif"
+              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif"
               alt="Dynamic Header" 
-              className="w-full h-full object-cover opacity-40 grayscale brightness-125"
+              className="w-full h-full object-cover opacity-60 grayscale brightness-125"
             />
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-b from-[#14532d]/20 via-[#14532d]/60 to-[#14532d]" />
           
-          {/* Decorative Floating Icons */}
+          {/* Decorative Floating Icon */}
           <motion.div 
             animate={{ y: [0, -15, 0], rotate: [0, 15, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -234,7 +224,7 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Explore Menu Circular Grid */}
+      {/* Circular Explore Menu */}
       <div className="mt-10 px-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Explore Menu</h2>
@@ -261,14 +251,14 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Trending Items Horizontal Scroll */}
+      {/* Trending Items Scroll */}
       <div className="mt-12">
         <div className="px-6 mb-6">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-5 w-5 text-[#14532d]" />
-            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Trending Items</h2>
+            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Trending Now</h2>
           </div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Most loved by your neighbors</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">The community's favorites</p>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-5 scrollbar-hide pb-4">
           {menuItems?.slice(0, 5).map((item) => (
@@ -297,7 +287,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Bestsellers Vertical List (Horizontal Cards) */}
+      {/* Bestseller Vertical List */}
       <div className="mt-12 px-6">
         <div className="flex items-center gap-2 mb-6">
           <Star className="h-5 w-5 text-[#14532d] fill-[#14532d]" />
@@ -339,8 +329,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Franchise Inquiry Banner */}
-      <div className="mt-16 px-6">
+      {/* Franchise & Trust */}
+      <div className="mt-16 px-6 space-y-12">
         <div className="bg-[#14532d] p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
           <div className="relative z-10">
             <h2 className="text-white text-2xl font-black uppercase italic leading-tight mb-2 tracking-tighter">
@@ -355,10 +345,7 @@ export default function HomePage() {
             <Store className="h-48 w-48" />
           </div>
         </div>
-      </div>
 
-      {/* Trust & Safety Section */}
-      <div className="mt-12 px-6">
         <div className="bg-white border-2 border-dashed border-gray-200 p-6 rounded-[32px] flex items-center gap-5">
           <div className="bg-accent/10 p-4 rounded-3xl">
             <ShieldAlert className="h-8 w-8 text-accent" />
@@ -370,7 +357,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Loyalty Progress Tracker (Bottom Home) */}
+      {/* Loyalty Progress Tracker (Bottom Reminder) */}
       <div className="mt-12 px-6">
         <div className="bg-white text-[#14532d] p-6 rounded-[32px] shadow-lg border border-[#14532d]/10 relative overflow-hidden">
           <div className="flex justify-between items-center mb-4">
@@ -405,7 +392,7 @@ export default function HomePage() {
             className="w-full h-16 bg-[#14532d] hover:bg-[#0f4023] text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none"
           >
             <div className="flex flex-col items-start">
-              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS ADDED</span>
+              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
               <span className="text-xl font-black tracking-tight">₹{totalPrice}</span>
             </div>
             <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">

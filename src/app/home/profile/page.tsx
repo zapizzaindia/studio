@@ -39,9 +39,12 @@ export default function ProfilePage() {
       await updateDoc(userRef, { displayName });
       
       // Update local session too for demo purposes
-      const session = JSON.parse(localStorage.getItem('zapizza-mock-session') || '{}');
-      session.displayName = displayName;
-      localStorage.setItem('zapizza-mock-session', JSON.stringify(session));
+      const sessionString = localStorage.getItem('zapizza-mock-session');
+      if (sessionString) {
+        const session = JSON.parse(sessionString);
+        session.displayName = displayName;
+        localStorage.setItem('zapizza-mock-session', JSON.stringify(session));
+      }
 
       toast({ title: "Profile updated successfully" });
     } catch (e: any) {
@@ -66,7 +69,7 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center gap-4 py-6">
           <div className="relative">
             <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-              <AvatarImage src={user?.photoURL} />
+              <AvatarImage src={user?.photoURL || undefined} />
               <AvatarFallback className="bg-[#14532d] text-white text-2xl font-black">
                 {user?.displayName?.charAt(0) || 'U'}
               </AvatarFallback>
@@ -76,7 +79,7 @@ export default function ProfilePage() {
             </button>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-black text-[#333333] uppercase">{user?.displayName || 'User'}</h2>
+            <h2 className="text-xl font-black text-[#333333] uppercase">{user?.displayName || 'Gourmet User'}</h2>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{user?.email}</p>
           </div>
         </div>
