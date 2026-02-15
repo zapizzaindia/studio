@@ -6,7 +6,8 @@ import {
   MOCK_CATEGORIES, 
   MOCK_MENU_ITEMS, 
   MOCK_ORDERS,
-  MOCK_BANNERS
+  MOCK_BANNERS,
+  MOCK_COUPONS
 } from '@/lib/mock-data';
 
 interface CollectionData<T> {
@@ -46,8 +47,15 @@ export function useCollection<T>(
         result = MOCK_ORDERS;
       } else if (path.includes('banners')) {
         result = MOCK_BANNERS;
+      } else if (path.includes('coupons')) {
+        result = MOCK_COUPONS;
       } else if (path.includes('users')) {
-        result = Object.values(import('@/lib/mock-data').then(m => m.MOCK_USERS));
+        // This is a rough mock for users collection
+        result = [
+          { uid: 'customer-1', email: 'user@example.com', displayName: 'John Doe', role: 'customer' },
+          { uid: 'admin-1', email: 'admin@zapizza.com', displayName: 'Outlet Manager', role: 'outlet-admin', outletId: 'andheri' },
+          { uid: 'franchise-1', email: 'franchise@zapizza.com', displayName: 'Zapizza Owner', role: 'franchise-owner' }
+        ];
       }
 
       // Apply simple client-side filter for demo

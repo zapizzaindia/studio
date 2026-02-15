@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -17,11 +16,12 @@ import {
   ShieldAlert,
   ShoppingBag,
   PlusCircle,
-  Clock
+  Clock,
+  Ticket
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon } from "@/lib/types";
+import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon, Coupon } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,7 @@ export default function HomePage() {
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
   const { data: banners, loading: bannersLoading } = useCollection<Banner>('banners');
+  const { data: coupons, loading: couponsLoading } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
   
   useEffect(() => {
     setIsHydrated(true);
@@ -278,6 +279,39 @@ export default function HomePage() {
                   ADD +
                 </Button>
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top Offers Section */}
+      <div className="mt-12">
+        <div className="px-6 mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Ticket className="h-5 w-5 text-[#14532d]" />
+            <h2 className="text-lg font-black text-[#14532d] uppercase tracking-tighter">Top Offers</h2>
+          </div>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Exciting deals just for you</p>
+        </div>
+        <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
+          {couponsLoading ? Array.from({length: 3}).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-64 rounded-2xl flex-shrink-0" />
+          )) : coupons?.map((coupon) => (
+            <div key={coupon.id} className="relative w-64 flex-shrink-0 bg-white rounded-2xl border-2 border-dashed border-[#14532d]/20 p-4 flex items-center gap-4 group active:scale-95 transition-transform overflow-hidden">
+              <div className="bg-[#14532d]/5 p-3 rounded-xl">
+                <Ticket className="h-6 w-6 text-[#14532d]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-[#14532d] uppercase tracking-widest mb-1">Use Code</p>
+                <h4 className="text-lg font-black text-[#333333] leading-none mb-1">{coupon.code}</h4>
+                <p className="text-[11px] font-bold text-muted-foreground">
+                  {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`} 
+                  {coupon.minOrderAmount > 0 && ` on ₹${coupon.minOrderAmount}+`}
+                </p>
+              </div>
+              {/* Semi-circles for coupon look */}
+              <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-4 h-4 bg-[#f8f9fa] rounded-full border-r-2 border-dashed border-[#14532d]/20" />
+              <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-4 h-4 bg-[#f8f9fa] rounded-full border-l-2 border-dashed border-[#14532d]/20" />
             </div>
           ))}
         </div>

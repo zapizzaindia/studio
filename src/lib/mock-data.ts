@@ -1,4 +1,4 @@
-import { City, Category, MenuItem, Outlet, UserProfile, Order, Banner } from './types';
+import { City, Category, MenuItem, Outlet, UserProfile, Order, Banner, Coupon } from './types';
 import { Timestamp } from 'firebase/firestore';
 
 export const MOCK_CITIES: City[] = [
@@ -110,6 +110,12 @@ export const MOCK_BANNERS: Banner[] = [
     imageId: 'banner_3',
     active: true
   },
+];
+
+export const MOCK_COUPONS: Coupon[] = [
+  { id: 'cpn-1', code: 'ZAPIZZA50', discountType: 'percentage', discountValue: 50, minOrderAmount: 500, active: true },
+  { id: 'cpn-2', code: 'WELCOME100', discountType: 'fixed', discountValue: 100, minOrderAmount: 300, active: true },
+  { id: 'cpn-3', code: 'PIZZALOVE', discountType: 'percentage', discountValue: 20, minOrderAmount: 0, active: true },
 ];
 
 export const MOCK_USERS: Record<string, UserProfile> = {
