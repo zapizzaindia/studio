@@ -90,10 +90,19 @@ export default function AdminOrdersPage() {
     if (reason) updateData.cancellationReason = reason;
     if (status === 'Cancelled') updateData.paymentStatus = 'Refund Initiated';
 
-    updateDoc(orderRef, updateData).then(() => {
-      toast({ title: "Status Updated" });
-      if (selectedOrder?.id === orderId) setSelectedOrder(null);
-    });
+    updateDoc(orderRef, updateData)
+      .then(() => {
+        toast({ title: "Status Updated" });
+        if (selectedOrder?.id === orderId) setSelectedOrder(null);
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+          path: orderRef.path,
+          operation: 'update',
+          requestResourceData: updateData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   const handleAutoCancel = (orderId: string) => handleUpdateStatus(orderId, 'Cancelled', 'Kitchen Timeout');
@@ -129,7 +138,10 @@ export default function AdminOrdersPage() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-medium text-xs">{order.customerName}</span>
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1"><MapPin className="h-2.5 w-2.5" /> {order.deliveryAddress.area}</span>
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-2.5 w-2.5" /> 
+                          {order.deliveryAddress?.area || "Address Unavailable"}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="font-black text-xs">₹{order.total.toFixed(2)}</TableCell>
@@ -201,11 +213,11 @@ export default function AdminOrdersPage() {
                     <div className="flex items-start gap-3">
                       <MapPin className="h-4 w-4 text-[#14532d] mt-0.5" />
                       <div>
-                        <p className="text-xs font-black text-[#333333] uppercase">{selectedOrder.deliveryAddress.label}</p>
+                        <p className="text-xs font-black text-[#333333] uppercase">{selectedOrder.deliveryAddress?.label || "Home"}</p>
                         <p className="text-[11px] font-bold text-muted-foreground mt-1 leading-tight">
-                          {selectedOrder.deliveryAddress.flatNo}, {selectedOrder.deliveryAddress.area}, {selectedOrder.deliveryAddress.city}
+                          {selectedOrder.deliveryAddress?.flatNo || "N/A"}, {selectedOrder.deliveryAddress?.area || "N/A"}, {selectedOrder.deliveryAddress?.city || "N/A"}
                         </p>
-                        {selectedOrder.deliveryAddress.landmark && (
+                        {selectedOrder.deliveryAddress?.landmark && (
                           <p className="text-[10px] font-black text-orange-600 mt-2 uppercase">Landmark: {selectedOrder.deliveryAddress.landmark}</p>
                         )}
                       </div>

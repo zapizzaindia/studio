@@ -208,20 +208,44 @@ export const MOCK_ORDERS: Order[] = [
     id: 'ord-101',
     customerId: 'customer-1',
     customerName: 'John Doe',
+    customerPhone: '+91-9876543210',
     items: [{ menuItemId: 'margherita', name: 'Classic Margherita', quantity: 1, price: 249 }],
     total: 249,
+    subtotal: 249,
+    gst: 44.82,
+    deliveryFee: 40,
+    discount: 0,
     status: 'New',
     createdAt: Timestamp.now(),
-    outletId: 'andheri'
+    outletId: 'andheri',
+    deliveryAddress: {
+      label: 'Home',
+      flatNo: 'A-101, Galaxy Apts',
+      area: 'Andheri West',
+      city: 'Mumbai',
+      landmark: 'Near City Mall'
+    }
   },
   {
     id: 'ord-102',
     customerId: 'customer-1',
     customerName: 'John Doe',
+    customerPhone: '+91-9876543210',
     items: [{ menuItemId: 'pepperoni', name: 'Pepperoni Feast', quantity: 2, price: 499 }],
     total: 998,
+    subtotal: 998,
+    gst: 179.64,
+    deliveryFee: 0,
+    discount: 0,
     status: 'Completed',
     createdAt: Timestamp.now(),
-    outletId: 'andheri'
+    outletId: 'andheri',
+    deliveryAddress: {
+      label: 'Work',
+      flatNo: 'Tech Hub, Level 4',
+      area: 'Bandra Kurla Complex',
+      city: 'Mumbai',
+      landmark: 'ICICI Bank'
+    }
   }
 ];
