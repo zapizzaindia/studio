@@ -223,7 +223,9 @@ export const MOCK_ORDERS: Order[] = [
       flatNo: 'A-101, Galaxy Apts',
       area: 'Andheri West',
       city: 'Mumbai',
-      landmark: 'Near City Mall'
+      landmark: 'Near City Mall',
+      latitude: 19.1136,
+      longitude: 72.8697
     }
   },
   {
