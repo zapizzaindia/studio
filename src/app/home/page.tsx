@@ -65,11 +65,12 @@ export default function HomePage() {
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
   const { data: allBanners, loading: bannersLoading } = useCollection<Banner>('banners');
-  const { data: coupons, loading: couponsLoading } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
+  const { data: allCoupons, loading: couponsLoading } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
   
   const categories = useMemo(() => allCategories?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCategories, selectedOutlet]);
   const menuItems = useMemo(() => allMenuItems?.filter(i => i.brand === selectedOutlet?.brand) || [], [allMenuItems, selectedOutlet]);
   const banners = useMemo(() => allBanners?.filter(b => b.brand === selectedOutlet?.brand) || [], [allBanners, selectedOutlet]);
+  const coupons = useMemo(() => allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCoupons, selectedOutlet]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -192,6 +193,36 @@ export default function HomePage() {
           </CarouselContent>
         </Carousel>
       </div>
+
+      {/* Coupons/Offers Strip */}
+      {coupons && coupons.length > 0 && (
+        <div className="mt-10 overflow-x-auto px-6 flex gap-4 scrollbar-hide">
+          {coupons.map((coupon) => (
+            <div key={coupon.id} className="min-w-[280px] bg-white rounded-2xl border-2 border-dashed p-4 flex items-center justify-between shadow-sm" style={{ borderColor: brandColor + '20' }}>
+              <div className="flex gap-3 items-center">
+                <div className="p-2 rounded-xl" style={{ backgroundColor: brandColor + '10' }}>
+                  <Ticket className="h-5 w-5" style={{ color: brandColor }} />
+                </div>
+                <div>
+                  <p className="text-[13px] font-black uppercase italic tracking-tight" style={{ color: brandColor }}>{coupon.code}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase">{coupon.discountValue}% OFF UP TO ₹500</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-[9px] font-black uppercase tracking-widest gap-1"
+                onClick={() => {
+                  navigator.clipboard.writeText(coupon.code);
+                  toast({ title: "Code Copied!", description: "Apply it at checkout." });
+                }}
+              >
+                COPY <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Categories */}
       <div className="mt-10">

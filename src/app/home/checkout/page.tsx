@@ -11,7 +11,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
 import { doc, collection, addDoc, serverTimestamp, query, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import type { GlobalSettings, Coupon, Address } from "@/lib/types";
+import type { GlobalSettings, Coupon, Address, Outlet } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
 
@@ -23,13 +23,21 @@ export default function CheckoutPage() {
   const db = useFirestore();
   
   const { data: settings } = useDoc<GlobalSettings>('settings', 'global');
-  const { data: coupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
+  const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [isPlacing, setIsPlacing] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
+
+  useEffect(() => {
+    const savedOutlet = localStorage.getItem("zapizza-outlet");
+    if (savedOutlet) {
+      try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
+    }
+  }, []);
 
   // Fetch addresses
   useEffect(() => {
@@ -70,9 +78,15 @@ export default function CheckoutPage() {
   }, [totalPrice, settings, appliedCoupon]);
 
   const handleApplyCoupon = () => {
-    const found = coupons?.find(c => c.code === couponInput.toUpperCase());
+    if (!selectedOutlet) return;
+    
+    const found = allCoupons?.find(c => 
+      c.code === couponInput.toUpperCase() && 
+      c.brand === selectedOutlet.brand
+    );
+
     if (!found) {
-      toast({ variant: 'destructive', title: "Invalid Code", description: "This coupon does not exist or is expired." });
+      toast({ variant: 'destructive', title: "Invalid Code", description: `This coupon does not exist or is not valid for ${selectedOutlet.brand.toUpperCase()}.` });
       return;
     }
     if (totalPrice < found.minOrderAmount) {
@@ -97,8 +111,7 @@ export default function CheckoutPage() {
     if (!db) return;
     setIsPlacing(true);
     
-    const savedOutlet = localStorage.getItem("zapizza-outlet");
-    const outlet = savedOutlet ? JSON.parse(savedOutlet) : { id: 'default' };
+    const outlet = selectedOutlet || { id: 'default' };
 
     const orderData = {
       customerId: user.uid,
@@ -164,6 +177,8 @@ export default function CheckoutPage() {
     );
   }
 
+  const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
+
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-48">
       <Script id="razorpay-checkout" src="https://checkout.razorpay.com/v1/checkout.js" />
@@ -172,23 +187,23 @@ export default function CheckoutPage() {
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-6 w-6" />
         </Button>
-        <h1 className="text-xl font-black text-[#14532d] uppercase tracking-widest">Review Order</h1>
+        <h1 className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Review Order</h1>
       </div>
 
       <div className="container mx-auto p-4 space-y-4 max-w-lg">
         {/* Address Selector */}
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
-            <CardTitle className="text-[10px] font-black text-[#14532d] uppercase tracking-widest flex items-center gap-2">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
               <MapPinned className="h-4 w-4" /> Delivery Address
             </CardTitle>
-            <Button variant="link" size="sm" onClick={() => router.push('/home/addresses')} className="h-auto p-0 text-[10px] font-black uppercase text-[#14532d]">CHANGE</Button>
+            <Button variant="link" size="sm" onClick={() => router.push('/home/addresses')} className="h-auto p-0 text-[10px] font-black uppercase" style={{ color: brandColor }}>CHANGE</Button>
           </CardHeader>
           <CardContent className="p-4 bg-white">
             {selectedAddress ? (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="bg-[#14532d]/10 text-[#14532d] text-[8px] font-black uppercase">{selectedAddress.label}</Badge>
+                  <Badge variant="secondary" className="text-[8px] font-black uppercase" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
                   {selectedAddress.latitude && (
                     <Badge variant="outline" className="text-blue-600 border-blue-200 text-[8px] font-black uppercase">GPS PINNED</Badge>
                   )}
@@ -197,7 +212,7 @@ export default function CheckoutPage() {
                 {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Landmark: {selectedAddress.landmark}</p>}
               </div>
             ) : (
-              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed border-[#14532d] text-[#14532d] font-black uppercase text-xs h-12">
+              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12" style={{ borderColor: brandColor, color: brandColor }}>
                 + Add Delivery Address
               </Button>
             )}
@@ -207,7 +222,7 @@ export default function CheckoutPage() {
         {/* Order Items */}
         <Card className="border-none shadow-sm">
           <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-[10px] font-black text-[#14532d] uppercase tracking-widest">Order Summary</CardTitle>
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Order Summary</CardTitle>
           </CardHeader>
           <CardContent className="p-0 bg-white">
             {items.map((item) => (
@@ -223,10 +238,10 @@ export default function CheckoutPage() {
                         <span className="text-[9px] font-bold bg-[#f1f2f6] text-[#666666] px-1.5 py-0.5 rounded uppercase">{item.selectedVariation.name}</span>
                       )}
                       {item.selectedAddons?.map(addon => (
-                        <span key={addon.name} className="text-[9px] font-bold bg-[#14532d]/5 text-[#14532d] px-1.5 py-0.5 rounded uppercase">+{addon.name}</span>
+                        <span key={addon.name} className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase" style={{ backgroundColor: brandColor + '05', color: brandColor }}>+{addon.name}</span>
                       ))}
                     </div>
-                    <span className="text-[11px] font-black text-[#14532d] mt-1.5 block">₹{item.price * item.quantity}</span>
+                    <span className="text-[11px] font-black mt-1.5 block" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
@@ -243,12 +258,12 @@ export default function CheckoutPage() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-4 bg-white">
             <div className="flex items-center gap-2 mb-3">
-               <Ticket className="h-4 w-4 text-[#14532d]" />
-               <span className="text-[10px] font-black uppercase tracking-widest text-[#14532d]">Offers & Coupons</span>
+               <Ticket className="h-4 w-4" style={{ color: brandColor }} />
+               <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Offers & Coupons</span>
             </div>
             {appliedCoupon ? (
-              <div className="flex items-center justify-between bg-[#14532d]/5 p-3 rounded-lg border border-dashed border-[#14532d]/30">
-                <span className="text-xs font-black uppercase text-[#14532d]">{appliedCoupon.code} applied!</span>
+              <div className="flex items-center justify-between p-3 rounded-lg border border-dashed" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '30' }}>
+                <span className="text-xs font-black uppercase" style={{ color: brandColor }}>{appliedCoupon.code} applied!</span>
                 <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600">REMOVE</Button>
               </div>
             ) : (
@@ -259,7 +274,7 @@ export default function CheckoutPage() {
                   onChange={e => setCouponInput(e.target.value)}
                   className="h-10 text-xs font-black"
                 />
-                <Button onClick={handleApplyCoupon} className="bg-[#14532d] text-white font-black text-[10px]">APPLY</Button>
+                <Button onClick={handleApplyCoupon} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
               </div>
             )}
           </CardContent>
@@ -268,7 +283,7 @@ export default function CheckoutPage() {
         {/* Bill Details */}
         <Card className="border-none shadow-sm">
           <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-[10px] font-black text-[#14532d] uppercase tracking-widest">Bill Details</CardTitle>
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3 bg-white">
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
@@ -291,12 +306,12 @@ export default function CheckoutPage() {
             </div>
             <div className="border-t border-dashed pt-3 flex justify-between text-lg font-black text-[#333333]">
               <span>TO PAY</span>
-              <span className="text-[#14532d]">₹{Math.round(calculations.finalTotal)}</span>
+              <span style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
             </div>
           </CardContent>
         </Card>
 
-        <div className="bg-[#14532d] p-4 rounded-xl flex items-center gap-3 shadow-lg">
+        <div className="p-4 rounded-xl flex items-center gap-3 shadow-lg" style={{ backgroundColor: brandColor }}>
            <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
               <Crown className="h-6 w-6 text-white" />
            </div>
@@ -312,7 +327,7 @@ export default function CheckoutPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#14532d]" />
+            <ShieldCheck className="h-5 w-5" style={{ color: brandColor }} />
             <div className="flex flex-col">
               <span className="text-[11px] font-black uppercase text-[#333333]">Secure Online Payment</span>
               <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">100% Encrypted</span>
@@ -322,7 +337,8 @@ export default function CheckoutPage() {
         <Button 
           onClick={handlePlaceOrder}
           disabled={isPlacing || !selectedAddress}
-          className="w-full h-14 bg-[#e31837] hover:bg-[#c61430] text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg"
+          className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg"
+          style={{ backgroundColor: brandColor }}
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : `PROCEED TO PAY ₹${Math.round(calculations.finalTotal)}`}
         </Button>

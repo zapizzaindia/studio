@@ -114,8 +114,8 @@ export const MOCK_BANNERS: Banner[] = [
 ];
 
 export const MOCK_COUPONS: Coupon[] = [
-  { id: 'cpn-1', code: 'ZAPIZZA50', discountType: 'percentage', discountValue: 50, minOrderAmount: 500, active: true, description: '50% Off on orders above ₹500' },
-  { id: 'cpn-zfry', code: 'ZFRY20', discountType: 'percentage', discountValue: 20, minOrderAmount: 0, active: true, description: '20% Off on Zfry orders' },
+  { id: 'cpn-1', code: 'ZAPIZZA50', discountType: 'percentage', discountValue: 50, minOrderAmount: 500, active: true, description: '50% Off on orders above ₹500', brand: 'zapizza' },
+  { id: 'cpn-zfry', code: 'ZFRY20', discountType: 'percentage', discountValue: 20, minOrderAmount: 0, active: true, description: '20% Off on Zfry orders', brand: 'zfry' },
 ];
 
 export const MOCK_USERS: Record<string, UserProfile> = {

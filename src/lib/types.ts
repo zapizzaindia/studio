@@ -58,6 +58,7 @@ export type Coupon = {
   minOrderAmount: number;
   active: boolean;
   description?: string;
+  brand: Brand;
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';
