@@ -128,6 +128,15 @@ export default function HomePage() {
     return base + addons;
   }, [customizingItem, selectedVariation, selectedAddons]);
 
+  // Determine which addons to show based on selected variation
+  const availableAddons = useMemo(() => {
+    if (!customizingItem) return [];
+    if (selectedVariation?.addons && selectedVariation.addons.length > 0) {
+      return selectedVariation.addons;
+    }
+    return customizingItem.addons || [];
+  }, [customizingItem, selectedVariation]);
+
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
   if (!isHydrated || userLoading) {
@@ -290,7 +299,10 @@ export default function HomePage() {
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
-                    <RadioGroup value={selectedVariation?.name} onValueChange={(val) => setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null)} className="space-y-3">
+                    <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
+                      setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null);
+                      setSelectedAddons([]); // Clear addons when size changes
+                    }} className="space-y-3">
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
                           <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase">{v.name}</span></Label>
@@ -298,6 +310,35 @@ export default function HomePage() {
                         </div>
                       ))}
                     </RadioGroup>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Add-ons */}
+                {availableAddons.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
+                    <div className="space-y-3">
+                      {availableAddons.map((addon) => (
+                        <div key={addon.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
+                          <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
+                            <span className="text-sm font-bold text-[#333] uppercase">{addon.name}</span>
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black" style={{ color: brandColor }}>₹{addon.price}</span>
+                            <Checkbox 
+                              id={`a-${addon.name}`} 
+                              checked={selectedAddons.some(a => a.name === addon.name)}
+                              onCheckedChange={(checked) => {
+                                if (checked) setSelectedAddons([...selectedAddons, addon]);
+                                else setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

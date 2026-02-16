@@ -303,28 +303,65 @@ export default function FranchiseMenuPage() {
                     <TabsContent value="variations" className="space-y-6">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Portion & Size Options</h4>
-                            <Button variant="ghost" size="sm" onClick={() => setNewItemVariations([...newItemVariations, { name: "", price: 0 }])} className="h-8 font-black uppercase text-[10px] tracking-widest" style={{ color: brandColor }}>+ Add Size</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setNewItemVariations([...newItemVariations, { name: "", price: 0, addons: [] }])} className="h-8 font-black uppercase text-[10px] tracking-widest" style={{ color: brandColor }}>+ Add Size</Button>
                         </div>
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
                             {newItemVariations.map((v, i) => (
-                                <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border shadow-sm">
-                                    <div className="flex-1 space-y-1">
-                                        <Label className="text-[8px] font-black text-muted-foreground uppercase">Size Name</Label>
-                                        <Input placeholder="e.g. Regular" value={v.name} onChange={e => {
-                                            const updated = [...newItemVariations];
-                                            updated[i].name = e.target.value;
-                                            setNewItemVariations(updated);
-                                        }} className="h-10 font-bold text-xs" />
+                                <div key={i} className="flex flex-col gap-4 bg-white p-4 rounded-2xl border shadow-sm">
+                                    <div className="flex gap-4 items-center">
+                                        <div className="flex-1 space-y-1">
+                                            <Label className="text-[8px] font-black text-muted-foreground uppercase">Size Name</Label>
+                                            <Input placeholder="e.g. Regular" value={v.name} onChange={e => {
+                                                const updated = [...newItemVariations];
+                                                updated[i].name = e.target.value;
+                                                setNewItemVariations(updated);
+                                            }} className="h-10 font-bold text-xs" />
+                                        </div>
+                                        <div className="w-32 space-y-1">
+                                            <Label className="text-[8px] font-black text-muted-foreground uppercase">Price (₹)</Label>
+                                            <Input type="number" value={v.price} onChange={e => {
+                                                const updated = [...newItemVariations];
+                                                updated[i].price = Number(e.target.value);
+                                                setNewItemVariations(updated);
+                                            }} className="h-10 font-black text-xs" style={{ color: brandColor }} />
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                     </div>
-                                    <div className="w-32 space-y-1">
-                                        <Label className="text-[8px] font-black text-muted-foreground uppercase">Price (₹)</Label>
-                                        <Input type="number" value={v.price} onChange={e => {
-                                            const updated = [...newItemVariations];
-                                            updated[i].price = Number(e.target.value);
-                                            setNewItemVariations(updated);
-                                        }} className="h-10 font-black text-xs" style={{ color: brandColor }} />
+                                    
+                                    {/* Variation Specific Addons */}
+                                    <div className="mt-2 pl-4 border-l-2 border-dashed border-gray-100 space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Size Specific Addons</span>
+                                            <Button variant="ghost" size="sm" onClick={() => {
+                                                const updated = [...newItemVariations];
+                                                updated[i].addons = [...(updated[i].addons || []), { name: "", price: 0 }];
+                                                setNewItemVariations(updated);
+                                            }} className="h-6 text-[8px] font-black uppercase" style={{ color: brandColor }}>+ Add Size Addon</Button>
+                                        </div>
+                                        {(v.addons || []).map((addon, aIdx) => (
+                                            <div key={aIdx} className="flex gap-2 items-center">
+                                                <Input placeholder="Addon Name" value={addon.name} onChange={e => {
+                                                    const updated = [...newItemVariations];
+                                                    const updatedAddons = [...(updated[i].addons || [])];
+                                                    updatedAddons[aIdx].name = e.target.value;
+                                                    updated[i].addons = updatedAddons;
+                                                    setNewItemVariations(updated);
+                                                }} className="h-8 text-[10px] font-bold" />
+                                                <Input type="number" placeholder="Price" value={addon.price} onChange={e => {
+                                                    const updated = [...newItemVariations];
+                                                    const updatedAddons = [...(updated[i].addons || [])];
+                                                    updatedAddons[aIdx].price = Number(e.target.value);
+                                                    updated[i].addons = updatedAddons;
+                                                    setNewItemVariations(updated);
+                                                }} className="h-8 w-20 text-[10px] font-black" />
+                                                <Button variant="ghost" size="icon" onClick={() => {
+                                                    const updated = [...newItemVariations];
+                                                    updated[i].addons = updated[i].addons?.filter((_, idx) => idx !== aIdx);
+                                                    setNewItemVariations(updated);
+                                                }} className="h-8 w-8 text-red-400"><Trash2 className="h-3 w-3" /></Button>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                 </div>
                             ))}
                         </div>

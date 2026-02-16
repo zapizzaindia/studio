@@ -41,8 +41,23 @@ export const MOCK_MENU_ITEMS: MenuItem[] = [
     isAvailableGlobally: true,
     brand: 'zapizza',
     variations: [
-      { name: 'Regular', price: 249 },
-      { name: 'Medium', price: 449 }
+      { 
+        name: 'Regular', 
+        price: 249,
+        addons: [
+          { name: 'Extra Cheese', price: 40 },
+          { name: 'Fresh Tomato', price: 20 }
+        ]
+      },
+      { 
+        name: 'Medium', 
+        price: 449,
+        addons: [
+          { name: 'Double Cheese', price: 80 },
+          { name: 'Paneer Cubes', price: 60 },
+          { name: 'Golden Corn', price: 40 }
+        ]
+      }
     ]
   },
   {
