@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Ticket, Trash2, Edit, Pizza, Flame, IndianRupee } from 'lucide-react';
+import { Plus, Trash2, Pizza, Flame, IndianRupee } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { doc, addDoc, collection, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";

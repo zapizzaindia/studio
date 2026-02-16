@@ -14,8 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
-import { placeholderImageMap, PlaceHolderImages } from '@/lib/placeholder-images';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { placeholderImageMap } from '@/lib/placeholder-images';
 import type { Banner, Brand } from '@/lib/types';
 import { cn } from "@/lib/utils";
 
