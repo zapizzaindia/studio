@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ShoppingBag, List, X, Search, Check, Info, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { Category, MenuItem, MenuItemVariation, MenuItemAddon } from "@/lib/types";
+import type { Category, MenuItem, MenuItemVariation, MenuItemAddon, Outlet } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCollection } from "@/firebase";
@@ -28,8 +28,21 @@ export default function MenuPage() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category');
   
-  const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
-  const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
+  const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
+
+  useEffect(() => {
+    const savedOutlet = localStorage.getItem("zapizza-outlet");
+    if (savedOutlet) {
+      try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
+    }
+  }, []);
+
+  const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories', {
+    where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
+  });
+  const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems', {
+    where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
+  });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,6 +117,8 @@ export default function MenuPage() {
     return customizingItem.addons || [];
   }, [customizingItem, selectedVariation]);
 
+  const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
+
   return (
     <div className="flex flex-col w-full min-h-screen bg-white relative">
       {/* Menu Header */}
@@ -130,7 +145,8 @@ export default function MenuPage() {
           )) : categories?.map((category) => (
               <button 
                   key={category.id} 
-                  className="text-[11px] font-black text-[#666666] uppercase whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-200 hover:border-[#14532d] hover:text-[#14532d] transition-colors active:bg-[#14532d]/5"
+                  style={{ borderColor: brandColor + '20' }}
+                  className="text-[11px] font-black text-[#666666] uppercase whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-200 hover:border-current hover:text-current transition-colors active:bg-muted"
                   onClick={() => scrollToCategory(category.id)}
               >
                   {category.name}
@@ -143,12 +159,12 @@ export default function MenuPage() {
       <div className="flex-1 pb-32 bg-white">
         {searchQuery ? (
           <div className="p-6">
-             <h3 className="text-sm font-black text-[#14532d] mb-6 uppercase tracking-widest">
+             <h3 className="text-sm font-black mb-6 uppercase tracking-widest" style={{ color: brandColor }}>
                 Search Results ({filteredMenuItems.length})
              </h3>
              <div className="space-y-8">
                 {filteredMenuItems.map((item) => (
-                  <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} />
+                  <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} brandColor={brandColor} />
                 ))}
              </div>
           </div>
@@ -159,13 +175,13 @@ export default function MenuPage() {
 
             return (
               <div key={category.id} id={`cat-${category.id}`} className="p-6 border-b last:border-0 scroll-mt-36">
-                <h3 className="text-base font-black text-[#14532d] mb-6 uppercase tracking-widest flex items-center gap-2">
-                  <div className="h-4 w-1 bg-primary rounded-full" />
+                <h3 className="text-base font-black mb-6 uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
+                  <div className="h-4 w-1 rounded-full" style={{ backgroundColor: brandColor }} />
                   {category.name}
                 </h3>
                 <div className="space-y-8">
                   {categoryItems.map((item) => (
-                    <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} />
+                    <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} brandColor={brandColor} />
                   ))}
                 </div>
               </div>
@@ -199,26 +215,26 @@ export default function MenuPage() {
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Select Size</h3>
-                      <Badge variant="secondary" className="text-[9px] uppercase font-black bg-[#14532d]/10 text-[#14532d]">Required</Badge>
+                      <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3>
+                      <Badge variant="secondary" className="text-[9px] uppercase font-black">Required</Badge>
                     </div>
                     <RadioGroup 
                       value={selectedVariation?.name} 
                       onValueChange={(val) => {
                         const newVar = customizingItem.variations?.find(v => v.name === val) || null;
                         setSelectedVariation(newVar);
-                        setSelectedAddons([]); // Reset addons when variation changes
+                        setSelectedAddons([]); 
                       }}
                       className="space-y-3"
                     >
                       {customizingItem.variations.map((v) => (
-                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-muted transition-all">
                           <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer">
                             <span className="text-sm font-bold text-[#333333] uppercase">{v.name}</span>
                           </Label>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-black text-[#14532d]">₹{v.price}</span>
-                            <RadioGroupItem value={v.name} id={`v-${v.name}`} className="border-[#14532d]" />
+                            <span className="text-xs font-black" style={{ color: brandColor }}>₹{v.price}</span>
+                            <RadioGroupItem value={v.name} id={`v-${v.name}`} />
                           </div>
                         </div>
                       ))}
@@ -231,15 +247,15 @@ export default function MenuPage() {
                 {/* Add-ons */}
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Extra Toppings</h3>
+                    <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
                     <div className="space-y-3">
                       {availableAddons.map((addon) => (
-                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-[#14532d]/20 transition-all">
+                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-muted transition-all">
                           <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
                             <span className="text-sm font-bold text-[#333333] uppercase">{addon.name}</span>
                           </Label>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-black text-[#14532d]">₹{addon.price}</span>
+                            <span className="text-xs font-black" style={{ color: brandColor }}>₹{addon.price}</span>
                             <Checkbox 
                               id={`a-${addon.name}`} 
                               checked={selectedAddons.some(a => a.name === addon.name)}
@@ -247,7 +263,6 @@ export default function MenuPage() {
                                 if (checked) setSelectedAddons([...selectedAddons, addon]);
                                 else setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
                               }}
-                              className="border-[#14532d]"
                             />
                           </div>
                         </div>
@@ -255,51 +270,17 @@ export default function MenuPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Recommended Sides */}
-                {customizingItem.recommendedSides && customizingItem.recommendedSides.length > 0 && (
-                  <>
-                    <Separator />
-                    <div className="space-y-4">
-                      <h3 className="text-xs font-black text-[#14532d] uppercase tracking-widest">Goes well with</h3>
-                      <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
-                        {customizingItem.recommendedSides.map(sideId => {
-                          const side = menuItems?.find(m => m.id === sideId);
-                          if (!side) return null;
-                          return (
-                            <div key={side.id} className="flex-shrink-0 w-32 bg-white border rounded-xl p-2 shadow-sm">
-                              <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
-                                <Image src={placeholderImageMap.get(side.imageId)?.imageUrl || ''} alt={side.name} fill className="object-cover" />
-                              </div>
-                              <p className="text-[10px] font-black uppercase text-[#333333] line-clamp-1 mb-1">{side.name}</p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black text-[#14532d]">₹{side.price}</span>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-6 w-6 text-primary"
-                                  onClick={() => addItem(side)}
-                                >
-                                  <PlusCircle className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
 
               <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Final Price</span>
-                  <span className="text-2xl font-black text-[#14532d]">₹{currentCustomPrice}</span>
+                  <span className="text-2xl font-black" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
                 </div>
                 <Button 
                   onClick={handleConfirmCustomization}
-                  className="bg-[#14532d] hover:bg-[#0f4023] text-white px-10 h-14 rounded-xl font-black uppercase tracking-widest shadow-xl flex-1"
+                  style={{ backgroundColor: brandColor }}
+                  className="text-white px-10 h-14 rounded-xl font-black uppercase tracking-widest shadow-xl flex-1"
                 >
                   ADD TO CART
                 </Button>
@@ -339,7 +320,7 @@ export default function MenuPage() {
               exit={{ y: "100%", opacity: 0 }}
               className="fixed bottom-36 left-4 right-4 bg-white rounded-2xl z-[52] shadow-2xl p-6 overflow-hidden border border-gray-100"
             >
-              <h3 className="text-sm font-black text-[#14532d] uppercase tracking-widest mb-4">Choose Category</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest mb-4" style={{ color: brandColor }}>Choose Category</h3>
               <div className="grid grid-cols-1 gap-1">
                 {categories?.map((cat) => (
                   <button
@@ -347,7 +328,7 @@ export default function MenuPage() {
                     onClick={() => scrollToCategory(cat.id)}
                     className="flex items-center justify-between w-full py-3 px-4 rounded-xl hover:bg-[#f1f2f6] transition-colors text-left group"
                   >
-                    <span className="text-sm font-bold text-[#333333] group-hover:text-[#14532d]">{cat.name}</span>
+                    <span className="text-sm font-bold text-[#333333] group-hover:text-primary">{cat.name}</span>
                     <span className="text-[10px] font-black text-muted-foreground opacity-50">
                       {menuItems?.filter(i => i.category === cat.id).length}
                     </span>
@@ -363,7 +344,8 @@ export default function MenuPage() {
         <div className="fixed bottom-20 left-4 right-4 z-40">
           <Button 
             onClick={() => router.push('/home/checkout')}
-            className="w-full h-14 bg-[#14532d] hover:bg-[#0f4023] text-white flex items-center justify-between px-6 rounded-xl shadow-2xl animate-in slide-in-from-bottom-10"
+            style={{ backgroundColor: brandColor }}
+            className="w-full h-14 text-white flex items-center justify-between px-6 rounded-xl shadow-2xl animate-in slide-in-from-bottom-10"
           >
             <div className="flex flex-col items-start">
               <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
@@ -379,7 +361,7 @@ export default function MenuPage() {
   );
 }
 
-function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
+function MenuItemCard({ item, onAdd, brandColor }: { item: MenuItem, onAdd: () => void, brandColor: string }) {
   const hasOptions = 
     (item.variations && item.variations.length > 0) || 
     (item.addons && item.addons.length > 0) || 
@@ -407,13 +389,14 @@ function MenuItemCard({ item, onAdd }: { item: MenuItem, onAdd: () => void }) {
         </div>
         <div className="mt-auto flex items-center justify-between pt-3">
           <div className="flex flex-col">
-            <span className="text-[15px] font-black text-[#14532d]">₹{item.price}</span>
+            <span className="text-[15px] font-black" style={{ color: brandColor }}>₹{item.price}</span>
             {hasOptions && <span className="text-[8px] font-bold text-muted-foreground uppercase">Options available</span>}
           </div>
           <Button 
             size="sm" 
             onClick={onAdd}
-            className="h-8 px-6 bg-white text-[#e31837] border-2 border-[#e31837] font-black text-[11px] rounded shadow-md uppercase active:bg-[#e31837] active:text-white transition-colors"
+            style={{ color: brandColor, borderColor: brandColor }}
+            className="h-8 px-6 bg-white border-2 font-black text-[11px] rounded shadow-md uppercase active:bg-muted transition-colors"
           >
             {hasOptions ? 'CUSTOMIZE' : 'ADD'}
           </Button>

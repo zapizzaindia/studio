@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { ChevronDown, MapPin, User, LogOut, ShoppingCart, History, Settings } from "lucide-react";
@@ -15,12 +16,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import type { City, Outlet } from "@/lib/types";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
+import { cn } from "@/lib/utils";
 
 export function MainNav() {
   const { user, loading } = useUser();
   const router = useRouter();
   const { totalItems } = useCart();
   const [locationLabel, setLocationLabel] = useState("Select Location");
+  const [brand, setBrand] = useState<"zapizza" | "zfry">("zapizza");
 
   useEffect(() => {
     const savedCity = localStorage.getItem("zapizza-city");
@@ -30,6 +33,7 @@ export function MainNav() {
       try {
         const outlet: Outlet = JSON.parse(savedOutlet);
         setLocationLabel(outlet.name);
+        setBrand(outlet.brand || "zapizza");
       } catch (e) {}
     } else if (savedCity) {
       try {
@@ -50,8 +54,10 @@ export function MainNav() {
     window.location.reload(); 
   }
 
+  const brandBg = brand === "zfry" ? "bg-[#e31837]" : "bg-[#14532d]";
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 bg-[#14532d] text-white">
+    <header className={cn("fixed top-0 left-0 right-0 z-30 text-white transition-colors duration-500", brandBg)}>
       <div className="container mx-auto flex h-16 max-w-full items-center justify-between px-4">
         <div className="flex items-center gap-1 overflow-hidden cursor-pointer" onClick={handleChangeLocation}>
           <MapPin className="h-5 w-5 text-white flex-shrink-0" />
@@ -87,7 +93,7 @@ export function MainNav() {
                 <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 border border-white/20">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.photoURL || undefined} />
-                    <AvatarFallback className="bg-[#0f5132] text-white">{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback className="bg-black/20 text-white">{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -95,7 +101,7 @@ export function MainNav() {
                 <div className="flex items-center gap-3 p-4 bg-[#f1f2f6]/50 border-b">
                    <Avatar className="h-10 w-10">
                     <AvatarImage src={user.photoURL || undefined} />
-                    <AvatarFallback className="bg-[#14532d] text-white">{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback className={cn("text-white", brandBg)}>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-black text-[#14532d] truncate uppercase">{user.displayName || 'Demo User'}</span>

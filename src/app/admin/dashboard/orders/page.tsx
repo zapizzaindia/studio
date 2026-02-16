@@ -204,6 +204,9 @@ export default function AdminOrdersPage() {
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Delivery Information</h4>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase tracking-widest" onClick={() => handleShareLocation(selectedOrder)}><Share2 className="h-3 w-3 mr-1" /> Share</Button>
+                      {selectedOrder.deliveryAddress?.latitude && (
+                        <Button variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase tracking-widest" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`, '_blank')}><Navigation className="h-3 w-3 mr-1" /> Open Map Pin</Button>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-dashed">
@@ -232,6 +235,11 @@ export default function AdminOrdersPage() {
                           <div className="flex flex-col">
                             <span className="font-bold uppercase">{item.name}</span>
                             {item.variation && <span className="text-[9px] font-black text-muted-foreground uppercase">Size: {item.variation}</span>}
+                            {item.addons && item.addons.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {item.addons.map((a, i) => <span key={i} className="text-[8px] font-black uppercase px-1 bg-primary/10 text-primary">+{a}</span>)}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <span className="font-black">₹{item.price * item.quantity}</span>
@@ -243,6 +251,8 @@ export default function AdminOrdersPage() {
                 <div className="pt-4 border-t border-dashed space-y-2">
                   <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase"><span>Item Total</span><span>₹{selectedOrder.subtotal.toFixed(2)}</span></div>
                   <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase"><span>Taxes (GST)</span><span>₹{selectedOrder.gst.toFixed(2)}</span></div>
+                  {selectedOrder.deliveryFee > 0 && <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase"><span>Delivery Fee</span><span>₹{selectedOrder.deliveryFee.toFixed(2)}</span></div>}
+                  {selectedOrder.discount > 0 && <div className="flex justify-between text-[10px] font-black text-green-600 uppercase"><span>Discount</span><span>-₹{selectedOrder.discount.toFixed(2)}</span></div>}
                   <div className="pt-2 border-t border-dashed flex justify-between items-center"><span className="text-xs font-black uppercase">Final Total</span><span className="text-lg font-black text-primary">₹{selectedOrder.total.toFixed(2)}</span></div>
                 </div>
               </div>
