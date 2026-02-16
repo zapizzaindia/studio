@@ -127,12 +127,10 @@ export default function HomePage() {
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
     const base = selectedVariation ? selectedVariation.price : customizingItem.price;
-    // Only use variation-specific addons if they exist, otherwise fallback to item addons
     const availableAddons = (selectedVariation?.addons && selectedVariation.addons.length > 0) 
       ? selectedVariation.addons 
       : (customizingItem.addons || []);
     
-    // Filter selected addons to only those that are currently available for this variation
     const validSelectedAddons = selectedAddons.filter(sa => 
       availableAddons.some(aa => aa.name === sa.name)
     );
@@ -216,7 +214,7 @@ export default function HomePage() {
       </div>
 
       {/* Categories */}
-      <div className="mt-6">
+      <div className="mt-4">
         <div className="px-6 flex justify-between items-center mb-3">
           <h2 className="text-lg font-black uppercase tracking-tighter" style={{ color: brandColor }}>Explore Menu</h2>
           <Button variant="ghost" size="sm" className="text-xs font-black uppercase gap-1 pr-0" style={{ color: brandColor }} onClick={() => router.push('/home/menu')}>See All <ChevronRight className="h-3 w-3" /></Button>
@@ -234,7 +232,7 @@ export default function HomePage() {
       </div>
 
       {/* Trending Now Section */}
-      <div className="mt-6">
+      <div className="mt-4">
         <div className="px-6 flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
@@ -265,7 +263,7 @@ export default function HomePage() {
 
       {/* Top Offers Section */}
       {coupons && coupons.length > 0 && (
-        <div className="mt-6">
+        <div className="mt-4">
           <div className="px-6 flex justify-center mb-3">
             <h2 className="text-xl font-black uppercase tracking-[0.2em] text-[#111]">Top Offers</h2>
           </div>
@@ -307,7 +305,7 @@ export default function HomePage() {
       )}
 
       {/* Best Sellers Section */}
-      <div className="mt-6">
+      <div className="mt-4">
         <div className="px-6 flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
@@ -347,7 +345,7 @@ export default function HomePage() {
       </div>
 
       {/* Explore Items Section */}
-      <div className="mt-6 px-6 pb-12">
+      <div className="mt-4 px-6 pb-12">
         <div className="flex items-center gap-2 mb-6">
           <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
             <Pizza className="h-4 w-4 text-white" />
@@ -399,7 +397,6 @@ export default function HomePage() {
                   >
                     Add <span className="text-lg font-normal" style={{ color: brandColor }}>+</span>
                   </Button>
-                  <p className="text-center text-[7px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">Customisable</p>
                 </div>
               </div>
             </motion.div>
