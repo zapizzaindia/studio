@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -14,7 +15,8 @@ import {
   PlusCircle,
   Ticket,
   Flame,
-  Award
+  Award,
+  Plus
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -125,8 +127,18 @@ export default function HomePage() {
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
     const base = selectedVariation ? selectedVariation.price : customizingItem.price;
-    const addons = selectedAddons.reduce((sum, a) => sum + a.price, 0);
-    return base + addons;
+    // Only use variation-specific addons if they exist, otherwise fallback to item addons
+    const availableAddons = (selectedVariation?.addons && selectedVariation.addons.length > 0) 
+      ? selectedVariation.addons 
+      : (customizingItem.addons || []);
+    
+    // Filter selected addons to only those that are currently available for this variation
+    const validSelectedAddons = selectedAddons.filter(sa => 
+      availableAddons.some(aa => aa.name === sa.name)
+    );
+    
+    const addonsTotal = validSelectedAddons.reduce((sum, a) => sum + a.price, 0);
+    return base + addonsTotal;
   }, [customizingItem, selectedVariation, selectedAddons]);
 
   const availableAddons = useMemo(() => {
@@ -149,7 +161,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header */}
-      <div style={{ backgroundColor: brandColor }} className="text-white px-6 pt-10 pb-16 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700">
+      <div style={{ backgroundColor: brandColor }} className="text-white px-6 pt-10 pb-12 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700">
         <div className="relative z-10 flex justify-between items-end">
           <div className="flex flex-col">
             <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">Welcome Back,</p>
@@ -174,7 +186,7 @@ export default function HomePage() {
       </div>
 
       {/* Search Section */}
-      <div className="px-6 -mt-8">
+      <div className="px-6 -mt-6">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors" />
           <Input placeholder={`Search ${selectedOutlet.brand === 'zfry' ? 'Zfry' : 'Zapizza'}...`} className="pl-12 h-14 bg-white border-none rounded-2xl shadow-xl font-bold placeholder:font-normal" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -204,8 +216,8 @@ export default function HomePage() {
       </div>
 
       {/* Categories */}
-      <div className="mt-8">
-        <div className="px-6 flex justify-between items-center mb-4">
+      <div className="mt-6">
+        <div className="px-6 flex justify-between items-center mb-3">
           <h2 className="text-lg font-black uppercase tracking-tighter" style={{ color: brandColor }}>Explore Menu</h2>
           <Button variant="ghost" size="sm" className="text-xs font-black uppercase gap-1 pr-0" style={{ color: brandColor }} onClick={() => router.push('/home/menu')}>See All <ChevronRight className="h-3 w-3" /></Button>
         </div>
@@ -222,8 +234,8 @@ export default function HomePage() {
       </div>
 
       {/* Trending Now Section */}
-      <div className="mt-8">
-        <div className="px-6 flex justify-between items-center mb-4">
+      <div className="mt-6">
+        <div className="px-6 flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <TrendingUp className="h-4 w-4 text-white" />
@@ -253,8 +265,8 @@ export default function HomePage() {
 
       {/* Top Offers Section */}
       {coupons && coupons.length > 0 && (
-        <div className="mt-8">
-          <div className="px-6 flex justify-center mb-4">
+        <div className="mt-6">
+          <div className="px-6 flex justify-center mb-3">
             <h2 className="text-xl font-black uppercase tracking-[0.2em] text-[#111]">Top Offers</h2>
           </div>
           <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
@@ -295,8 +307,8 @@ export default function HomePage() {
       )}
 
       {/* Best Sellers Section */}
-      <div className="mt-8 mb-8">
-        <div className="px-6 flex justify-between items-center mb-4">
+      <div className="mt-6">
+        <div className="px-6 flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <Award className="h-4 w-4 text-white" />
@@ -327,6 +339,67 @@ export default function HomePage() {
                   <div style={{ backgroundColor: brandColor }} className="p-1.5 rounded-full text-white shadow-sm">
                     <PlusCircle className="h-4 w-4" />
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Explore Items Section */}
+      <div className="mt-6 px-6 pb-12">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+            <Pizza className="h-4 w-4 text-white" />
+          </div>
+          <h2 className="text-xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Explore Items</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-6">
+          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full rounded-[32px]" />
+          )) : menuItems?.map((item) => (
+            <motion.div 
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-[24px] p-4 shadow-md border border-gray-50 flex gap-4"
+            >
+              <div className="flex-1 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                      <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+                    </div>
+                    <div className="flex gap-1">
+                      <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1.5 py-0 rounded-sm border-none">Bestseller</Badge>
+                      <Badge className="bg-orange-100 text-orange-800 text-[7px] font-black uppercase px-1.5 py-0 rounded-sm border-none">New</Badge>
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-black text-[#333] uppercase leading-tight tracking-tight">{item.name}</h3>
+                  <p className="text-sm font-black" style={{ color: brandColor }}>₹{item.price}</p>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({length: 5}).map((_, i) => (
+                      <Star key={i} className={`h-2.5 w-2.5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-medium">
+                    {item.description} <span className="text-gray-400 font-bold">Read More</span>
+                  </p>
+                </div>
+              </div>
+              <div className="relative flex-shrink-0 flex flex-col items-center">
+                <div className="relative h-28 w-28 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                  <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                </div>
+                <div className="absolute -bottom-2 w-20">
+                  <Button 
+                    onClick={() => handleAddClick(item)}
+                    className="w-full bg-white hover:bg-gray-50 text-[#333] border border-gray-200 h-8 rounded-lg font-black text-[10px] uppercase shadow-lg flex items-center justify-center gap-1"
+                  >
+                    Add <span className="text-lg font-normal" style={{ color: brandColor }}>+</span>
+                  </Button>
+                  <p className="text-center text-[7px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">Customisable</p>
                 </div>
               </div>
             </motion.div>
