@@ -203,36 +203,6 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Coupons/Offers Strip */}
-      {coupons && coupons.length > 0 && (
-        <div className="mt-10 overflow-x-auto px-6 flex gap-4 scrollbar-hide">
-          {coupons.map((coupon) => (
-            <div key={coupon.id} className="min-w-[280px] bg-white rounded-2xl border-2 border-dashed p-4 flex items-center justify-between shadow-sm" style={{ borderColor: brandColor + '20' }}>
-              <div className="flex gap-3 items-center">
-                <div className="p-2 rounded-xl" style={{ backgroundColor: brandColor + '10' }}>
-                  <Ticket className="h-5 w-5" style={{ color: brandColor }} />
-                </div>
-                <div>
-                  <p className="text-[13px] font-black uppercase italic tracking-tight" style={{ color: brandColor }}>{coupon.code}</p>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase">{coupon.discountValue}% OFF UP TO ₹500</p>
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 text-[9px] font-black uppercase tracking-widest gap-1"
-                onClick={() => {
-                  navigator.clipboard.writeText(coupon.code);
-                  toast({ title: "Code Copied!", description: "Apply it at checkout." });
-                }}
-              >
-                COPY <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Categories */}
       <div className="mt-10">
         <div className="px-6 flex justify-between items-center mb-4">
@@ -280,6 +250,52 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+
+      {/* Top Offers Section */}
+      {coupons && coupons.length > 0 && (
+        <div className="mt-12">
+          <div className="px-6 flex justify-center mb-6">
+            <h2 className="text-xl font-black uppercase tracking-[0.2em] text-[#111]">Top Offers</h2>
+          </div>
+          <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-8">
+            {coupons.map((coupon) => (
+              <div 
+                key={coupon.id} 
+                className="min-w-[300px] bg-white rounded-[24px] overflow-hidden flex shadow-sm border border-gray-100 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+                onClick={() => {
+                  navigator.clipboard.writeText(coupon.code);
+                  toast({ title: "Code Copied!", description: `Use ${coupon.code} at checkout.` });
+                }}
+              >
+                {/* Left side: Badge */}
+                <div style={{ backgroundColor: brandColor + '10' }} className="w-24 flex flex-col items-center justify-center p-4 relative border-r border-dashed border-gray-200">
+                  <div className="text-center">
+                    <span className="text-xl font-black block" style={{ color: brandColor }}>
+                      {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-tight" style={{ color: brandColor }}>OFF</span>
+                  </div>
+                  {/* Decorative scalloped edge look */}
+                  <div className="absolute top-0 right-0 bottom-0 w-2 overflow-hidden flex flex-col justify-around py-1">
+                    {Array.from({length: 6}).map((_, i) => (
+                      <div key={i} className="w-3 h-3 bg-white rounded-full -mr-2" />
+                    ))}
+                  </div>
+                </div>
+                {/* Right side: Info */}
+                <div className="flex-1 p-5 flex flex-col justify-center">
+                  <h4 className="text-[12px] font-black uppercase tracking-tight text-[#333] leading-tight line-clamp-1">
+                    {coupon.description || `GET FLAT ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ''} DISCOUNT`}
+                  </h4>
+                  <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-wide">
+                    Use <span className="text-[#333] font-black tracking-widest">{coupon.code}</span> {coupon.minOrderAmount > 0 ? `| Above ₹${coupon.minOrderAmount}` : ''}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
