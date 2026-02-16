@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { 
   Search, 
-  Filter, 
   Pizza, 
   Star, 
   TrendingUp, 
@@ -15,8 +14,8 @@ import {
   ShoppingBag,
   PlusCircle,
   Ticket,
-  Copy,
-  Flame
+  Flame,
+  Award
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -37,7 +36,7 @@ import {
   type CarouselApi
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -85,9 +84,12 @@ export default function HomePage() {
     }
   }, []);
 
+  // 3-Second Auto Scroll Logic for Banners
   useEffect(() => {
     if (!api) return;
-    const intervalId = setInterval(() => api.scrollNext(), 3000);
+    const intervalId = setInterval(() => {
+      api.scrollNext();
+    }, 3000);
     return () => clearInterval(intervalId);
   }, [api]);
 
@@ -128,7 +130,6 @@ export default function HomePage() {
     return base + addons;
   }, [customizingItem, selectedVariation, selectedAddons]);
 
-  // Determine which addons to show based on selected variation
   const availableAddons = useMemo(() => {
     if (!customizingItem) return [];
     if (selectedVariation?.addons && selectedVariation.addons.length > 0) {
@@ -267,7 +268,6 @@ export default function HomePage() {
                   toast({ title: "Code Copied!", description: `Use ${coupon.code} at checkout.` });
                 }}
               >
-                {/* Left side: Badge */}
                 <div style={{ backgroundColor: brandColor + '10' }} className="w-24 flex flex-col items-center justify-center p-4 relative border-r border-dashed border-gray-200">
                   <div className="text-center">
                     <span className="text-xl font-black block" style={{ color: brandColor }}>
@@ -275,14 +275,12 @@ export default function HomePage() {
                     </span>
                     <span className="text-[10px] font-black uppercase tracking-tight" style={{ color: brandColor }}>OFF</span>
                   </div>
-                  {/* Decorative scalloped edge look */}
                   <div className="absolute top-0 right-0 bottom-0 w-2 overflow-hidden flex flex-col justify-around py-1">
                     {Array.from({length: 6}).map((_, i) => (
                       <div key={i} className="w-3 h-3 bg-white rounded-full -mr-2" />
                     ))}
                   </div>
                 </div>
-                {/* Right side: Info */}
                 <div className="flex-1 p-5 flex flex-col justify-center">
                   <h4 className="text-[12px] font-black uppercase tracking-tight text-[#333] leading-tight line-clamp-1">
                     {coupon.description || `GET FLAT ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ''} DISCOUNT`}
@@ -296,6 +294,46 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Best Sellers Section */}
+      <div className="mt-12 mb-12">
+        <div className="px-6 flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+              <Award className="h-4 w-4 text-white" />
+            </div>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Best Sellers</h2>
+          </div>
+        </div>
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-8">
+          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-64 w-52 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(2, 7).map((item) => (
+            <motion.div 
+              key={item.id} 
+              whileTap={{ scale: 0.95 }} 
+              className="flex flex-col w-52 flex-shrink-0 bg-white rounded-[32px] shadow-md border border-gray-50 overflow-hidden"
+              onClick={() => handleAddClick(item)}
+            >
+              <div className="relative h-36 w-full">
+                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                <div className="absolute inset-0 bg-black/10" />
+                <div className="absolute top-3 right-3 bg-white/90 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-[#333]">
+                  Most Loved
+                </div>
+              </div>
+              <div className="p-5 flex flex-col gap-2">
+                <h4 className="text-[13px] font-black text-[#333] uppercase leading-tight tracking-tight line-clamp-1">{item.name}</h4>
+                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed h-8">{item.description}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-sm font-black" style={{ color: brandColor }}>₹{item.price}</span>
+                  <div style={{ backgroundColor: brandColor }} className="p-1.5 rounded-full text-white shadow-sm">
+                    <PlusCircle className="h-4 w-4" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
 
       {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
@@ -317,7 +355,7 @@ export default function HomePage() {
                     <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
                     <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
                       setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null);
-                      setSelectedAddons([]); // Clear addons when size changes
+                      setSelectedAddons([]); 
                     }} className="space-y-3">
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
@@ -331,7 +369,6 @@ export default function HomePage() {
 
                 <Separator />
 
-                {/* Add-ons */}
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
