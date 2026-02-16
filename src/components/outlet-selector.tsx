@@ -1,7 +1,8 @@
+
 "use client";
 
 import { motion } from "framer-motion";
-import { Store, ChevronLeft, Search, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Store, ChevronLeft, Search, Clock, CheckCircle2, XCircle, Flame, Pizza } from "lucide-react";
 import type { Outlet } from "@/lib/types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -33,13 +34,13 @@ export function OutletSelector({ cityId, onOutletSelect, onBack }: OutletSelecto
           <ChevronLeft className="h-6 w-6" />
         </Button>
         <ZapizzaLogo className="h-10 w-10 text-primary" />
-        <div className="w-10" /> {/* Spacer */}
+        <div className="w-10" />
       </div>
 
       <div className="flex flex-col items-center pt-4 text-center">
-        <h1 className="font-headline text-3xl font-bold">Select Outlet</h1>
+        <h1 className="font-headline text-3xl font-bold">Pick Your Flavor</h1>
         <p className="max-w-xs text-muted-foreground mt-2">
-          Which Zapizza kitchen should prepare your feast?
+          Choose a brand and outlet to start ordering.
         </p>
       </div>
 
@@ -65,11 +66,16 @@ export function OutletSelector({ cityId, onOutletSelect, onBack }: OutletSelecto
                 <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
-                            <div className={`p-3 rounded-full ${outlet.isOpen ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                                <Store className="h-6 w-6" />
+                            <div className={`p-3 rounded-full ${outlet.brand === 'zfry' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                                {outlet.brand === 'zfry' ? <Flame className="h-6 w-6" /> : <Pizza className="h-6 w-6" />}
                             </div>
                             <div>
-                                <h3 className="font-headline text-lg font-bold">{outlet.name}</h3>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-headline text-lg font-bold">{outlet.name}</h3>
+                                  <Badge variant="outline" className={`text-[8px] font-black uppercase ${outlet.brand === 'zfry' ? 'text-red-600 border-red-200' : 'text-green-600 border-green-200'}`}>
+                                    {outlet.brand}
+                                  </Badge>
+                                </div>
                                 <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                                     <Clock className="h-3 w-3" />
                                     <span>{outlet.openingTime} - {outlet.closingTime}</span>
@@ -84,12 +90,6 @@ export function OutletSelector({ cityId, onOutletSelect, onBack }: OutletSelecto
                 </CardContent>
               </Card>
             ))
-          )}
-          {!loading && outlets?.length === 0 && (
-            <div className="text-center py-12">
-                <Store className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-                <p className="text-muted-foreground">No outlets found in this city yet.</p>
-            </div>
           )}
         </div>
       </div>

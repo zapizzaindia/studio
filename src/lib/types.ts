@@ -1,6 +1,8 @@
 
 import type { Timestamp } from 'firebase/firestore';
 
+export type Brand = 'zapizza' | 'zfry';
+
 export type City = {
   id: string;
   name: string;
@@ -11,6 +13,7 @@ export type Category = {
   name: string;
   imageId?: string;
   order?: number;
+  brand: Brand;
 };
 
 export type MenuItemVariation = {
@@ -37,6 +40,7 @@ export type MenuItem = {
   variations?: MenuItemVariation[];
   addons?: MenuItemAddon[];
   recommendedSides?: string[];
+  brand: Brand;
 };
 
 export type GlobalSettings = {
@@ -105,6 +109,7 @@ export type Outlet = {
     isOpen: boolean;
     openingTime: string;
     closingTime: string;
+    brand: Brand;
 };
 
 export type UserProfile = {
@@ -137,6 +142,7 @@ export type Banner = {
   price?: string;
   imageId: string;
   active: boolean;
+  brand: Brand;
 };
 
 export type OutletMenuAvailability = {

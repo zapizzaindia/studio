@@ -10,8 +10,6 @@ import type { Order, OrderStatus, UserProfile } from '@/lib/types';
 import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2 } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -22,14 +20,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from '@/components/ui/separator';
-
-const statusIcons: Record<OrderStatus, React.ReactNode> = {
-  "New": <CircleDot className="h-4 w-4 text-blue-500" />,
-  "Preparing": <Loader className="h-4 w-4 text-yellow-500 animate-spin" />,
-  "Out for Delivery": <Truck className="h-4 w-4 text-orange-500" />,
-  "Completed": <CheckCircle className="h-4 w-4 text-green-500" />,
-  "Cancelled": <XCircle className="h-4 w-4 text-red-500" />,
-};
 
 const ALERT_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3";
 const ACCEPTANCE_TIMEOUT_MS = 5 * 60 * 1000;
@@ -67,7 +57,6 @@ export default function AdminOrdersPage() {
   const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   const outletId = userProfile?.outletId;
   const { data: orders, loading: ordersLoading } = useCollection<Order>('orders', { where: outletId ? ['outletId', '==', outletId] : undefined });
-  const { data: globalSettings } = useDoc<any>('settings', 'global');
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -90,20 +79,14 @@ export default function AdminOrdersPage() {
     const orderRef = doc(firestore, 'orders', orderId);
     const updateData: any = { status };
     if (reason) updateData.cancellationReason = reason;
-    if (status === 'Cancelled') updateData.paymentStatus = 'Refund Initiated';
 
     updateDoc(orderRef, updateData)
       .then(() => {
         toast({ title: "Status Updated" });
         if (selectedOrder?.id === orderId) setSelectedOrder(null);
       })
-      .catch((error) => {
-        const permissionError = new FirestorePermissionError({
-          path: orderRef.path,
-          operation: 'update',
-          requestResourceData: updateData
-        });
-        errorEmitter.emit('permission-error', permissionError);
+      .catch(() => {
+        toast({ variant: 'destructive', title: "Error updating status" });
       });
   };
 
@@ -111,82 +94,65 @@ export default function AdminOrdersPage() {
 
   const handleShareLocation = (order: Order) => {
     const addr = order.deliveryAddress;
-    const mapLink = addr?.latitude ? `\n📍 *Map Location:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
-    
-    const text = `🍕 *Zapizza Delivery Order* 🍕\n\n` +
-      `*Order ID:* #${order.id.slice(-6).toUpperCase()}\n` +
-      `*Customer:* ${order.customerName}\n` +
-      `*Phone:* ${order.customerPhone || 'N/A'}\n\n` +
-      `*Address:* ${addr?.flatNo || ''}, ${addr?.area || ''}, ${addr?.city || ''}\n` +
-      `*Landmark:* ${addr?.landmark || 'N/A'}${mapLink}`;
-
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+    const mapLink = addr?.latitude ? `\n📍 *Map:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
+    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return <Card><CardContent className="p-4"><Skeleton className="h-48 w-full" /></CardContent></Card>;
     const filteredOrders = statusFilter === 'All' ? orders : orders?.filter(o => o.status === statusFilter);
-    const sortedOrders = filteredOrders?.sort((a,b) => {
-        const timeA = typeof a.createdAt?.toMillis === 'function' ? a.createdAt.toMillis() : 0;
-        const timeB = typeof b.createdAt?.toMillis === 'function' ? b.createdAt.toMillis() : 0;
-        return timeB - timeA;
-    });
     
     return (
       <Card className="border-none shadow-sm overflow-hidden">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="font-bold text-xs uppercase tracking-widest">Order</TableHead>
-                  <TableHead className="font-bold text-xs uppercase tracking-widest">Customer</TableHead>
-                  <TableHead className="font-bold text-xs uppercase tracking-widest">Total</TableHead>
-                  <TableHead className="font-bold text-xs uppercase tracking-widest">Status</TableHead>
-                  <TableHead className="text-right font-bold text-xs uppercase tracking-widest">Actions</TableHead>
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="font-bold text-xs uppercase tracking-widest">Order</TableHead>
+                <TableHead className="font-bold text-xs uppercase tracking-widest">Customer</TableHead>
+                <TableHead className="font-bold text-xs uppercase tracking-widest">Total</TableHead>
+                <TableHead className="font-bold text-xs uppercase tracking-widest">Status</TableHead>
+                <TableHead className="text-right font-bold text-xs uppercase tracking-widest">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders && filteredOrders.length > 0 ? filteredOrders.map((order) => (
+                <TableRow key={order.id} className="hover:bg-muted/30">
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-black text-primary">#{order.id.slice(-6).toUpperCase()}</span>
+                      {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-xs">{order.customerName}</span>
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-2.5 w-2.5" /> 
+                        {order.deliveryAddress?.area || "N/A"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-black text-xs">₹{order.total.toFixed(2)}</TableCell>
+                  <TableCell>
+                     <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest">{order.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="h-8 w-8 p-0"><Eye className="h-4 w-4" /></Button>
+                      {order.status === 'New' && (
+                        <>
+                          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
+                          <Button size="sm" className="bg-primary font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept</Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedOrders && sortedOrders.length > 0 ? sortedOrders.map((order) => (
-                  <TableRow key={order.id} className="hover:bg-muted/30">
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-black text-[#14532d]">#{order.id.slice(-6).toUpperCase()}</span>
-                        {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-xs">{order.customerName}</span>
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-2.5 w-2.5" /> 
-                          {order.deliveryAddress?.area || "Address Unavailable"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-black text-xs">₹{order.total.toFixed(2)}</TableCell>
-                    <TableCell>
-                       <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest">{order.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)} className="h-8 w-8 p-0"><Eye className="h-4 w-4" /></Button>
-                        {order.status === 'New' && (
-                          <>
-                            <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
-                            <Button size="sm" className="bg-[#14532d] font-bold text-[10px] uppercase h-8" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept</Button>
-                          </>
-                        )}
-                        {order.status === 'Preparing' && <Button className="bg-orange-500 font-bold text-[10px] uppercase h-8" size="sm" onClick={() => handleUpdateStatus(order.id, 'Out for Delivery')}>Dispatch</Button>}
-                        {order.status === 'Out for Delivery' && <Button className="bg-green-600 font-bold text-[10px] uppercase h-8" size="sm" onClick={() => handleUpdateStatus(order.id, 'Completed')}>Delivered</Button>}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )) : <TableRow><TableCell colSpan={5} className="h-32 text-center text-muted-foreground uppercase text-xs font-bold tracking-widest">No active orders</TableCell></TableRow>}
-              </TableBody>
-            </Table>
-          </div>
+              )) : <TableRow><TableCell colSpan={5} className="h-32 text-center text-muted-foreground uppercase text-xs font-bold tracking-widest">No active orders</TableCell></TableRow>}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     );
@@ -209,8 +175,8 @@ export default function AdminOrdersPage() {
       <Tabs defaultValue="New" className="w-full">
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-6 bg-white p-1 rounded-xl shadow-sm h-12 border">
           {["New", "Preparing", "Out for Delivery", "Completed", "Cancelled", "All"].map(tab => (
-            <TabsTrigger key={tab} value={tab} className="font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-[#14532d] data-[state=active]:text-white">
-              {tab === "Out for Delivery" ? "Delivery" : tab}
+            <TabsTrigger key={tab} value={tab} className="font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
+              {tab}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -226,7 +192,7 @@ export default function AdminOrdersPage() {
         <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none max-h-[90vh] overflow-y-auto">
           {selectedOrder && (
             <div className="flex flex-col">
-              <DialogHeader className="p-6 bg-[#14532d] text-white">
+              <DialogHeader className="p-6 bg-primary text-white">
                 <DialogTitle className="text-xl font-black uppercase tracking-widest flex justify-between items-center">
                   Order #{selectedOrder.id.slice(-6).toUpperCase()}
                   <Badge variant="outline" className="text-white border-white uppercase text-[9px]">{selectedOrder.status}</Badge>
@@ -237,49 +203,21 @@ export default function AdminOrdersPage() {
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Delivery Information</h4>
                     <div className="flex gap-2">
-                      {selectedOrder.deliveryAddress?.latitude && (
-                        <Button 
-                          asChild
-                          variant="outline" 
-                          size="sm" 
-                          className="h-7 text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border-blue-200"
-                        >
-                          <a 
-                            href={`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                          >
-                            <Navigation className="h-3 w-3 mr-1" /> Open Map Pin
-                          </a>
-                        </Button>
-                      )}
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-7 text-[9px] font-black uppercase tracking-widest bg-green-50 text-green-600 border-green-200"
-                        onClick={() => handleShareLocation(selectedOrder)}
-                      >
-                        <Share2 className="h-3 w-3 mr-1" /> Share Info
-                      </Button>
+                      <Button variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase tracking-widest" onClick={() => handleShareLocation(selectedOrder)}><Share2 className="h-3 w-3 mr-1" /> Share</Button>
                     </div>
                   </div>
                   <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-dashed">
                     <div className="flex items-start gap-3">
-                      <MapPin className="h-4 w-4 text-[#14532d] mt-0.5" />
+                      <MapPin className="h-4 w-4 text-primary mt-0.5" />
                       <div>
-                        <p className="text-xs font-black text-[#333333] uppercase">{selectedOrder.deliveryAddress?.label || "Home"}</p>
-                        <p className="text-[11px] font-bold text-muted-foreground mt-1 leading-tight">
-                          {selectedOrder.deliveryAddress?.flatNo || "N/A"}, {selectedOrder.deliveryAddress?.area || "N/A"}, {selectedOrder.deliveryAddress?.city || "N/A"}
-                        </p>
-                        {selectedOrder.deliveryAddress?.landmark && (
-                          <p className="text-[10px] font-black text-orange-600 mt-2 uppercase">Landmark: {selectedOrder.deliveryAddress.landmark}</p>
-                        )}
+                        <p className="text-xs font-black uppercase">{selectedOrder.deliveryAddress?.label || "Home"}</p>
+                        <p className="text-[11px] font-bold text-muted-foreground mt-1">{selectedOrder.deliveryAddress?.flatNo}, {selectedOrder.deliveryAddress?.area}, {selectedOrder.deliveryAddress?.city}</p>
                       </div>
                     </div>
                     <Separator className="bg-muted-foreground/10" />
                     <div className="flex items-center gap-3">
-                      <Phone className="h-4 w-4 text-[#14532d]" />
-                      <p className="text-xs font-black text-[#333333]">{selectedOrder.customerPhone || "Phone not available"}</p>
+                      <Phone className="h-4 w-4 text-primary" />
+                      <p className="text-xs font-black">{selectedOrder.customerPhone || "N/A"}</p>
                     </div>
                   </div>
                 </div>
@@ -288,79 +226,30 @@ export default function AdminOrdersPage() {
                   <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Order Items</h4>
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex flex-col border-b border-dashed pb-3 last:border-0 last:pb-0">
-                        <div className="flex justify-between items-start text-xs">
-                          <div className="flex gap-3">
-                            <span className="font-black text-[#14532d] min-w-[20px]">{item.quantity}x</span>
-                            <div className="flex flex-col gap-1">
-                              <span className="font-bold text-[#333333] uppercase tracking-tight">{item.name}</span>
-                              {item.variation && (
-                                <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1">
-                                  <span className="h-1 w-1 bg-muted-foreground rounded-full" /> Size: {item.variation}
-                                </span>
-                              )}
-                              {item.addons && item.addons.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mt-1">
-                                  {item.addons.map((addon, aIdx) => (
-                                    <span key={aIdx} className="text-[8px] font-black bg-[#14532d]/10 text-[#14532d] px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                      +{addon}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                      <div key={idx} className="flex justify-between items-start text-xs border-b border-dashed pb-3 last:border-0">
+                        <div className="flex gap-3">
+                          <span className="font-black text-primary">{item.quantity}x</span>
+                          <div className="flex flex-col">
+                            <span className="font-bold uppercase">{item.name}</span>
+                            {item.variation && <span className="text-[9px] font-black text-muted-foreground uppercase">Size: {item.variation}</span>}
                           </div>
-                          <span className="font-black text-[#333333]">₹{item.price * item.quantity}</span>
                         </div>
+                        <span className="font-black">₹{item.price * item.quantity}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-dashed space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
-                    <span>Item Total</span>
-                    <span>₹{selectedOrder.subtotal?.toFixed(2) || selectedOrder.total.toFixed(2)}</span>
-                  </div>
-                  {selectedOrder.deliveryFee > 0 && (
-                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
-                      <span>Delivery Fee</span>
-                      <span>₹{selectedOrder.deliveryFee.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {selectedOrder.gst > 0 && (
-                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
-                      <span>Taxes (GST)</span>
-                      <span>₹{selectedOrder.gst.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {selectedOrder.discount > 0 && (
-                    <div className="flex justify-between text-[10px] font-black text-green-600 uppercase">
-                      <span>Coupon Discount</span>
-                      <span>-₹{selectedOrder.discount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="pt-2 border-t border-dashed flex justify-between items-center">
-                    <span className="text-xs font-black uppercase text-[#333333]">Amount Paid (Online)</span>
-                    <span className="text-lg font-black text-[#14532d]">₹{selectedOrder.total.toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="mt-2 pt-2 bg-[#14532d]/5 p-3 rounded-xl flex items-center justify-between border border-dashed border-[#14532d]/20">
-                    <div className="flex items-center gap-2">
-                      <Crown className="h-3 w-3 text-[#14532d]" />
-                      <span className="text-[9px] font-black text-[#14532d] uppercase">Loyalty Points Earned</span>
-                    </div>
-                    <span className="text-[10px] font-black text-[#14532d]">+{Math.floor((selectedOrder.subtotal / 100) * (globalSettings?.loyaltyRatio || 1))} PTS</span>
-                  </div>
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase"><span>Item Total</span><span>₹{selectedOrder.subtotal.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase"><span>Taxes (GST)</span><span>₹{selectedOrder.gst.toFixed(2)}</span></div>
+                  <div className="pt-2 border-t border-dashed flex justify-between items-center"><span className="text-xs font-black uppercase">Final Total</span><span className="text-lg font-black text-primary">₹{selectedOrder.total.toFixed(2)}</span></div>
                 </div>
               </div>
               <div className="p-6 bg-muted/50 border-t flex gap-3">
                 <Button variant="outline" onClick={() => setSelectedOrder(null)} className="flex-1 font-black uppercase text-[10px] h-12">Close</Button>
                 {selectedOrder.status === 'New' && (
-                  <>
-                    <Button variant="outline" onClick={() => handleUpdateStatus(selectedOrder.id, 'Cancelled', 'Rejected by Outlet')} className="flex-1 text-red-600 border-red-200 font-black uppercase text-[10px] h-12">Reject Order</Button>
-                    <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Preparing')} className="flex-1 bg-[#14532d] font-black uppercase text-[10px] h-12">Accept Order</Button>
-                  </>
+                  <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Preparing')} className="flex-1 bg-primary font-black uppercase text-[10px] h-12">Accept Order</Button>
                 )}
               </div>
             </div>
