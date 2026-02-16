@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -183,7 +182,7 @@ export default function HomePage() {
       </div>
 
       {/* Hero Banners */}
-      <div className="mt-8 px-6">
+      <div className="mt-6 px-6">
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
           <CarouselContent>
             {bannersLoading ? (
@@ -205,12 +204,12 @@ export default function HomePage() {
       </div>
 
       {/* Categories */}
-      <div className="mt-10">
+      <div className="mt-8">
         <div className="px-6 flex justify-between items-center mb-4">
           <h2 className="text-lg font-black uppercase tracking-tighter" style={{ color: brandColor }}>Explore Menu</h2>
           <Button variant="ghost" size="sm" className="text-xs font-black uppercase gap-1 pr-0" style={{ color: brandColor }} onClick={() => router.push('/home/menu')}>See All <ChevronRight className="h-3 w-3" /></Button>
         </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2">
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
             <div key={cat.id} className="flex flex-col items-center gap-2 group cursor-pointer flex-shrink-0" onClick={() => router.push(`/home/menu?category=${cat.id}`)}>
               <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
@@ -223,8 +222,8 @@ export default function HomePage() {
       </div>
 
       {/* Trending Now Section */}
-      <div className="mt-12">
-        <div className="px-6 flex justify-between items-center mb-6">
+      <div className="mt-8">
+        <div className="px-6 flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <TrendingUp className="h-4 w-4 text-white" />
@@ -232,7 +231,7 @@ export default function HomePage() {
             <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Trending Now</h2>
           </div>
         </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-8">
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-56 w-44 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
             <motion.div key={item.id} whileTap={{ scale: 0.95 }} className="flex flex-col gap-3 w-44 flex-shrink-0 cursor-pointer group bg-white p-2.5 rounded-[32px] border border-gray-100 shadow-sm" onClick={() => handleAddClick(item)}>
               <div className="relative h-40 w-full rounded-[24px] overflow-hidden shadow-sm border border-black/5">
@@ -254,11 +253,11 @@ export default function HomePage() {
 
       {/* Top Offers Section */}
       {coupons && coupons.length > 0 && (
-        <div className="mt-12">
-          <div className="px-6 flex justify-center mb-6">
+        <div className="mt-8">
+          <div className="px-6 flex justify-center mb-4">
             <h2 className="text-xl font-black uppercase tracking-[0.2em] text-[#111]">Top Offers</h2>
           </div>
-          <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-8">
+          <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
             {coupons.map((coupon) => (
               <div 
                 key={coupon.id} 
@@ -296,8 +295,8 @@ export default function HomePage() {
       )}
 
       {/* Best Sellers Section */}
-      <div className="mt-12 mb-12">
-        <div className="px-6 flex justify-between items-center mb-6">
+      <div className="mt-8 mb-8">
+        <div className="px-6 flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <Award className="h-4 w-4 text-white" />
@@ -305,7 +304,7 @@ export default function HomePage() {
             <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Best Sellers</h2>
           </div>
         </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-8">
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-64 w-52 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(2, 7).map((item) => (
             <motion.div 
               key={item.id} 
@@ -354,7 +353,8 @@ export default function HomePage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
                     <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
-                      setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null);
+                      const newVar = customizingItem.variations?.find(v => v.name === val) || null;
+                      setSelectedVariation(newVar);
                       setSelectedAddons([]); 
                     }} className="space-y-3">
                       {customizingItem.variations.map((v) => (
