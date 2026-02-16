@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2 } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -108,6 +108,21 @@ export default function AdminOrdersPage() {
   };
 
   const handleAutoCancel = (orderId: string) => handleUpdateStatus(orderId, 'Cancelled', 'Kitchen Timeout');
+
+  const handleShareLocation = (order: Order) => {
+    const addr = order.deliveryAddress;
+    const mapLink = addr?.latitude ? `\n📍 *Map Location:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
+    
+    const text = `🍕 *Zapizza Delivery Order* 🍕\n\n` +
+      `*Order ID:* #${order.id.slice(-6).toUpperCase()}\n` +
+      `*Customer:* ${order.customerName}\n` +
+      `*Phone:* ${order.customerPhone || 'N/A'}\n\n` +
+      `*Address:* ${addr?.flatNo || ''}, ${addr?.area || ''}, ${addr?.city || ''}\n` +
+      `*Landmark:* ${addr?.landmark || 'N/A'}${mapLink}`;
+
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+  };
 
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return <Card><CardContent className="p-4"><Skeleton className="h-48 w-full" /></CardContent></Card>;
@@ -221,22 +236,32 @@ export default function AdminOrdersPage() {
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Delivery Information</h4>
-                    {selectedOrder.deliveryAddress?.latitude && (
+                    <div className="flex gap-2">
+                      {selectedOrder.deliveryAddress?.latitude && (
+                        <Button 
+                          asChild
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border-blue-200"
+                        >
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
+                            <Navigation className="h-3 w-3 mr-1" /> Open Map Pin
+                          </a>
+                        </Button>
+                      )}
                       <Button 
-                        asChild
                         variant="outline" 
                         size="sm" 
-                        className="h-7 text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border-blue-200"
+                        className="h-7 text-[9px] font-black uppercase tracking-widest bg-green-50 text-green-600 border-green-200"
+                        onClick={() => handleShareLocation(selectedOrder)}
                       >
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                        >
-                          <Navigation className="h-3 w-3 mr-1" /> Open Map Pin
-                        </a>
+                        <Share2 className="h-3 w-3 mr-1" /> Share Info
                       </Button>
-                    )}
+                    </div>
                   </div>
                   <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-dashed">
                     <div className="flex items-start gap-3">
