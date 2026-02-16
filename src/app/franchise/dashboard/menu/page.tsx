@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -10,22 +10,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { MenuItem, Category, MenuItemVariation, MenuItemAddon } from '@/lib/types';
+import type { MenuItem, Category, MenuItemVariation, MenuItemAddon, Brand } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee } from 'lucide-react';
+import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee, Flame, Pizza } from 'lucide-react';
 import { useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 export default function FranchiseMenuPage() {
-  const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
-  const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
+  const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
+  const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { toast } = useToast();
 
+  const [activeBrand, setActiveBrand] = useState<Brand>('zapizza');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -49,8 +51,13 @@ export default function FranchiseMenuPage() {
   const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
   const [categoryCustomImage, setCategoryCustomImage] = useState<string | null>(null);
 
+  const menuItems = useMemo(() => allMenuItems?.filter(item => item.brand === activeBrand) || [], [allMenuItems, activeBrand]);
+  const categories = useMemo(() => allCategories?.filter(cat => cat.brand === activeBrand) || [], [allCategories, activeBrand]);
+
   const isLoading = menuItemsLoading || categoriesLoading;
-  const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
+  const sortedCategories = useMemo(() => [...categories].sort((a,b) => (a.order || 0) - (b.order || 0)), [categories]);
+
+  const brandColor = activeBrand === 'zfry' ? '#e31837' : '#14532d';
 
   const handleEditClick = (item: MenuItem) => {
     setEditingItem(item);
@@ -97,62 +104,6 @@ export default function FranchiseMenuPage() {
     setCategoryCustomImage(null);
   };
 
-  const handleAddVariation = () => {
-    setNewItemVariations([...newItemVariations, { name: "", price: 0, addons: [] }]);
-  };
-
-  const handleRemoveVariation = (index: number) => {
-    setNewItemVariations(newItemVariations.filter((_, i) => i !== index));
-  };
-
-  const handleUpdateVariation = (index: number, field: keyof MenuItemVariation, value: any) => {
-    const updated = [...newItemVariations];
-    updated[index] = { ...updated[index], [field]: value };
-    setNewItemVariations(updated);
-  };
-
-  const handleAddAddonToVariation = (vIndex: number) => {
-    const updated = [...newItemVariations];
-    const addons = updated[vIndex].addons || [];
-    updated[vIndex].addons = [...addons, { name: "", price: 0 }];
-    setNewItemVariations(updated);
-  };
-
-  const handleUpdateVariationAddon = (vIndex: number, aIndex: number, field: keyof MenuItemAddon, value: any) => {
-    const updated = [...newItemVariations];
-    const addons = [...(updated[vIndex].addons || [])];
-    addons[aIndex] = { ...addons[aIndex], [field]: value };
-    updated[vIndex].addons = addons;
-    setNewItemVariations(updated);
-  };
-
-  const handleRemoveVariationAddon = (vIndex: number, aIndex: number) => {
-    const updated = [...newItemVariations];
-    const addons = (updated[vIndex].addons || []).filter((_, i) => i !== aIndex);
-    updated[vIndex].addons = addons;
-    setNewItemVariations(updated);
-  };
-
-  const handleAddAddon = () => {
-    setNewItemAddons([...newItemAddons, { name: "", price: 0 }]);
-  };
-
-  const handleRemoveAddon = (index: number) => {
-    setNewItemAddons(newItemAddons.filter((_, i) => i !== index));
-  };
-
-  const handleUpdateAddon = (index: number, field: keyof MenuItemAddon, value: string | number) => {
-    const updated = [...newItemAddons];
-    updated[index] = { ...updated[index], [field]: value };
-    setNewItemAddons(updated);
-  };
-
-  const handleToggleSide = (itemId: string) => {
-    setNewItemSides(prev => 
-      prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
-    );
-  };
-
   const handleAddItem = () => {
     if (!newItemName || (!newItemPrice && newItemVariations.length === 0) || !newItemCategory) {
         toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out Name, Price (or Variations) and Category.' });
@@ -160,521 +111,369 @@ export default function FranchiseMenuPage() {
     }
 
     toast({ 
-        title: editingItem ? "Item updated successfully (Demo Mode)" : "Item added successfully (Demo Mode)", 
-        description: `${newItemName} has been ${editingItem ? 'updated in' : 'added to'} the global menu.` 
+        title: `${activeBrand.toUpperCase()} Item ${editingItem ? 'Updated' : 'Added'} (Demo)`, 
+        description: `${newItemName} has been ${editingItem ? 'updated in' : 'added to'} the ${activeBrand} menu.` 
     });
 
-    setNewItemName("");
-    setNewItemDesc("");
-    setNewItemPrice("");
-    setNewItemCategory("");
-    setNewItemIsVeg(true);
-    setNewItemImageId("margherita");
-    setNewItemGlobal(true);
-    setNewItemVariations([]);
-    setNewItemAddons([]);
-    setNewItemSides([]);
-    setCustomImage(null);
-    setEditingItem(null);
     setIsAddDialogOpen(false);
+    setEditingItem(null);
   };
 
   const handleAddCategory = () => {
     if (!newCategoryName) return;
-
-    toast({
-        title: editingCategory ? "Category updated (Demo Mode)" : "Category created (Demo Mode)",
-        description: `"${newCategoryName}" is now active.`
-    });
-
+    toast({ title: "Category Processed (Demo)", description: `"${newCategoryName}" is now live for ${activeBrand}.` });
     setNewCategoryName("");
-    setNewCategoryImageId("cat_veg");
-    setCategoryCustomImage(null);
     setEditingCategory(null);
   };
 
-  const handleDeleteCategory = (catName: string) => {
-    toast({
-        title: "Category deleted (Demo Mode)",
-        description: `"${catName}" has been removed from the list.`
-    });
-  };
-
   return (
-    <div className="container mx-auto p-0">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-0 space-y-8">
+      {/* Brand Selection Toggle */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-[24px] shadow-sm border border-gray-100">
         <div>
-            <h1 className="font-headline text-3xl font-bold">Global Menu Management</h1>
-            <p className="text-muted-foreground">Add, edit, or remove items from the master menu.</p>
+            <h1 className="font-headline text-3xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>
+                {activeBrand === 'zapizza' ? 'Zapizza' : 'Zfry'} Global Menu
+            </h1>
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Manage master products and categories</p>
         </div>
         
-        <div className="flex gap-2">
-            <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) setEditingCategory(null); }}>
-                <DialogTrigger asChild>
-                    <Button variant="outline"><Layers className="mr-2 h-4 w-4" /> Manage Categories</Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Menu Categories</DialogTitle>
-                        <DialogDescription>View and manage your menu organization and imagery.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-6 py-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Existing Categories</Label>
-                            <div className="grid grid-cols-1 gap-2 border rounded-md p-2 max-h-48 overflow-y-auto bg-muted/20">
-                                {sortedCategories.length > 0 ? sortedCategories.map(cat => (
-                                    <div key={cat.id} className="flex justify-between items-center text-sm p-3 bg-white border rounded-lg shadow-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className="relative h-8 w-8 rounded-full overflow-hidden border">
-                                                <Image 
-                                                    src={placeholderImageMap.get(cat.imageId || 'cat_veg')?.imageUrl || ''} 
-                                                    alt={cat.name} 
-                                                    fill 
-                                                    className="object-cover" 
-                                                />
-                                            </div>
-                                            <span className="font-bold text-[#14532d]">{cat.name}</span>
-                                        </div>
-                                        <div className="flex gap-1">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(cat)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                onClick={() => handleDeleteCategory(cat.name)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )) : <p className="text-center py-4 text-xs text-muted-foreground">No categories found.</p>}
-                            </div>
-                        </div>
-                        
-                        <Separator />
-                        
-                        <div className="space-y-4 bg-muted/30 p-4 rounded-xl border">
-                            <Label className="text-xs font-black uppercase tracking-widest text-[#14532d]">
-                                {editingCategory ? 'Edit Category' : 'Add New Category'}
-                            </Label>
-                            
-                            <div className="flex items-center gap-4">
-                                <div className="relative h-16 w-16 rounded-xl overflow-hidden border bg-white shadow-inner flex-shrink-0 flex items-center justify-center">
-                                    <Image 
-                                        src={categoryCustomImage || placeholderImageMap.get(newCategoryImageId)?.imageUrl || ''} 
-                                        alt="Preview" 
-                                        fill 
-                                        className="object-cover" 
-                                    />
-                                </div>
-                                <div className="flex-1 space-y-2">
-                                    <Input 
-                                        type="file" 
-                                        id="cat-img-upload" 
-                                        accept="image/*" 
-                                        className="hidden" 
-                                        onChange={handleCategoryFileChange} 
-                                    />
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        className="w-full h-10 text-[10px] font-black uppercase tracking-widest"
-                                        onClick={() => document.getElementById('cat-img-upload')?.click()}
-                                    >
-                                        <Upload className="mr-2 h-4 w-4" /> Upload Category Image
-                                    </Button>
-                                </div>
-                            </div>
+        <div className="flex bg-muted/50 p-1.5 rounded-2xl border w-full sm:w-auto h-14">
+            <button 
+                onClick={() => setActiveBrand('zapizza')}
+                className={cn(
+                    "flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+                    activeBrand === 'zapizza' ? "bg-white text-[#14532d] shadow-md ring-1 ring-black/5" : "text-muted-foreground hover:text-foreground"
+                )}
+            >
+                <Pizza className="h-4 w-4" /> Zapizza
+            </button>
+            <button 
+                onClick={() => setActiveBrand('zfry')}
+                className={cn(
+                    "flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+                    activeBrand === 'zfry' ? "bg-white text-[#e31837] shadow-md ring-1 ring-black/5" : "text-muted-foreground hover:text-foreground"
+                )}
+            >
+                <Flame className="h-4 w-4" /> Zfry
+            </button>
+        </div>
+      </div>
 
-                            <div className="space-y-3">
-                                <Input 
-                                    placeholder="Category Name (e.g. Sides & Dips)" 
-                                    value={newCategoryName} 
-                                    onChange={e => setNewCategoryName(e.target.value)} 
-                                    className="font-bold h-10"
-                                />
-                                <Button onClick={handleAddCategory} className="w-full bg-[#14532d] hover:bg-[#0f4023] h-10 font-black uppercase text-xs tracking-widest">
-                                    {editingCategory ? 'Update and Save' : 'Create Category'}
-                                </Button>
-                                {editingCategory && (
-                                    <Button variant="ghost" className="w-full h-8 text-[9px] uppercase font-bold" onClick={() => { setEditingCategory(null); setNewCategoryName(""); }}>
-                                        Cancel Edit
-                                    </Button>
-                                )}
-                            </div>
+      <div className="flex flex-wrap gap-3">
+        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) setEditingCategory(null); }}>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 shadow-sm">
+                    <Layers className="mr-2 h-4 w-4" /> Manage {activeBrand === 'zapizza' ? 'Zapizza' : 'Zfry'} Categories
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+                <DialogHeader className="p-6 bg-muted/30">
+                    <DialogTitle className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Categories Manager</DialogTitle>
+                    <DialogDescription className="text-[10px] font-bold uppercase text-muted-foreground">Organization for {activeBrand}</DialogDescription>
+                </DialogHeader>
+                <div className="p-6 space-y-6">
+                    <div className="space-y-3">
+                        <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Existing Categories</Label>
+                        <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
+                            {sortedCategories.map(cat => (
+                                <div key={cat.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100 group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative h-8 w-8 rounded-full overflow-hidden border bg-white">
+                                            <Image src={placeholderImageMap.get(cat.imageId || 'cat_veg')?.imageUrl || ''} alt={cat.name} fill className="object-cover" />
+                                        </div>
+                                        <span className="font-bold text-sm uppercase tracking-tight">{cat.name}</span>
+                                    </div>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(cat)}><Edit className="h-3.5 w-3.5" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500"><Trash2 className="h-3.5 w-3.5" /></Button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsCategoryDialogOpen(false)} className="font-black uppercase text-xs">Close</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setEditingItem(null); }}>
-                <DialogTrigger asChild>
-                    <Button className="bg-[#14532d] hover:bg-[#0f4023]"><Plus className="mr-2 h-4 w-4" /> Add New Item</Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none rounded-2xl shadow-2xl">
-                    <DialogHeader className="p-6 bg-[#14532d] text-white">
-                        <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-2">
-                          <PlusCircle className="h-6 w-6" /> {editingItem ? 'Edit Global Menu Item' : 'Add Global Menu Item'}
-                        </DialogTitle>
-                        <DialogDescription className="text-white/70">
-                          {editingItem ? `Update details for ${editingItem.name}.` : 'Create a new product with full customization for all Zapizza outlets.'}
-                        </DialogDescription>
-                    </DialogHeader>
                     
-                    <div className="p-6">
-                      <Tabs defaultValue="general" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50 p-1 rounded-xl">
-                          <TabsTrigger value="general" className="font-black uppercase text-[10px] tracking-widest">General</TabsTrigger>
-                          <TabsTrigger value="variations" className="font-black uppercase text-[10px] tracking-widest">Variations</TabsTrigger>
-                          <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest">Global Add-ons</TabsTrigger>
-                          <TabsTrigger value="sides" className="font-black uppercase text-[10px] tracking-widest">Sides</TabsTrigger>
-                        </TabsList>
+                    <Separator className="opacity-50" />
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                            <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 bg-white shadow-inner flex-shrink-0">
+                                <Image src={categoryCustomImage || placeholderImageMap.get(newCategoryImageId)?.imageUrl || ''} alt="Preview" fill className="object-cover" />
+                            </div>
+                            <div className="flex-1">
+                                <Input type="file" id="cat-img-upload" accept="image/*" className="hidden" onChange={handleCategoryFileChange} />
+                                <Button 
+                                    variant="outline" 
+                                    className="w-full h-10 text-[9px] font-black uppercase tracking-widest rounded-lg border-dashed"
+                                    onClick={() => document.getElementById('cat-img-upload')?.click()}
+                                >
+                                    <Upload className="mr-2 h-3 w-3" /> Change Photo
+                                </Button>
+                            </div>
+                        </div>
+                        <Input placeholder="e.g. Gourmet Specials" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="font-bold h-12 rounded-xl" />
+                        <Button onClick={handleAddCategory} style={{ backgroundColor: brandColor }} className="w-full h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg">
+                            {editingCategory ? 'Update Category' : 'Create Category'}
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
 
-                        <TabsContent value="general" className="space-y-4">
-                          <div className="grid gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="name" className="text-[10px] font-black uppercase text-muted-foreground">Item Name</Label>
-                                <Input id="name" value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder="e.g. Paneer Tikka Pizza" className="font-bold" />
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setEditingItem(null); }}>
+            <DialogTrigger asChild>
+                <Button style={{ backgroundColor: brandColor }} className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg px-8">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New {activeBrand === 'zapizza' ? 'Pizza' : 'Item'}
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none rounded-[32px] shadow-2xl flex flex-col">
+                <DialogHeader className="p-8 pb-0">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>
+                      {editingItem ? 'Modify' : 'Create'} {activeBrand} Product
+                    </DialogTitle>
+                    <DialogDescription className="text-[10px] font-bold uppercase tracking-widest opacity-60">Master Menu Configuration</DialogDescription>
+                </DialogHeader>
+                
+                <div className="p-8">
+                  <Tabs defaultValue="general" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/30 p-1.5 rounded-2xl border">
+                      <TabsTrigger value="general" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">General</TabsTrigger>
+                      <TabsTrigger value="variations" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Sizes</TabsTrigger>
+                      <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Toppings</TabsTrigger>
+                      <TabsTrigger value="sides" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Sides</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="general" className="space-y-6">
+                        <div className="grid gap-6">
+                            <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Product Title</Label>
+                                <Input value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder="e.g. Smoky BBQ Chicken" className="font-bold h-12 rounded-xl" />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="description" className="text-[10px] font-black uppercase text-muted-foreground">Description</Label>
-                                <Textarea id="description" value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Tell us what makes it delicious..." className="font-medium" />
+                            <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Menu Description</Label>
+                                <Textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Write something tempting..." className="font-medium rounded-xl min-h-[100px]" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="price" className="text-[10px] font-black uppercase text-muted-foreground">Base Price (₹)</Label>
-                                    <Input id="price" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} placeholder="0.00" className="font-black text-[#14532d]" />
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Base Price (₹)</Label>
+                                    <div className="relative">
+                                        <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="pl-10 font-black h-12 rounded-xl" style={{ color: brandColor }} />
+                                    </div>
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="category" className="text-[10px] font-black uppercase text-muted-foreground">Category</Label>
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Category</Label>
                                     <Select onValueChange={setNewItemCategory} value={newItemCategory}>
-                                        <SelectTrigger className="font-bold">
+                                        <SelectTrigger className="font-bold h-12 rounded-xl uppercase text-xs">
                                             <SelectValue placeholder="Select Category" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {categories?.map(cat => (
-                                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                            {categories.map(cat => (
+                                                <SelectItem key={cat.id} value={cat.id} className="uppercase text-[10px] font-bold">{cat.name}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
                             
-                            <div className="grid gap-2">
-                                <Label htmlFor="upload-item" className="text-[10px] font-black uppercase text-muted-foreground">Product Image</Label>
-                                <div className="relative">
-                                    <Input 
-                                        id="upload-item" 
-                                        type="file" 
-                                        accept="image/*" 
-                                        className="hidden" 
-                                        onChange={handleFileChange}
-                                    />
-                                    <Button 
-                                        variant="outline" 
-                                        className="w-full font-black uppercase text-[10px] h-12 tracking-widest" 
-                                        onClick={() => document.getElementById('upload-item')?.click()}
-                                    >
-                                        <Upload className="mr-2 h-4 w-4" /> Upload High-Res Image
-                                    </Button>
+                            <div className="space-y-4">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Product Visual</Label>
+                                <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 border-dashed group cursor-pointer bg-muted/20" onClick={() => document.getElementById('upload-item')?.click()}>
+                                    <Image src={customImage || placeholderImageMap.get(newItemImageId)?.imageUrl || ''} alt="Preview" fill className="object-cover transition-transform group-hover:scale-105" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center text-white">
+                                        <Upload className="h-8 w-8 mb-2" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Click to Change Image</span>
+                                    </div>
+                                    <input id="upload-item" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                                 </div>
                             </div>
 
-                            <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted/20 flex items-center justify-center group">
-                                <Image 
-                                    src={customImage || placeholderImageMap.get(newItemImageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
-                                    alt="Preview" 
-                                    fill 
-                                    className="object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span className="text-white font-black uppercase text-xs tracking-widest flex gap-2 items-center">
-                                        <ImageIcon className="h-4 w-4" /> Item Preview
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center space-x-6 pt-2 bg-muted/30 p-4 rounded-xl">
-                                <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-8 bg-gray-50 p-5 rounded-[20px] border border-gray-100">
+                                <div className="flex items-center space-x-3">
                                     <Checkbox id="isVeg" checked={newItemIsVeg} onCheckedChange={(val: any) => setNewItemIsVeg(!!val)} />
-                                    <Label htmlFor="isVeg" className="text-xs font-black uppercase tracking-widest text-[#14532d]">Vegetarian</Label>
+                                    <Label htmlFor="isVeg" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Vegetarian</Label>
                                 </div>
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-3">
                                     <Checkbox id="isGlobal" checked={newItemGlobal} onCheckedChange={(val: any) => setNewItemGlobal(!!val)} />
-                                    <Label htmlFor="isGlobal" className="text-xs font-black uppercase tracking-widest text-[#14532d]">Global Availability</Label>
+                                    <Label htmlFor="isGlobal" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Live Globally</Label>
                                 </div>
                             </div>
-                          </div>
-                        </TabsContent>
+                        </div>
+                    </TabsContent>
 
-                        <TabsContent value="variations" className="space-y-4">
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Size & Pricing Variations</h4>
-                              <Button variant="outline" size="sm" onClick={handleAddVariation} className="h-8 font-black uppercase text-[10px] tracking-widest text-[#14532d]">
-                                <PlusCircle className="mr-1 h-3 w-3" /> Add Variation
-                              </Button>
-                            </div>
-                            
-                            <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
-                              {newItemVariations.length === 0 ? (
-                                <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
-                                  <Settings2 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No variations defined.</p>
-                                </div>
-                              ) : (
-                                newItemVariations.map((v, i) => (
-                                  <div key={i} className="space-y-3 bg-white p-4 rounded-xl border shadow-sm">
-                                    <div className="flex gap-3 items-center">
-                                      <div className="flex-1 space-y-1">
-                                        <Label className="text-[9px] font-black uppercase text-muted-foreground">Variation Name</Label>
-                                        <Input 
-                                          placeholder="e.g. Medium" 
-                                          value={v.name} 
-                                          onChange={e => handleUpdateVariation(i, 'name', e.target.value)}
-                                          className="h-8 font-bold"
-                                        />
-                                      </div>
-                                      <div className="w-24 space-y-1">
-                                        <Label className="text-[9px] font-black uppercase text-muted-foreground">Price (₹)</Label>
-                                        <Input 
-                                          type="number" 
-                                          placeholder="0" 
-                                          value={v.price} 
-                                          onChange={e => handleUpdateVariation(i, 'price', Number(e.target.value))}
-                                          className="h-8 font-black text-[#14532d]"
-                                        />
-                                      </div>
-                                      <Button variant="ghost" size="icon" onClick={() => handleRemoveVariation(i)} className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                    
-                                    <div className="pl-4 border-l-2 border-[#14532d]/20 space-y-2">
-                                      <div className="flex justify-between items-center">
-                                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Variation-Specific Add-ons</Label>
-                                        <Button variant="link" size="sm" onClick={() => handleAddAddonToVariation(i)} className="h-auto p-0 text-[8px] font-black uppercase text-[#14532d]">
-                                          + Add Add-on
-                                        </Button>
-                                      </div>
-                                      {v.addons?.map((va, ai) => (
-                                        <div key={ai} className="flex gap-2 items-center">
-                                          <Input 
-                                            placeholder="Topping Name" 
-                                            value={va.name} 
-                                            onChange={e => handleUpdateVariationAddon(i, ai, 'name', e.target.value)}
-                                            className="h-7 text-[10px] font-bold"
-                                          />
-                                          <Input 
-                                            type="number" 
-                                            placeholder="Price" 
-                                            value={va.price} 
-                                            onChange={e => handleUpdateVariationAddon(i, ai, 'price', Number(e.target.value))}
-                                            className="h-7 w-20 text-[10px] font-black text-[#14532d]"
-                                          />
-                                          <Button variant="ghost" size="icon" onClick={() => handleRemoveVariationAddon(i, ai)} className="h-7 w-7 text-red-400">
-                                            <Trash2 className="h-3 w-3" />
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                        </TabsContent>
-
-                        <TabsContent value="addons" className="space-y-4">
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Global Extra Toppings & Add-ons</h4>
-                              <Button variant="outline" size="sm" onClick={handleAddAddon} className="h-8 font-black uppercase text-[10px] tracking-widest text-[#14532d]">
-                                <PlusCircle className="mr-1 h-3 w-3" /> Add Add-on
-                              </Button>
-                            </div>
-
-                            <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                              {newItemAddons.length === 0 ? (
-                                <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
-                                  <Settings2 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No global add-ons defined.</p>
-                                </div>
-                              ) : (
-                                newItemAddons.map((a, i) => (
-                                  <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-xl border shadow-sm">
+                    <TabsContent value="variations" className="space-y-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Portion & Size Options</h4>
+                            <Button variant="ghost" size="sm" onClick={() => setNewItemVariations([...newItemVariations, { name: "", price: 0 }])} className="h-8 font-black uppercase text-[10px] tracking-widest" style={{ color: brandColor }}>+ Add Size</Button>
+                        </div>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
+                            {newItemVariations.map((v, i) => (
+                                <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border shadow-sm">
                                     <div className="flex-1 space-y-1">
-                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Add-on Name</Label>
-                                      <Input 
-                                        placeholder="e.g. Extra Cheese" 
-                                        value={a.name} 
-                                        onChange={e => handleUpdateAddon(i, 'name', e.target.value)}
-                                        className="h-8 font-bold"
-                                      />
+                                        <Label className="text-[8px] font-black text-muted-foreground uppercase">Size Name</Label>
+                                        <Input placeholder="e.g. Regular" value={v.name} onChange={e => {
+                                            const updated = [...newItemVariations];
+                                            updated[i].name = e.target.value;
+                                            setNewItemVariations(updated);
+                                        }} className="h-10 font-bold text-xs" />
                                     </div>
-                                    <div className="w-24 space-y-1">
-                                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Price (₹)</Label>
-                                      <Input 
-                                        type="number" 
-                                        placeholder="0" 
-                                        value={a.price} 
-                                        onChange={e => handleUpdateAddon(i, 'price', Number(e.target.value))}
-                                        className="h-8 font-black text-[#14532d]"
-                                      />
+                                    <div className="w-32 space-y-1">
+                                        <Label className="text-[8px] font-black text-muted-foreground uppercase">Price (₹)</Label>
+                                        <Input type="number" value={v.price} onChange={e => {
+                                            const updated = [...newItemVariations];
+                                            updated[i].price = Number(e.target.value);
+                                            setNewItemVariations(updated);
+                                        }} className="h-10 font-black text-xs" style={{ color: brandColor }} />
                                     </div>
-                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveAddon(i)} className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                        </TabsContent>
+                                    <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                            ))}
+                        </div>
+                    </TabsContent>
 
-                        <TabsContent value="sides" className="space-y-4">
-                           <div className="space-y-4">
-                             <div className="flex justify-between items-center">
-                               <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Recommended Side Items</h4>
-                             </div>
-                             
-                             <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
-                               {menuItems?.length === 0 ? (
-                                 <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
-                                   <ShoppingBasket className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No side items found.</p>
-                                 </div>
-                               ) : (
-                                 menuItems?.map(item => (
-                                   <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-xl border shadow-sm hover:border-[#14532d] transition-colors">
-                                      <div className="flex items-center gap-3">
-                                         <div className="h-8 w-8 relative rounded overflow-hidden flex-shrink-0">
-                                            <Image 
-                                              src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
-                                              alt={item.name} 
-                                              fill 
-                                              className="object-cover" 
-                                            />
-                                         </div>
-                                         <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-[#14532d]">{item.name}</span>
-                                            <span className="text-[9px] font-black text-muted-foreground uppercase">₹{item.price}</span>
-                                         </div>
-                                      </div>
-                                      <Checkbox 
-                                        id={`side-${item.id}`} 
-                                        checked={newItemSides.includes(item.id)} 
-                                        onCheckedChange={() => handleToggleSide(item.id)} 
-                                      />
-                                   </div>
-                                 ))
-                               )}
-                             </div>
-                           </div>
-                        </TabsContent>
-                      </Tabs>
-                    </div>
+                    <TabsContent value="addons" className="space-y-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Extra Toppings & Add-ons</h4>
+                            <Button variant="ghost" size="sm" onClick={() => setNewItemAddons([...newItemAddons, { name: "", price: 0 }])} className="h-8 font-black uppercase text-[10px] tracking-widest" style={{ color: brandColor }}>+ Add Topping</Button>
+                        </div>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
+                            {newItemAddons.map((a, i) => (
+                                <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border shadow-sm">
+                                    <div className="flex-1 space-y-1">
+                                        <Label className="text-[8px] font-black text-muted-foreground uppercase">Add-on Title</Label>
+                                        <Input placeholder="e.g. Extra Cheese" value={a.name} onChange={e => {
+                                            const updated = [...newItemAddons];
+                                            updated[i].name = e.target.value;
+                                            setNewItemAddons(updated);
+                                        }} className="h-10 font-bold text-xs" />
+                                    </div>
+                                    <div className="w-32 space-y-1">
+                                        <Label className="text-[8px] font-black text-muted-foreground uppercase">Price (₹)</Label>
+                                        <Input type="number" value={a.price} onChange={e => {
+                                            const updated = [...newItemAddons];
+                                            updated[i].price = Number(e.target.value);
+                                            setNewItemAddons(updated);
+                                        }} className="h-10 font-black text-xs" style={{ color: brandColor }} />
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => setNewItemAddons(newItemAddons.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                            ))}
+                        </div>
+                    </TabsContent>
 
-                    <DialogFooter className="p-6 bg-muted/50 rounded-b-2xl border-t gap-3 sm:gap-0">
-                        <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="font-black uppercase text-xs tracking-widest h-12">Cancel</Button>
-                        <Button onClick={handleAddItem} className="bg-[#14532d] hover:bg-[#0f4023] font-black uppercase text-xs tracking-widest h-12 px-10">
-                          {editingItem ? 'Update Product' : 'Save Product'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
+                    <TabsContent value="sides" className="space-y-6">
+                        <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-4">Recommended Combos</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                            {allMenuItems?.filter(i => i.brand === activeBrand).map(item => (
+                                <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm hover:ring-2 hover:ring-muted transition-all">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 relative rounded-lg overflow-hidden border shadow-inner">
+                                            <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold uppercase tracking-tight line-clamp-1">{item.name}</span>
+                                            <span className="text-[9px] font-black text-muted-foreground">₹{item.price}</span>
+                                        </div>
+                                    </div>
+                                    <Checkbox checked={newItemSides.includes(item.id)} onCheckedChange={(val) => {
+                                        setNewItemSides(prev => val ? [...prev, item.id] : prev.filter(id => id !== item.id));
+                                    }} />
+                                </div>
+                            ))}
+                        </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+
+                <div className="p-8 bg-muted/30 border-t flex gap-4">
+                    <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase text-xs tracking-widest">Discard</Button>
+                    <Button onClick={handleAddItem} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
+                      {editingItem ? 'Confirm Changes' : `Save ${activeBrand.toUpperCase()} Product`}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
       </div>
 
       {isLoading ? (
-        Array.from({length: 3}).map((_, i) => (
-          <div key={i} className="mb-8">
-            <Skeleton className="h-8 w-48 mb-4" />
-            <Card><CardContent className="p-0"><Skeleton className="w-full h-64" /></CardContent></Card>
-          </div>
-        ))
-      ) : sortedCategories.map(category => (
-        <div key={category.id} id={`cat-${category.id}`} className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-primary shadow-sm">
-                    <Image 
-                        src={placeholderImageMap.get(category.imageId || 'cat_veg')?.imageUrl || ''} 
-                        alt={category.name} 
-                        fill 
-                        className="object-cover" 
-                    />
+        <div className="space-y-8">
+            {Array.from({length: 2}).map((_, i) => (
+                <div key={i} className="space-y-4">
+                    <Skeleton className="h-8 w-48 rounded-lg" />
+                    <Card className="rounded-[32px] overflow-hidden border-none shadow-sm"><CardContent className="p-0"><Skeleton className="w-full h-[300px]" /></CardContent></Card>
                 </div>
-                <h2 className="font-headline text-2xl font-bold">{category.name}</h2>
-            </div>
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[80px]">Image</TableHead>
-                                <TableHead>Item</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead>Veg?</TableHead>
-                                <TableHead>Global</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {menuItems?.filter(item => item.category === category.id).map(item => (
-                                <TableRow key={item.id}>
-                                    <TableCell>
-                                      <Image
-                                        src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-                                        alt={item.name}
-                                        width={56}
-                                        height={56}
-                                        className="rounded-md object-cover"
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                        <p className="font-medium">{item.name}</p>
-                                        <p className="text-sm text-muted-foreground hidden md:block line-clamp-1">{item.description}</p>
-                                        {item.variations && item.variations.length > 0 && (
-                                          <div className="flex gap-1 mt-1">
-                                            {item.variations.map((v, idx) => (
-                                              <span key={idx} className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-muted rounded-full">
-                                                {v.name}: ₹{v.price}
-                                              </span>
-                                            ))}
-                                          </div>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-1">
-                                            <IndianRupee className="h-3 w-3 text-muted-foreground" />
-                                            <Input type="number" defaultValue={item.price.toFixed(2)} className="w-24 h-8" />
-                                        </div>
-                                    </TableCell>
-                                     <TableCell>
-                                        <Checkbox checked={item.isVeg} />
-                                    </TableCell>
-                                     <TableCell>
-                                        <Checkbox checked={item.isAvailableGlobally} />
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex gap-2 justify-end">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(item)}><Edit className="h-4 w-4"/></Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4"/></Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            ))}
         </div>
-      ))}
+      ) : sortedCategories.map(category => {
+        const catItems = menuItems.filter(item => item.category === category.id);
+        if (catItems.length === 0 && !categoriesLoading) return null;
+
+        return (
+            <div key={category.id} className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <div className="relative h-12 w-12 rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-black/5">
+                        <Image src={placeholderImageMap.get(category.imageId || 'cat_veg')?.imageUrl || ''} alt={category.name} fill className="object-cover" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>{category.name}</h2>
+                        <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">{catItems.length} Products Available</span>
+                    </div>
+                </div>
+                <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader className="bg-gray-50/50">
+                                <TableRow className="border-b-gray-100 hover:bg-transparent">
+                                    <TableHead className="w-[100px] font-black uppercase text-[10px] tracking-widest h-14 pl-8">Photo</TableHead>
+                                    <TableHead className="font-black uppercase text-[10px] tracking-widest h-14">Product Details</TableHead>
+                                    <TableHead className="font-black uppercase text-[10px] tracking-widest h-14">Pricing</TableHead>
+                                    <TableHead className="font-black uppercase text-[10px] tracking-widest h-14 text-right pr-8">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {catItems.map(item => (
+                                    <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
+                                        <TableCell className="pl-8 py-6">
+                                            <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5">
+                                                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={cn("h-2.5 w-2.5 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
+                                                    <p className="font-black uppercase text-[13px] tracking-tight italic text-[#333]">{item.name}</p>
+                                                </div>
+                                                <p className="text-[11px] text-muted-foreground font-medium line-clamp-1 max-w-xs">{item.description}</p>
+                                                {item.variations && (
+                                                    <div className="flex gap-1.5 pt-1">
+                                                        {item.variations.map((v, idx) => (
+                                                            <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">{v.name}: ₹{v.price}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-1.5 font-black text-sm" style={{ color: brandColor }}>
+                                                <IndianRupee className="h-3.5 w-3.5" />
+                                                <span>{item.price.toFixed(2)}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right pr-8">
+                                            <div className="flex gap-2 justify-end">
+                                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all" onClick={() => handleEditClick(item)}><Edit className="h-4 w-4"/></Button>
+                                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 text-red-500 hover:bg-red-50 hover:shadow-md transition-all"><Trash2 className="h-4 w-4"/></Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+      })}
     </div>
   );
 }

@@ -62,20 +62,15 @@ export default function HomePage() {
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
-  // Offer Modal State
-  const [selectedOffer, setSelectedOffer] = useState<Coupon | null>(null);
-  
-  const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories', {
-    where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
-  });
-  const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems', {
-    where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
-  });
-  const { data: banners, loading: bannersLoading } = useCollection<Banner>('banners', {
-    where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
-  });
+  const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
+  const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
+  const { data: allBanners, loading: bannersLoading } = useCollection<Banner>('banners');
   const { data: coupons, loading: couponsLoading } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
   
+  const categories = useMemo(() => allCategories?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCategories, selectedOutlet]);
+  const menuItems = useMemo(() => allMenuItems?.filter(i => i.brand === selectedOutlet?.brand) || [], [allMenuItems, selectedOutlet]);
+  const banners = useMemo(() => allBanners?.filter(b => b.brand === selectedOutlet?.brand) || [], [allBanners, selectedOutlet]);
+
   useEffect(() => {
     setIsHydrated(true);
     const savedCity = localStorage.getItem("zapizza-city");
@@ -89,7 +84,6 @@ export default function HomePage() {
     }
   }, []);
 
-  // Banner Auto-scroll effect
   useEffect(() => {
     if (!api) return;
     const intervalId = setInterval(() => api.scrollNext(), 3000);
@@ -126,11 +120,6 @@ export default function HomePage() {
     }
   };
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast({ title: "Code Copied!", description: `${code} is now in your clipboard.` });
-  };
-
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
     const base = selectedVariation ? selectedVariation.price : customizingItem.price;
@@ -141,7 +130,7 @@ export default function HomePage() {
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
   if (!isHydrated || userLoading) {
-    return <div className="flex justify-center items-center h-screen"><Skeleton className="h-12 w-12 rounded-full animate-spin" /></div>;
+    return <div className="flex justify-center items-center h-screen bg-white"><Skeleton className="h-12 w-12 rounded-full animate-spin" /></div>;
   }
 
   if (!selectedCity) return <CitySelector onCitySelect={handleCitySelect} />;
@@ -150,7 +139,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       {/* Welcome Header */}
-      <div style={{ backgroundColor: brandColor }} className="text-white px-6 pt-10 pb-16 rounded-b-[40px] shadow-lg relative overflow-hidden transition-colors duration-500">
+      <div style={{ backgroundColor: brandColor }} className="text-white px-6 pt-10 pb-16 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700">
         <div className="relative z-10 flex justify-between items-end">
           <div className="flex flex-col">
             <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">Welcome Back,</p>
@@ -187,13 +176,13 @@ export default function HomePage() {
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
           <CarouselContent>
             {bannersLoading ? (
-              <CarouselItem><Skeleton className="w-full h-48 rounded-3xl" /></CarouselItem>
+              <CarouselItem><Skeleton className="w-full h-48 rounded-[32px]" /></CarouselItem>
             ) : banners?.filter(b => b.active).map((banner, index) => (
               <CarouselItem key={index}>
-                <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-lg group">
+                <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-lg group">
                   <Image src={placeholderImageMap.get(banner.imageId)?.imageUrl || 'https://picsum.photos/seed/banner/800/400'} alt={banner.title || 'Promotion'} fill className="object-cover" />
                   <div style={{ background: `linear-gradient(to right, ${brandColor}E6, ${brandColor}66, transparent)` }} className="absolute inset-0 flex flex-col justify-center p-6">
-                    {banner.subtitle && <Badge className="w-fit mb-2 bg-yellow-400 text-black font-black uppercase text-[8px] tracking-widest">{banner.subtitle}</Badge>}
+                    {banner.subtitle && <Badge className="w-fit mb-2 bg-yellow-400 text-black font-black uppercase text-[8px] tracking-widest rounded-sm">{banner.subtitle}</Badge>}
                     {banner.title && <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md">{banner.title}</h2>}
                     {banner.price && <p className="text-white font-black text-lg">₹{banner.price}</p>}
                   </div>
@@ -213,7 +202,7 @@ export default function HomePage() {
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
             <div key={cat.id} className="flex flex-col items-center gap-2 group cursor-pointer flex-shrink-0" onClick={() => router.push(`/home/menu?category=${cat.id}`)}>
-              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95">
+              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
                 <Image src={placeholderImageMap.get(cat.imageId || 'cat_veg')?.imageUrl || ''} alt={cat.name} fill className="object-cover" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1" style={{ color: brandColor }}>{cat.name}</span>
@@ -222,18 +211,18 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Trending Now */}
+      {/* Best Sellers */}
       <div className="mt-12">
         <div className="px-6 flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <TrendingUp className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Trending Now</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Best Sellers</h2>
           </div>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-8">
-          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-56 w-44 rounded-[28px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
+          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-56 w-44 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
             <motion.div key={item.id} whileTap={{ scale: 0.95 }} className="flex flex-col gap-3 w-44 flex-shrink-0 cursor-pointer group bg-white p-2.5 rounded-[32px] border border-gray-100 shadow-sm" onClick={() => handleAddClick(item)}>
               <div className="relative h-40 w-full rounded-[24px] overflow-hidden shadow-sm border border-black/5">
                 <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -252,19 +241,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Floating View Cart Button */}
-      {totalItems > 0 && (
-        <div className="fixed bottom-20 left-4 right-4 z-40">
-          <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none">
-            <div className="flex flex-col items-start"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
-            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">VIEW CART <ShoppingBag className="h-5 w-5" /></div>
-          </Button>
-        </div>
-      )}
-
       {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
-        <DialogContent className="max-w-[90vw] rounded-3xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
           {customizingItem && (
             <>
               <div className="relative h-48 w-full flex-shrink-0">
@@ -276,10 +255,10 @@ export default function HomePage() {
                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">{customizingItem.name}</h2>
                 </div>
               </div>
-              <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white">
+              <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide">
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black">Required</Badge></div>
+                    <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
                     <RadioGroup value={selectedVariation?.name} onValueChange={(val) => setSelectedVariation(customizingItem.variations?.find(v => v.name === val) || null)} className="space-y-3">
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
@@ -291,14 +270,27 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-              <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
-                <div className="flex flex-col"><span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Item Total</span><span className="text-2xl font-black" style={{ color: brandColor }}>₹{currentCustomPrice}</span></div>
-                <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl flex-1 border-none">ADD TO CART</Button>
+              <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
+                  <span className="text-2xl font-black" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
+                </div>
+                <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all">ADD TO CART</Button>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Floating View Cart */}
+      {totalItems > 0 && (
+        <div className="fixed bottom-20 left-4 right-4 z-40">
+          <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none transition-all duration-500">
+            <div className="flex flex-col items-start"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
+            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">VIEW CART <ShoppingBag className="h-5 w-5" /></div>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
