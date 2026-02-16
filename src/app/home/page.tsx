@@ -221,14 +221,14 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Best Sellers */}
+      {/* Trending Now Section */}
       <div className="mt-12">
         <div className="px-6 flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <TrendingUp className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Best Sellers</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Trending Now</h2>
           </div>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-8">
