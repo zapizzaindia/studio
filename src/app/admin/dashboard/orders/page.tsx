@@ -1,12 +1,11 @@
-
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import type { Order, OrderStatus, UserProfile } from '@/lib/types';
+import type { Order, OrderStatus, UserProfile, Outlet } from '@/lib/types';
 import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -56,7 +55,14 @@ export default function AdminOrdersPage() {
   const { user } = useUser();
   const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   const outletId = userProfile?.outletId;
-  const { data: orders, loading: ordersLoading } = useCollection<Order>('orders', { where: outletId ? ['outletId', '==', outletId] : undefined });
+  const { data: outlet } = useDoc<Outlet>('outlets', outletId || 'dummy');
+  
+  // Use useMemo to stabilize the where filter to prevent infinite loading
+  const ordersFilter = useMemo(() => outletId ? ['outletId', '==', outletId] : undefined, [outletId]);
+  const { data: orders, loading: ordersLoading } = useCollection<Order>('orders', { 
+    where: ordersFilter as any
+  });
+
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -146,21 +152,23 @@ export default function AdminOrdersPage() {
     );
   };
   
+  const brandColor = outlet?.brand === 'zfry' ? '#e31837' : '#14532d';
+
   return (
     <div className="container mx-auto p-0 max-w-4xl">
       <div className="mb-8 flex items-center justify-between bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
         <div>
-            <h1 className="font-headline text-3xl font-black uppercase tracking-tighter italic text-primary">Kitchen Pipeline</h1>
+            <h1 className="font-headline text-3xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Kitchen Pipeline</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
-              <p className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{userProfile?.outletId || 'Connecting...'}</p>
+              <p className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{outlet?.name || 'Connecting...'}</p>
             </div>
         </div>
         <Button variant="outline" size="sm" className="rounded-2xl h-12 w-12 p-0 border-none bg-gray-50 shadow-inner" onClick={() => setIsMuted(!isMuted)}>
-          {isMuted ? <VolumeX className="h-5 w-5 text-red-500" /> : <Volume2 className="h-5 w-5 text-primary" />}
+          {isMuted ? <VolumeX className="h-5 w-5 text-red-500" /> : <Volume2 className="h-5 w-5" style={{ color: brandColor }} />}
         </Button>
       </div>
       
@@ -184,7 +192,7 @@ export default function AdminOrdersPage() {
         <DialogContent className="max-w-[90vw] md:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
           {selectedOrder && (
             <>
-              <DialogHeader className="p-8 bg-primary text-white space-y-4">
+              <DialogHeader className="p-8 text-white space-y-4" style={{ backgroundColor: brandColor }}>
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Order Reference</p>
@@ -200,24 +208,24 @@ export default function AdminOrdersPage() {
                   <div className="flex justify-between items-center">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Rider Intelligence</h4>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-none bg-gray-50" onClick={() => handleShareLocation(selectedOrder)}><Share2 className="h-3 w-3 mr-1.5 text-primary" /> Share Link</Button>
+                      <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-none bg-gray-50" onClick={() => handleShareLocation(selectedOrder)}><Share2 className="h-3 w-3 mr-1.5" style={{ color: brandColor }} /> Share Link</Button>
                       {selectedOrder.deliveryAddress?.latitude && (
-                        <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-none bg-gray-50" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`, '_blank')}><Navigation className="h-3 w-3 mr-1.5 text-primary" /> GPS Map</Button>
+                        <Button variant="outline" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-none bg-gray-50" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`, '_blank')}><Navigation className="h-3 w-3 mr-1.5" style={{ color: brandColor }} /> GPS Map</Button>
                       )}
                     </div>
                   </div>
                   <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-4 shadow-inner">
                     <div className="flex items-start gap-4">
-                      <div className="p-2 bg-white rounded-lg shadow-sm text-primary"><MapPin className="h-4 w-4" /></div>
+                      <div className="p-2 bg-white rounded-lg shadow-sm" style={{ color: brandColor }}><MapPin className="h-4 w-4" /></div>
                       <div>
                         <p className="text-[11px] font-black uppercase tracking-tight text-[#333]">{selectedOrder.deliveryAddress?.label || "Home"}</p>
                         <p className="text-[11px] font-medium text-muted-foreground mt-0.5 leading-relaxed">{selectedOrder.deliveryAddress?.flatNo}, {selectedOrder.deliveryAddress?.area}, {selectedOrder.deliveryAddress?.city}</p>
-                        {selectedOrder.deliveryAddress?.landmark && <p className="text-[9px] font-bold text-primary mt-1 uppercase tracking-wide italic">Near: {selectedOrder.deliveryAddress.landmark}</p>}
+                        {selectedOrder.deliveryAddress?.landmark && <p className="text-[9px] font-bold mt-1 uppercase tracking-wide italic" style={{ color: brandColor }}>Near: {selectedOrder.deliveryAddress.landmark}</p>}
                       </div>
                     </div>
                     <Separator className="bg-gray-200/50" />
                     <div className="flex items-center gap-4">
-                      <div className="p-2 bg-white rounded-lg shadow-sm text-primary"><Phone className="h-4 w-4" /></div>
+                      <div className="p-2 bg-white rounded-lg shadow-sm" style={{ color: brandColor }}><Phone className="h-4 w-4" /></div>
                       <p className="text-[11px] font-black tracking-widest">{selectedOrder.customerPhone || "N/A"}</p>
                     </div>
                   </div>
@@ -230,12 +238,12 @@ export default function AdminOrdersPage() {
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-start text-xs bg-white rounded-xl transition-all">
                         <div className="flex gap-4">
-                          <span className="font-black text-primary bg-primary/5 h-7 w-7 rounded-lg flex items-center justify-center text-[10px]">{item.quantity}x</span>
+                          <span className="font-black h-7 w-7 rounded-lg flex items-center justify-center text-[10px]" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{item.quantity}x</span>
                           <div className="flex flex-col gap-1">
                             <span className="font-black text-[13px] uppercase tracking-tight text-[#333] italic">{item.name}</span>
                             <div className="flex flex-wrap gap-1.5">
                                 {item.variation && <Badge variant="secondary" className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded border-none">{item.variation}</Badge>}
-                                {item.addons?.map((a, i) => <Badge key={i} variant="outline" className="text-[8px] font-black uppercase px-1.5 py-0.5 border-dashed border-primary/30 text-primary">+{a}</Badge>)}
+                                {item.addons?.map((a, i) => <Badge key={i} variant="outline" className="text-[8px] font-black uppercase px-1.5 py-0.5 border-dashed" style={{ borderColor: brandColor + '30', color: brandColor }}>+{a}</Badge>)}
                             </div>
                           </div>
                         </div>
@@ -259,17 +267,17 @@ export default function AdminOrdersPage() {
                             <CreditCard className="h-3 w-3 text-muted-foreground" />
                         </div>
                     </div>
-                    <span className="text-2xl font-black text-primary tracking-tighter italic">₹{selectedOrder.total.toFixed(2)}</span>
+                    <span className="text-2xl font-black tracking-tighter italic" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Loyalty Info */}
-                <div className="flex items-center gap-3 bg-primary/5 p-4 rounded-2xl border border-primary/10">
-                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white shadow-md">
+                <div className="flex items-center gap-3 p-4 rounded-2xl border" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '10' }}>
+                    <div className="h-8 w-8 rounded-full flex items-center justify-center text-white shadow-md" style={{ backgroundColor: brandColor }}>
                         <Crown className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Loyalty Points Earned</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Loyalty Points Earned</span>
                         <span className="text-xs font-bold text-[#333]">{Math.floor(selectedOrder.subtotal / 100)} Points Added to Customer</span>
                     </div>
                 </div>
@@ -278,7 +286,7 @@ export default function AdminOrdersPage() {
               <div className="p-8 bg-gray-50/80 border-t flex gap-4">
                 <Button variant="ghost" onClick={() => setSelectedOrder(null)} className="flex-1 h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest">Close</Button>
                 {selectedOrder.status === 'New' && (
-                  <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Preparing')} className="flex-[2] bg-primary text-white hover:bg-primary/90 h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">Accept Order</Button>
+                  <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Preparing')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl" style={{ backgroundColor: brandColor }}>Accept Order</Button>
                 )}
               </div>
             </>

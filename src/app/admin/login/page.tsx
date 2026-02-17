@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from 'next/navigation';
@@ -34,21 +33,24 @@ export default function AdminLoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    // Mock successful admin login
+    // Determine which mock admin to log in based on email for the demo
+    const isZfry = values.email.includes('zfry');
+    
     const mockAdmin = {
-        uid: 'admin-1',
+        uid: isZfry ? 'admin-zfry' : 'admin-zapizza',
         email: values.email,
-        displayName: 'Demo Admin',
+        displayName: isZfry ? 'Zfry Manager' : 'Zapizza Manager',
         role: 'outlet-admin',
-        outletId: 'andheri'
+        outletId: isZfry ? 'andheri-zfry' : 'andheri-zapizza'
     };
+    
     localStorage.setItem('zapizza-mock-session', JSON.stringify(mockAdmin));
     
     toast({
       title: "Admin Login Successful (Demo Mode)",
-      description: "Opening Live Orders...",
+      description: `Opening Live Orders for ${isZfry ? 'Zfry' : 'Zapizza'}...`,
     });
-    // Redirect directly to Orders page as requested
+    
     window.location.href = '/admin/dashboard/orders';
   }
 
@@ -88,6 +90,13 @@ export default function AdminLoginPage() {
               </FormItem>
             )}
           />
+          <div className="bg-muted/50 p-3 rounded-lg mb-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase text-center">Demo Credentials</p>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="text-[9px] font-medium text-center">admin@zapizza.com</div>
+              <div className="text-[9px] font-medium text-center">admin@zfry.com</div>
+            </div>
+          </div>
           <Button type="submit" className="w-full h-11 bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
             Login
           </Button>
