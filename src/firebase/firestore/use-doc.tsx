@@ -1,12 +1,8 @@
 
 'use client';
 import { useEffect, useState } from 'react';
-import { 
-  MOCK_CITIES, 
-  MOCK_OUTLETS, 
-  MOCK_MENU_ITEMS, 
-  MOCK_USERS 
-} from '@/lib/mock-data';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { useFirestore } from '../provider';
 
 interface DocData<T> {
   data: T | null;
@@ -17,33 +13,38 @@ interface DocData<T> {
 export function useDoc<T>(path: string, id: string): DocData<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+  const firestore = useFirestore();
 
   useEffect(() => {
-    if (id === 'dummy') {
-        setLoading(false);
-        return;
+    if (!firestore || !id || id === 'dummy') {
+      setLoading(false);
+      return;
     }
     
     setLoading(true);
-    const timer = setTimeout(() => {
-      let result: any = null;
+    try {
+      const docRef = doc(firestore, path, id);
+      const unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setData({ id: docSnap.id, ...docSnap.data() } as T);
+        } else {
+          setData(null);
+        }
+        setLoading(false);
+      }, (err) => {
+        console.error(`Firestore useDoc error [${path}/${id}]:`, err);
+        setError(err);
+        setLoading(false);
+      });
 
-      if (path === 'cities') {
-        result = MOCK_CITIES.find(c => c.id === id);
-      } else if (path === 'outlets') {
-        result = MOCK_OUTLETS.find(o => o.id === id);
-      } else if (path === 'menuItems') {
-        result = MOCK_MENU_ITEMS.find(m => m.id === id);
-      } else if (path === 'users') {
-        result = MOCK_USERS[id];
-      }
-
-      setData(result as T);
+      return () => unsubscribe();
+    } catch (err) {
+      console.error(`Firestore useDoc setup error [${path}/${id}]:`, err);
+      setError(err);
       setLoading(false);
-    }, 300);
+    }
+  }, [firestore, path, id]);
 
-    return () => clearTimeout(timer);
-  }, [path, id]);
-
-  return { data, loading, error: null };
+  return { data, loading, error };
 }
