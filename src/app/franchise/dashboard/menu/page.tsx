@@ -222,7 +222,7 @@ export default function FranchiseMenuPage() {
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setEditingItem(null); }}>
             <DialogTrigger asChild>
                 <Button style={{ backgroundColor: brandColor }} className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg px-8">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New {activeBrand === 'zapizza' ? 'Pizza' : 'Item'}
+                    <PlusCircle className="mr-2 h-4 w-4" /> ADD NEW ITEM
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none rounded-[32px] shadow-2xl flex flex-col">
@@ -458,13 +458,15 @@ export default function FranchiseMenuPage() {
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardContent className="p-0">
                         <Table>
-                            <TableHeader className="bg-gray-50/50">
+                            <TableHeader>
+                                <TableHeader className="bg-gray-50/50">
                                 <TableRow className="border-b-gray-100 hover:bg-transparent">
                                     <TableHead className="w-[100px] font-black uppercase text-[10px] tracking-widest h-14 pl-8">Photo</TableHead>
                                     <TableHead className="font-black uppercase text-[10px] tracking-widest h-14">Product Details</TableHead>
                                     <TableHead className="font-black uppercase text-[10px] tracking-widest h-14">Pricing</TableHead>
                                     <TableHead className="font-black uppercase text-[10px] tracking-widest h-14 text-right pr-8">Actions</TableHead>
                                 </TableRow>
+                            </TableHeader>
                             </TableHeader>
                             <TableBody>
                                 {catItems.map(item => (
