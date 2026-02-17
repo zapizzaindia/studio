@@ -7,6 +7,10 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
+import { useEffect } from "react";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "@/firebase/config";
+
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +39,18 @@ type Step = 'phone' | 'otp';
 export default function LoginPage() {
   const [step, setStep] = useState<Step>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
+  useEffect(() => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible",
+        }
+      );
+    }
+  }, []);  
+  
   const router = useRouter();
   const { toast } = useToast();
 
@@ -49,29 +65,62 @@ export default function LoginPage() {
   });
 
   async function onPhoneSubmit(values: z.infer<typeof phoneSchema>) {
-    setPhoneNumber(`+91${values.phone}`);
-    toast({
-      title: "OTP Sent (Demo Mode)",
-      description: `Use any 6 digits to verify.`,
-    });
-    setStep('otp');
-  }
+    try {
+      const phone = `+91${values.phone}`;
+      setPhoneNumber(phone);
+  
+      const appVerifier = window.recaptchaVerifier;
+  
+      const confirmationResult = await signInWithPhoneNumber(
+        auth,
+        phone,
+        appVerifier
+      );
+  
+      window.confirmationResult = confirmationResult;
+  
+      toast({
+        title: "OTP Sent",
+        description: "Please enter the OTP sent to your phone",
+      });
+  
+      setStep("otp");
+    } catch (error: any) {
+      toast({
+        title: "OTP Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  }  
 
   async function onOtpSubmit(values: z.infer<typeof otpSchema>) {
-    // Mock successful login
-    const mockUser = {
-        uid: 'customer-1',
-        email: 'demo-user@example.com',
-        displayName: 'Demo Customer',
-        role: 'customer'
-    };
-    localStorage.setItem('zapizza-mock-session', JSON.stringify(mockUser));
-    toast({
-      title: "Login Successful (Demo Mode)",
-      description: "Welcome to Zapizza!",
-    });
-    window.location.href = '/home';
-  }
+    try {
+      const result = await window.confirmationResult.confirm(values.otp);
+      const user = result.user;
+  
+      localStorage.setItem(
+        "zapizza-user",
+        JSON.stringify({
+          uid: user.uid,
+          phone: user.phoneNumber,
+        })
+      );
+  
+      toast({
+        title: "Login Successful",
+        description: "Welcome to Zapizza!",
+      });
+  
+      window.location.href = "/home";
+    } catch (error: any) {
+      toast({
+        title: "Invalid OTP",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  }  
 
   const variants = {
     hidden: { opacity: 0, x: -50 },
@@ -178,6 +227,7 @@ export default function LoginPage() {
           </Button>
         </div>
       </div>
+      <div id="recaptcha-container"></div>
     </div>
   );
 }

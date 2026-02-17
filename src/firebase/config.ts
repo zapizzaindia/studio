@@ -1,7 +1,8 @@
-// src/firebase/config.ts
-import { FirebaseOptions } from 'firebase/app';
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-const firebaseConfig: FirebaseOptions = {
+const firebaseConfig = {
   apiKey: "AIzaSyBSu9BNIBegwN654IxpxaqYxL79O28fcPM",
   authDomain: "zapizza-backend.firebaseapp.com",
   projectId: "zapizza-backend",
@@ -10,6 +11,8 @@ const firebaseConfig: FirebaseOptions = {
   appId: "1:869168144766:web:be17174874980971e5d32f",
 };
 
-// This is a placeholder for the real config.
-// The actual config will be populated by the backend provisioning.
-export default firebaseConfig;
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+export const firestore = getFirestore(app);
+export default app;
