@@ -458,15 +458,13 @@ export default function FranchiseMenuPage() {
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardContent className="p-0">
                         <Table>
-                            <TableHeader>
-                                <TableHeader className="bg-gray-50/50">
+                            <TableHeader className="bg-gray-50/50">
                                 <TableRow className="border-b-gray-100 hover:bg-transparent">
                                     <TableHead className="w-[100px] font-black uppercase text-[10px] tracking-widest h-14 pl-8">Photo</TableHead>
                                     <TableHead className="font-black uppercase text-[10px] tracking-widest h-14">Product Details</TableHead>
                                     <TableHead className="font-black uppercase text-[10px] tracking-widest h-14">Pricing</TableHead>
                                     <TableHead className="font-black uppercase text-[10px] tracking-widest h-14 text-right pr-8">Actions</TableHead>
                                 </TableRow>
-                            </TableHeader>
                             </TableHeader>
                             <TableBody>
                                 {catItems.map(item => (
