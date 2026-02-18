@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/firebase';
+import { auth } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 
@@ -31,12 +31,12 @@ const loginSchema = z.object({
 export default function FranchiseLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
+  
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: 'superadmin@zapizza.co.in', password: '' },
+    defaultValues: { email: '', password: '' },
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
