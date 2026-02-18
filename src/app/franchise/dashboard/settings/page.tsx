@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useDoc, useFirestore } from '@/firebase';
 import type { GlobalSettings } from '@/lib/types';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { IndianRupee, Percent, Truck, Crown, Save, Loader2 } from 'lucide-react';
+import { Percent, Truck, Crown, Save, Loader2 } from 'lucide-react';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function GlobalSettingsPage() {
     const firestore = useFirestore();
@@ -33,7 +34,7 @@ export default function GlobalSettingsPage() {
         }
     }, [settings]);
 
-    const handleSave = async () => {
+    const handleSave = () => {
         if (!firestore) return;
         setIsSaving(true);
 
@@ -44,110 +45,128 @@ export default function GlobalSettingsPage() {
             loyaltyRatio: Number(loyaltyRatio),
         };
 
-        try {
-            await setDoc(doc(firestore, 'settings', 'global'), updatedData);
-            toast({ title: "Settings Updated", description: "Global business rules have been synced." });
-        } catch (e: any) {
-            toast({ variant: 'destructive', title: "Error", description: e.message });
-        } finally {
-            setIsSaving(false);
-        }
+        const settingsRef = doc(firestore, 'settings', 'global');
+
+        setDoc(settingsRef, updatedData)
+            .then(() => {
+                toast({ title: "Settings Updated", description: "Global business rules have been synced to the cloud." });
+            })
+            .catch(async (error) => {
+                const permissionError = new FirestorePermissionError({
+                    path: settingsRef.path,
+                    operation: 'write',
+                    requestResourceData: updatedData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsSaving(false);
+            });
     };
 
-    if (loading) return <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
+    if (loading) return (
+        <div className="flex flex-col h-64 items-center justify-center gap-4">
+            <Loader2 className="animate-spin text-primary h-10 w-10" />
+            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing with Backend...</p>
+        </div>
+    );
 
     return (
         <div className="container mx-auto max-w-4xl p-0">
-            <div className="mb-6">
-                <h1 className="font-headline text-3xl font-bold">Global Business Settings</h1>
-                <p className="text-muted-foreground">Configure tax, delivery, and loyalty rules for the entire franchise.</p>
+            <div className="mb-8 bg-white p-6 rounded-[32px] border shadow-sm flex items-center justify-between">
+                <div>
+                    <h1 className="font-headline text-3xl font-black uppercase tracking-tight italic text-primary">Global Business Rules</h1>
+                    <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Configure tax, delivery, and loyalty for all brands</p>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Save className="h-6 w-6" />
+                </div>
             </div>
 
             <div className="grid gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                    <CardHeader className="bg-gray-50/50 p-8">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic">
                             <Percent className="h-5 w-5 text-primary" /> Tax Configuration
                         </CardTitle>
-                        <CardDescription>Set the applicable GST percentage for all orders.</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Set applicable GST for all menu orders</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>GST Percentage (%)</Label>
+                    <CardContent className="p-8 space-y-4">
+                        <div className="space-y-3">
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Current GST Rate (%)</Label>
                             <Input 
                                 type="number" 
                                 value={gst} 
                                 onChange={e => setGst(Number(e.target.value))} 
-                                placeholder="18"
+                                className="h-12 rounded-xl font-black text-lg"
                             />
-                            <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
-                                Total GST will be split into 50% CGST and 50% SGST on receipts.
+                            <p className="text-[10px] text-muted-foreground font-medium italic">
+                                Note: This value is used to calculate tax on the Checkout page in real-time.
                             </p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                    <CardHeader className="bg-gray-50/50 p-8">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic">
                             <Truck className="h-5 w-5 text-primary" /> Delivery Logistics
                         </CardTitle>
-                        <CardDescription>Manage delivery charges and free shipping thresholds.</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Charges and free shipping thresholds</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid gap-6 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label>Base Delivery Fee (₹)</Label>
+                    <CardContent className="p-8 grid gap-8 sm:grid-cols-2">
+                        <div className="space-y-3">
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Base Delivery Fee (₹)</Label>
                             <Input 
                                 type="number" 
                                 value={deliveryFee} 
                                 onChange={e => setDeliveryFee(Number(e.target.value))} 
-                                placeholder="40"
+                                className="h-12 rounded-xl font-black text-lg"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label>Free Delivery Threshold (₹)</Label>
+                        <div className="space-y-3">
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Free Delivery Above (₹)</Label>
                             <Input 
                                 type="number" 
                                 value={freeThreshold} 
                                 onChange={e => setFreeThreshold(Number(e.target.value))} 
-                                placeholder="500"
+                                className="h-12 rounded-xl font-black text-lg"
                             />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                    <CardHeader className="bg-gray-50/50 p-8">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic">
                             <Crown className="h-5 w-5 text-primary" /> Loyalty Program
                         </CardTitle>
-                        <CardDescription>Configure how customers earn points.</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Customer point accumulation rules</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Points per ₹100 Spent</Label>
+                    <CardContent className="p-8 space-y-4">
+                        <div className="space-y-3">
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Points per ₹100 spent</Label>
                             <Input 
                                 type="number" 
                                 value={loyaltyRatio} 
                                 onChange={e => setLoyaltyRatio(Number(e.target.value))} 
-                                placeholder="1"
+                                className="h-12 rounded-xl font-black text-lg"
                             />
-                            <p className="text-[10px] text-muted-foreground font-bold">
-                                Example: If set to 1, a ₹500 order earns 5 loyalty points.
+                            <p className="text-[10px] text-muted-foreground font-bold italic">
+                                Current Rule: A ₹1,000 order earns {Math.floor(10 * loyaltyRatio)} points.
                             </p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end pt-6 pb-12">
                     <Button 
-                        size="lg" 
                         onClick={handleSave} 
                         disabled={isSaving}
-                        className="font-black uppercase tracking-widest px-10 h-14"
+                        className="font-black uppercase tracking-widest px-12 h-16 rounded-2xl shadow-xl text-lg transition-all active:scale-95"
                     >
-                        {isSaving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                        Apply Changes
+                        {isSaving ? <Loader2 className="animate-spin h-6 w-6 mr-3" /> : <Save className="h-6 w-6 mr-3" />}
+                        {isSaving ? "Syncing..." : "Apply Global Rules"}
                     </Button>
                 </div>
             </div>

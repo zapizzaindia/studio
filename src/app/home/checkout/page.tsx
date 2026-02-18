@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { GlobalSettings, Coupon, Address, Outlet } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function CheckoutPage() {
   const { user } = useUser();
   const db = useFirestore();
   
+  // Real-time listener for global settings
   const { data: settings } = useDoc<GlobalSettings>('settings', 'global');
   const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
 
@@ -53,12 +56,12 @@ export default function CheckoutPage() {
     fetchAddresses();
   }, [user, db]);
 
-  // Dynamic calculations
+  // Dynamic calculations based on real-time backend settings
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
-    const gstRate = settings?.gstPercentage || 18;
-    const baseDelivery = settings?.deliveryFee || 40;
-    const freeThreshold = settings?.minOrderForFreeDelivery || 500;
+    const gstRate = settings?.gstPercentage ?? 18;
+    const baseDelivery = settings?.deliveryFee ?? 40;
+    const freeThreshold = settings?.minOrderForFreeDelivery ?? 500;
     
     const deliveryFee = subtotal >= freeThreshold ? 0 : baseDelivery;
     const gstTotal = (subtotal * gstRate) / 100;
@@ -97,7 +100,7 @@ export default function CheckoutPage() {
     toast({ title: "Coupon Applied!" });
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (!user) {
       router.push('/login');
       return;
@@ -146,23 +149,29 @@ export default function CheckoutPage() {
       paymentStatus: "Pending"
     };
 
-    try {
-      toast({ title: "Connecting to Secure Gateway...", description: "Please do not refresh the page." });
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    toast({ title: "Connecting to Secure Gateway...", description: "Processing your transaction..." });
 
-      await addDoc(collection(db, 'orders'), {
-        ...orderData,
-        paymentStatus: "Success",
-        paymentId: `pay_${Math.random().toString(36).substring(7)}`,
-      });
-
+    // Non-blocking firestore write
+    addDoc(collection(db, 'orders'), {
+      ...orderData,
+      paymentStatus: "Success",
+      paymentId: `pay_${Math.random().toString(36).substring(7)}`,
+    })
+    .then(() => {
       clearCart();
       router.push('/home/checkout/success');
-    } catch (e: any) {
-      toast({ title: "Payment Failed", description: e.message, variant: "destructive" });
-    } finally {
+    })
+    .catch(async (error) => {
+      const permissionError = new FirestorePermissionError({
+        path: 'orders',
+        operation: 'create',
+        requestResourceData: orderData,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    })
+    .finally(() => {
       setIsPlacing(false);
-    }
+    });
   };
 
   if (items.length === 0) {
@@ -280,7 +289,7 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Bill Details */}
+        {/* Bill Details with Live Backend Data */}
         <Card className="border-none shadow-sm">
           <CardHeader className="bg-white border-b py-4">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle>
@@ -301,7 +310,7 @@ export default function CheckoutPage() {
               <span className={calculations.deliveryFee === 0 ? "text-green-600" : ""}>{calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}</span>
             </div>
             <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
-              <span>Taxes (GST @ {settings?.gstPercentage || 18}%)</span>
+              <span>Taxes (GST @ {settings?.gstPercentage ?? 18}%)</span>
               <span>₹{calculations.gstTotal.toFixed(2)}</span>
             </div>
             <div className="border-t border-dashed pt-3 flex justify-between text-lg font-black text-[#333333]">
@@ -318,7 +327,7 @@ export default function CheckoutPage() {
            <div>
               <p className="text-[9px] font-black text-white/70 uppercase tracking-widest">Loyalty Reward</p>
               <p className="text-xs font-black text-white uppercase italic">
-                You will earn {Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio || 1))} points
+                You will earn {Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1))} points
               </p>
            </div>
         </div>
