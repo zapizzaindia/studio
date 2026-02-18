@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
@@ -16,13 +17,13 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, List, BarChart, Users, LogOut, Image as ImageIcon, Ticket, Settings } from "lucide-react";
+import { LayoutDashboard, Store, List, BarChart, Users, LogOut, Image as ImageIcon, Ticket, Settings, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth, useDoc, useUser } from '@/firebase';
+import { useAuth, useDoc, useUser, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-
 
 const navItems = [
   { href: "/franchise/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -35,6 +36,7 @@ const navItems = [
   { href: "/franchise/dashboard/settings", label: "Global Settings", icon: Settings },
 ];
 
+const SUPERADMIN_UID = "wjjLcG2B5ecbjfjOLopajwCETfA3";
 
 export default function FranchiseDashboardLayout({
   children,
@@ -44,30 +46,52 @@ export default function FranchiseDashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { user, loading: userLoading } = useUser();
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
   useEffect(() => {
     if (!userLoading && !user) {
       router.replace('/franchise/login');
+      return;
     }
+
+    // Auto-provision Superadmin if they log in for the first time
+    if (!userLoading && user && user.uid === SUPERADMIN_UID && !profileLoading && !userProfile && db) {
+        const provisionRef = doc(db, 'users', user.uid);
+        setDoc(provisionRef, {
+            uid: user.uid,
+            email: user.email || "superadmin@zapizza.co.in",
+            displayName: "Master Franchise Owner",
+            role: "franchise-owner"
+        }, { merge: true });
+    }
+
     if (!profileLoading && userProfile && userProfile.role !== 'franchise-owner') {
-      auth?.signOut();
-      router.replace('/franchise/login');
+      // If the user has a profile but isn't a franchise owner, kick them out
+      if (user.uid !== SUPERADMIN_UID) {
+        auth?.signOut();
+        router.replace('/franchise/login');
+      }
     }
-  }, [user, userLoading, userProfile, profileLoading, auth, router]);
+  }, [user, userLoading, userProfile, profileLoading, auth, router, db]);
 
   const handleLogout = async () => {
     if (auth) {
         await signOut(auth);
+        localStorage.removeItem('zapizza-mock-session');
         router.push('/login');
+    } else {
+        localStorage.removeItem('zapizza-mock-session');
+        window.location.href = '/login';
     }
   }
   
-  if (userLoading || profileLoading) {
+  if (userLoading || (profileLoading && !userProfile)) {
     return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <p>Loading Dashboard...</p>
+        <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
+            <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Franchise Mesh...</p>
         </div>
     )
   }
@@ -78,8 +102,8 @@ export default function FranchiseDashboardLayout({
             <SidebarHeader>
               <div className="flex flex-col items-start gap-2 p-4">
                 <ZapizzaLogo className="h-10 w-10 text-primary" />
-                <h1 className="font-headline text-xl font-bold text-primary leading-tight">
-                    Zapizza Franchise
+                <h1 className="font-headline text-xl font-bold text-primary leading-tight uppercase italic tracking-tighter">
+                    Zapizza Global
                 </h1>
               </div>
             </SidebarHeader>
@@ -90,7 +114,7 @@ export default function FranchiseDashboardLayout({
                     <SidebarMenuButton asChild isActive={pathname.startsWith(item.href) && (item.href === '/franchise/dashboard' ? pathname === item.href : true) } >
                       <Link href={item.href}>
                         <item.icon />
-                        <span>{item.label}</span>
+                        <span className="font-bold text-xs uppercase tracking-widest">{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -98,35 +122,45 @@ export default function FranchiseDashboardLayout({
               </SidebarMenu>
             </SidebarContent>
             <SidebarFooter>
+                {user?.uid === SUPERADMIN_UID && (
+                    <div className="px-4 py-2 mb-2 bg-primary/5 rounded-xl border border-primary/10 mx-2 flex items-center gap-2">
+                        <ShieldAlert className="h-3 w-3 text-primary" />
+                        <span className="text-[8px] font-black text-primary uppercase tracking-widest">Master Auth Active</span>
+                    </div>
+                )}
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton onClick={handleLogout}>
                             <LogOut />
-                            <span>Logout</span>
+                            <span className="font-bold text-xs uppercase tracking-widest">Sign Out</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-            <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background px-4">
+            <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 backdrop-blur-md px-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
-                    <h1 className="font-headline text-xl font-bold text-primary hidden sm:block">
-                        {navItems.find(item => pathname.startsWith(item.href) && (item.href === '/franchise/dashboard' ? pathname === item.href : true))?.label}
+                    <h1 className="font-headline text-xl font-bold text-primary hidden sm:block uppercase tracking-tight italic">
+                        {navItems.find(item => pathname.startsWith(item.href) && (item.href === '/franchise/dashboard' ? pathname === item.href : true))?.label || "Super Admin"}
                     </h1>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Avatar className="h-8 w-8">
+                    <div className="hidden md:flex flex-col items-end">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">{userProfile?.displayName || 'Master Owner'}</p>
+                        <p className="text-[8px] font-bold text-muted-foreground uppercase">Global Jurisdiction</p>
+                    </div>
+                    <Avatar className="h-9 w-9 border-2 border-primary/10 shadow-sm">
                        <AvatarImage src={user?.photoURL || undefined} />
-                       <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'S'}</AvatarFallback>
+                       <AvatarFallback className="bg-primary text-white font-black">{userProfile?.displayName?.charAt(0) || 'S'}</AvatarFallback>
                     </Avatar>
-                     <Button asChild variant="ghost" className="md:hidden" onClick={handleLogout}>
+                     <Button variant="ghost" size="icon" className="md:hidden" onClick={handleLogout}>
                         <LogOut className="h-5 w-5"/>
                     </Button>
                 </div>
             </header>
-            <main className="flex-1 p-4 sm:p-6">{children}</main>
+            <main className="flex-1 p-4 sm:p-8 bg-[#f8f9fa]">{children}</main>
         </SidebarInset>
     </SidebarProvider>
   );

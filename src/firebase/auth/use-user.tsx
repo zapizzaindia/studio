@@ -10,22 +10,31 @@ export const useUser = () => {
   const auth = useAuth();
 
   useEffect(() => {
-    // Check for mock session first (Demo Mode priority)
-    const mockSession = localStorage.getItem('zapizza-mock-session');
-    if (mockSession) {
-      setUser(JSON.parse(mockSession));
-      setLoading(false);
-      return;
-    }
-
     if (!auth) {
+      // If Firebase Auth isn't initialized yet, check for mock session immediately
+      const mockSession = localStorage.getItem('zapizza-mock-session');
+      if (mockSession) {
+        setUser(JSON.parse(mockSession));
+      }
       setLoading(false);
       return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
+      if (firebaseUser) {
+        // We have a real Firebase user
+        setUser(firebaseUser);
+        setLoading(false);
+      } else {
+        // No real user, fallback to check for mock session (Demo Mode)
+        const mockSession = localStorage.getItem('zapizza-mock-session');
+        if (mockSession) {
+          setUser(JSON.parse(mockSession));
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
