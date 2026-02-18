@@ -17,12 +17,11 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Store, List, BarChart, Users, LogOut, Image as ImageIcon, Ticket, Settings, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Store, List, BarChart, Users, LogOut, Image as ImageIcon, Ticket, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth, useDoc, useUser, useFirestore } from '@/firebase';
+import { useAuth, useDoc, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 
 const navItems = [
@@ -36,8 +35,6 @@ const navItems = [
   { href: "/franchise/dashboard/settings", label: "Global Settings", icon: Settings },
 ];
 
-const SUPERADMIN_UID = "wjjLcG2B5ecbjfjOLopajwCETfA3";
-
 export default function FranchiseDashboardLayout({
   children,
 }: Readonly<{
@@ -46,7 +43,6 @@ export default function FranchiseDashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
-  const db = useFirestore();
   const { user, loading: userLoading } = useUser();
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
@@ -56,25 +52,12 @@ export default function FranchiseDashboardLayout({
       return;
     }
 
-    // Auto-provision Superadmin if they log in for the first time
-    if (!userLoading && user && user.uid === SUPERADMIN_UID && !profileLoading && !userProfile && db) {
-        const provisionRef = doc(db, 'users', user.uid);
-        setDoc(provisionRef, {
-            uid: user.uid,
-            email: user.email || "superadmin@zapizza.co.in",
-            displayName: "Master Franchise Owner",
-            role: "franchise-owner"
-        }, { merge: true });
-    }
-
     if (!profileLoading && userProfile && userProfile.role !== 'franchise-owner') {
       // If the user has a profile but isn't a franchise owner, kick them out
-      if (user.uid !== SUPERADMIN_UID) {
-        auth?.signOut();
-        router.replace('/franchise/login');
-      }
+      auth?.signOut();
+      router.replace('/franchise/login');
     }
-  }, [user, userLoading, userProfile, profileLoading, auth, router, db]);
+  }, [user, userLoading, userProfile, profileLoading, auth, router]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -122,12 +105,6 @@ export default function FranchiseDashboardLayout({
               </SidebarMenu>
             </SidebarContent>
             <SidebarFooter>
-                {user?.uid === SUPERADMIN_UID && (
-                    <div className="px-4 py-2 mb-2 bg-primary/5 rounded-xl border border-primary/10 mx-2 flex items-center gap-2">
-                        <ShieldAlert className="h-3 w-3 text-primary" />
-                        <span className="text-[8px] font-black text-primary uppercase tracking-widest">Master Auth Active</span>
-                    </div>
-                )}
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton onClick={handleLogout}>
