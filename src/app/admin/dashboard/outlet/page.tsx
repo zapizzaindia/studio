@@ -42,7 +42,7 @@ export default function AdminOutletPage() {
     }, [outlet]);
     
     const handleSaveChanges = () => {
-        if (!firestore || !outletId) return;
+        if (!db || !outletId) return;
 
         const outletRef = doc(firestore, 'outlets', outletId);
         const updatedData = {

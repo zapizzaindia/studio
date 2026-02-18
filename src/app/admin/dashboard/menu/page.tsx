@@ -7,13 +7,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import type { MenuItem, Category, UserProfile, OutletMenuAvailability } from '@/lib/types';
 import Image from 'next/image';
-import { useCollection, useDoc, useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { firestore } from '@/firebase/config';
 import { placeholderImageMap } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
+import { firestore as db } from '@/firebase/config';
+
 
 export default function AdminMenuPage() {
   const { user } = useUser();
@@ -24,7 +29,7 @@ export default function AdminMenuPage() {
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: availabilityData, loading: availabilityLoading } = useCollection<OutletMenuAvailability>(`outlets/${outletId}/menuAvailability`);
   
-  const firestore = useFirestore();
+ 
   const { toast } = useToast();
 
   const [availabilityMap, setAvailabilityMap] = useState<Record<string, boolean>>({});
@@ -32,7 +37,7 @@ export default function AdminMenuPage() {
   useEffect(() => {
     if (availabilityData) {
       const newMap: Record<string, boolean> = {};
-      availabilityData.forEach(item => {
+      availabilityData.forEach((item: OutletMenuAvailability & { id: string }) => {
         const id = (item as any).id; // The document ID is the menuItemId
         newMap[id] = item.isAvailable;
       });
@@ -41,7 +46,7 @@ export default function AdminMenuPage() {
   }, [availabilityData]);
 
   const handleToggleAvailability = (itemId: string, isGloballyAvailable: boolean) => {
-    if (!firestore || !outletId) return;
+    if (!db || !outletId) return;
 
     if (!isGloballyAvailable) {
         toast({ variant: 'destructive', title: 'Action not allowed', description: 'This item is managed by the franchise and cannot be toggled here.'});
@@ -51,7 +56,11 @@ export default function AdminMenuPage() {
     const currentStatus = availabilityMap[itemId] ?? true; // Default to available
     const newStatus = !currentStatus;
 
-    const availabilityRef = doc(firestore, `outlets/${outletId}/menuAvailability`, itemId);
+    const availabilityRef = doc(
+      db,
+      `outlets/${outletId}/menuAvailability`,
+      itemId
+    );    
 
     setDoc(availabilityRef, { isAvailable: newStatus })
         .then(() => {
@@ -100,7 +109,9 @@ export default function AdminMenuPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {menuItems?.filter(item => item.category === category.id).map(item => (
+                            {menuItems
+  ?.filter((item: MenuItem) => item.category === category.id)
+  .map((item: MenuItem) => (
                                 <TableRow key={item.id}>
                                     <TableCell>
                                       <Image
