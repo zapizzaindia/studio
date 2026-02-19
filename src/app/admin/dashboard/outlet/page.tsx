@@ -44,6 +44,12 @@ export default function AdminOutletPage() {
     }, [outlet]);
     
     const handleSaveChanges = () => {
+        console.log("USER:", user);
+console.log("PROFILE ID:", profileId);
+console.log("USER PROFILE:", userProfile);
+console.log("OUTLET ID:", outletId);
+console.log("DB:", db);
+
         if (!db || !outletId || outletId === 'dummy') {
             toast({ variant: 'destructive', title: 'Error', description: 'Outlet ID not found. Please re-login.' });
             return;
@@ -62,9 +68,11 @@ export default function AdminOutletPage() {
         // Non-blocking mutation as per guidelines
         updateDoc(outletRef, updatedData)
             .then(() => {
+                console.log("Firestore update SUCCESS");
                 toast({ title: 'Success', description: 'Outlet details synchronized with master database.' });
             })
             .catch(error => {
+                console.log("Firestore update FAILED:", error);
                 const permissionError = new FirestorePermissionError({
                     path: outletRef.path,
                     operation: 'update',
