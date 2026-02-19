@@ -110,6 +110,12 @@ export default function MenuPage() {
     }
   };
 
+  const handleLocationChange = () => {
+    localStorage.removeItem("zapizza-city");
+    localStorage.removeItem("zapizza-outlet");
+    router.push('/home');
+  };
+
   const availableAddons = useMemo(() => {
     if (!customizingItem) return [];
     if (customizingItem.variations && customizingItem.variations.length > 0) {
@@ -162,8 +168,8 @@ export default function MenuPage() {
               <div className="flex items-center gap-1 text-[11px] font-bold">
                 <Clock className="h-3 w-3" /> 40 Minutes
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold cursor-pointer" onClick={() => router.push('/home')}>
-                <MapPin className="h-3 w-3" /> Civil lines, Rudrapur <ChevronDown className="h-3 w-3" />
+              <div className="flex items-center gap-1 text-[11px] font-bold cursor-pointer" onClick={handleLocationChange}>
+                <MapPin className="h-3 w-3" /> {selectedOutlet?.name || "Civil lines, Rudrapur"} <ChevronDown className="h-3 w-3" />
               </div>
             </div>
           </div>
@@ -179,7 +185,7 @@ export default function MenuPage() {
       {/* 2. Offers Banner */}
       <div className="bg-white border-b px-4 py-3 flex items-center justify-between cursor-pointer" onClick={() => router.push('/home/offers')}>
         <div className="flex items-center gap-3">
-          <div className="bg-[#14532d] p-1.5 rounded-lg">
+          <div className="bg-[#14532d] p-1.5 rounded-lg" style={{ backgroundColor: brandColor }}>
             <Zap className="h-4 w-4 text-white fill-current" />
           </div>
           <div className="flex flex-col">
