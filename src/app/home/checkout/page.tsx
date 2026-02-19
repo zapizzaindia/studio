@@ -23,7 +23,6 @@ export default function CheckoutPage() {
   const { user } = useUser();
   const db = useFirestore();
   
-  // Real-time listener for global settings
   const { data: settings } = useDoc<GlobalSettings>('settings', 'global');
   const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
 
@@ -41,7 +40,6 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  // Fetch addresses
   useEffect(() => {
     if (!user || !db) return;
     const fetchAddresses = async () => {
@@ -55,7 +53,6 @@ export default function CheckoutPage() {
     fetchAddresses();
   }, [user, db]);
 
-  // Dynamic calculations based on real-time backend settings
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
     const gstRate = settings?.gstPercentage ?? 18;
@@ -79,6 +76,18 @@ export default function CheckoutPage() {
     return { subtotal, deliveryFee, gstTotal, discount, finalTotal };
   }, [totalPrice, settings, appliedCoupon]);
 
+  // Re-validate coupon if cart total changes
+  useEffect(() => {
+    if (appliedCoupon && totalPrice < appliedCoupon.minOrderAmount) {
+      setAppliedCoupon(null);
+      toast({ 
+        variant: 'destructive', 
+        title: "Coupon Removed", 
+        description: `Minimum order of ₹${appliedCoupon.minOrderAmount} required for ${appliedCoupon.code}` 
+      });
+    }
+  }, [totalPrice, appliedCoupon, toast]);
+
   const handleApplyCoupon = () => {
     if (!selectedOutlet) return;
     
@@ -96,7 +105,7 @@ export default function CheckoutPage() {
       return;
     }
     setAppliedCoupon(found);
-    toast({ title: "Coupon Applied!" });
+    toast({ title: "Coupon Applied!", description: `You saved ₹${found.discountType === 'percentage' ? (totalPrice * found.discountValue / 100) : found.discountValue}` });
   };
 
   const handlePlaceOrder = () => {
@@ -131,7 +140,7 @@ export default function CheckoutPage() {
       gst: calculations.gstTotal,
       deliveryFee: calculations.deliveryFee,
       discount: calculations.discount,
-      total: calculations.finalTotal,
+      total: Math.round(calculations.finalTotal),
       status: "New",
       createdAt: serverTimestamp(),
       outletId: outlet.id,
@@ -150,7 +159,6 @@ export default function CheckoutPage() {
 
     toast({ title: "Connecting to Secure Gateway...", description: "Processing your transaction..." });
 
-    // Non-blocking firestore write
     addDoc(collection(db, 'orders'), {
       ...orderData,
       paymentStatus: "Success",
@@ -199,7 +207,6 @@ export default function CheckoutPage() {
       </div>
 
       <div className="container mx-auto p-4 space-y-4 max-w-lg">
-        {/* Address Selector */}
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
@@ -227,7 +234,6 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Order Items */}
         <Card className="border-none shadow-sm">
           <CardHeader className="bg-white border-b py-4">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Order Summary</CardTitle>
@@ -272,7 +278,6 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Coupon Section */}
         <Card className="border-none shadow-sm">
           <CardContent className="p-4 bg-white">
             <div className="flex items-center gap-2 mb-3">
@@ -298,7 +303,6 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Bill Details with Live Backend Data */}
         <Card className="border-none shadow-sm">
           <CardHeader className="bg-white border-b py-4">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle>
@@ -311,7 +315,7 @@ export default function CheckoutPage() {
             {calculations.discount > 0 && (
               <div className="flex justify-between text-xs font-black text-green-600 uppercase">
                 <span>Coupon Discount</span>
-                <span>-₹{calculations.discount}</span>
+                <span>-₹{calculations.discount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
@@ -322,9 +326,9 @@ export default function CheckoutPage() {
               <span>Taxes (GST @ {settings?.gstPercentage ?? 18}%)</span>
               <span>₹{calculations.gstTotal.toFixed(2)}</span>
             </div>
-            <div className="border-t border-dashed pt-3 flex justify-between text-lg font-black text-[#333333]">
-              <span>TO PAY</span>
-              <span style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
+            <div className="border-t border-dashed pt-3 flex justify-between items-center">
+              <span className="text-lg font-black text-[#333333]">TO PAY</span>
+              <span className="text-2xl font-black" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
             </div>
           </CardContent>
         </Card>
