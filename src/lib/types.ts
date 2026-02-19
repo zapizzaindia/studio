@@ -87,6 +87,7 @@ export type Order = {
   customerId: string;
   customerName: string;
   customerPhone?: string;
+  specialNote?: string;
   items: OrderItem[];
   subtotal: number;
   gst: number;

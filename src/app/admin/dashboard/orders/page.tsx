@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile, Outlet } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket, MessageSquareText } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -104,7 +104,8 @@ export default function AdminOrdersPage() {
   const handleShareLocation = (order: Order) => {
     const addr = order.deliveryAddress;
     const mapLink = addr?.latitude ? `\n📍 *Map:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
-    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}\n\n*Items:*\n${order.items.map(i => `- ${i.quantity}x ${i.name} (${i.variation || 'Base'})${i.addons ? ' +' + i.addons.join(', ') : ''}`).join('\n')}`;
+    const note = order.specialNote ? `\n\n📝 *SPECIAL NOTE:* ${order.specialNote.toUpperCase()}` : '';
+    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}\n\n*Items:*\n${order.items.map(i => `- ${i.quantity}x ${i.name} (${i.variation || 'Base'})${i.addons ? ' +' + i.addons.join(', ') : ''}`).join('\n')}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -127,6 +128,11 @@ export default function AdminOrdersPage() {
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1 font-bold uppercase tracking-wide">
                     <MapPin className="h-3 w-3" /> {order.deliveryAddress?.area || "N/A"}
                   </p>
+                  {order.specialNote && (
+                    <div className="flex items-center gap-1.5 mt-1 text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full w-fit uppercase">
+                      <MessageSquareText className="h-2.5 w-2.5" /> Note Attached
+                    </div>
+                  )}
                 </div>
                 <div className="text-right space-y-1">
                   <p className="font-black text-sm">₹{order.total.toFixed(2)}</p>
@@ -206,6 +212,20 @@ export default function AdminOrdersPage() {
               </DialogHeader>
               
               <div className="p-8 space-y-8 overflow-y-auto scrollbar-hide flex-1 bg-white">
+                {/* Special Instructions Note */}
+                {selectedOrder.specialNote && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <MessageSquareText className="h-3 w-3" /> Customer Note
+                    </h4>
+                    <div className="bg-orange-50/50 p-5 rounded-2xl border-2 border-orange-100/50 shadow-inner">
+                      <p className="text-xs font-black text-orange-900 uppercase italic tracking-tight leading-relaxed">
+                        "{selectedOrder.specialNote}"
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Delivery Pin Info */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">

@@ -123,6 +123,7 @@
         "properties": {
             "customerId": { "type": "string" },
             "customerName": { "type": "string" },
+            "specialNote": { "type": "string", "description": "Instructions for the kitchen." },
             "items": { 
                 "type": "array",
                 "items": {

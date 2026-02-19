@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function CheckoutPage() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
+  const [specialNote, setSpecialNote] = useState("");
 
   useEffect(() => {
     const savedOutlet = localStorage.getItem("zapizza-outlet");
@@ -139,6 +141,7 @@ export default function CheckoutPage() {
       customerId: user.uid,
       customerName: user.displayName || "Gourmet Customer",
       customerPhone: user.phoneNumber || "+91-9876543210",
+      specialNote: specialNote.trim() || undefined,
       items: items.map(i => ({
         menuItemId: i.id,
         name: i.name,
@@ -286,6 +289,24 @@ export default function CheckoutPage() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Special Cooking Note Section */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <CardHeader className="bg-white border-b py-4">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
+              <MessageSquareText className="h-4 w-4" /> Cooking Instructions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 bg-white">
+            <Textarea 
+              placeholder="e.g. Please make it extra spicy, or don't ring the doorbell..." 
+              value={specialNote}
+              onChange={(e) => setSpecialNote(e.target.value)}
+              className="min-h-[80px] rounded-xl font-medium text-xs border-gray-100 bg-gray-50/50"
+            />
+            <p className="text-[9px] font-bold text-muted-foreground mt-2 uppercase tracking-tight">Your note will be visible to the chef & rider.</p>
           </CardContent>
         </Card>
 
