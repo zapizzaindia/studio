@@ -111,7 +111,8 @@ export default function HomePage() {
     const hasOptions = (item.variations?.length || 0) > 0 || (item.addons?.length || 0) > 0;
     if (hasOptions) {
       setCustomizingItem(item);
-      setSelectedVariation(item.variations?.[0] || null);
+      const initialVar = item.variations?.[0] || null;
+      setSelectedVariation(initialVar);
       setSelectedAddons([]);
     } else {
       addItem(item);
@@ -125,28 +126,24 @@ export default function HomePage() {
     }
   };
 
+  const availableAddons = useMemo(() => {
+    if (!customizingItem) return [];
+    
+    // If variations exist, only showaddons for that specific variation
+    if (customizingItem.variations && customizingItem.variations.length > 0) {
+      return selectedVariation?.addons || [];
+    }
+    
+    // If no variations exist, show the base item addons
+    return customizingItem.addons || [];
+  }, [customizingItem, selectedVariation]);
+
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
     const base = selectedVariation ? selectedVariation.price : customizingItem.price;
-    const availableAddons = (selectedVariation?.addons && selectedVariation.addons.length > 0) 
-      ? selectedVariation.addons 
-      : (customizingItem.addons || []);
-    
-    const validSelectedAddons = selectedAddons.filter(sa => 
-      availableAddons.some(aa => aa.name === sa.name)
-    );
-    
-    const addonsTotal = validSelectedAddons.reduce((sum, a) => sum + a.price, 0);
+    const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
     return base + addonsTotal;
   }, [customizingItem, selectedVariation, selectedAddons]);
-
-  const availableAddons = useMemo(() => {
-    if (!customizingItem) return [];
-    if (selectedVariation?.addons && selectedVariation.addons.length > 0) {
-      return selectedVariation.addons;
-    }
-    return customizingItem.addons || [];
-  }, [customizingItem, selectedVariation]);
 
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
@@ -262,89 +259,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Top Offers Section */}
-      {coupons && coupons.length > 0 && (
-        <div className="mt-4">
-          <div className="px-6 flex justify-center mb-3">
-            <h2 className="text-xl font-black uppercase tracking-[0.2em] text-[#111]">Top Offers</h2>
-          </div>
-          <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-4">
-            {coupons.map((coupon) => (
-              <div 
-                key={coupon.id} 
-                className="min-w-[300px] bg-white rounded-[24px] overflow-hidden flex shadow-sm border border-gray-100 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
-                onClick={() => {
-                  navigator.clipboard.writeText(coupon.code);
-                  toast({ title: "Code Copied!", description: `Use ${coupon.code} at checkout.` });
-                }}
-              >
-                <div style={{ backgroundColor: brandColor + '10' }} className="w-24 flex flex-col items-center justify-center p-4 relative border-r border-dashed border-gray-200">
-                  <div className="text-center">
-                    <span className="text-xl font-black block" style={{ color: brandColor }}>
-                      {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-tight" style={{ color: brandColor }}>OFF</span>
-                  </div>
-                  <div className="absolute top-0 right-0 bottom-0 w-2 overflow-hidden flex flex-col justify-around py-1">
-                    {Array.from({length: 6}).map((_, i) => (
-                      <div key={i} className="w-3 h-3 bg-white rounded-full -mr-2" />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex-1 p-5 flex flex-col justify-center">
-                  <h4 className="text-[12px] font-black uppercase tracking-tight text-[#333] leading-tight line-clamp-1">
-                    {coupon.description || `GET FLAT ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ''} DISCOUNT`}
-                  </h4>
-                  <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-wide">
-                    Use <span className="text-[#333] font-black tracking-widest">{coupon.code}</span> {coupon.minOrderAmount > 0 ? `| Above ₹${coupon.minOrderAmount}` : ''}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Best Sellers Section */}
-      <div className="mt-4">
-        <div className="px-6 flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
-              <Award className="h-4 w-4 text-white" />
-            </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Best Sellers</h2>
-          </div>
-        </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
-          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-64 w-52 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(2, 7).map((item) => (
-            <motion.div 
-              key={item.id} 
-              whileTap={{ scale: 0.95 }} 
-              className="flex flex-col w-52 flex-shrink-0 bg-white rounded-[32px] shadow-md border border-gray-50 overflow-hidden"
-              onClick={() => handleAddClick(item)}
-            >
-              <div className="relative h-36 w-full">
-                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
-                <div className="absolute inset-0 bg-black/10" />
-                <div className="absolute top-3 right-3 bg-white/90 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-[#333]">
-                  Most Loved
-                </div>
-              </div>
-              <div className="p-5 flex flex-col gap-2">
-                <h4 className="text-[13px] font-black text-[#333] uppercase leading-tight tracking-tight line-clamp-1">{item.name}</h4>
-                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed h-8">{item.description}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm font-black" style={{ color: brandColor }}>₹{item.price}</span>
-                  <div style={{ backgroundColor: brandColor }} className="p-1.5 rounded-full text-white shadow-sm">
-                    <PlusCircle className="h-4 w-4" />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
       {/* Explore Items Section */}
       <div className="mt-4 px-6 pb-12">
         <div className="flex items-center gap-2 mb-6">
@@ -420,13 +334,14 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide">
+                {/* Variations (Sizes) */}
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
                     <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
                       const newVar = customizingItem.variations?.find(v => v.name === val) || null;
                       setSelectedVariation(newVar);
-                      setSelectedAddons([]); 
+                      setSelectedAddons([]); // Reset addons when size changes
                     }} className="space-y-3">
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
@@ -440,6 +355,7 @@ export default function HomePage() {
 
                 <Separator />
 
+                {/* Add-ons (Variation specific or global) */}
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>

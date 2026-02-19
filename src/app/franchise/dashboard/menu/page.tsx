@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MenuItem, Category, MenuItemVariation, MenuItemAddon, Brand } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee, Flame, Pizza, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee, Flame, Pizza, Loader2, ListPlus } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -49,12 +49,6 @@ export default function FranchiseMenuPage() {
   const [newItemVariations, setNewItemVariations] = useState<MenuItemVariation[]>([]);
   const [newItemAddons, setNewItemAddons] = useState<MenuItemAddon[]>([]);
   const [newItemSides, setNewItemSides] = useState<string[]>([]);
-  const [customImage, setCustomImage] = useState<string | null>(null);
-
-  // New Category State
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
-  const [categoryCustomImage, setCategoryCustomImage] = useState<string | null>(null);
 
   const menuItems = useMemo(() => allMenuItems?.filter(item => item.brand === activeBrand) || [], [allMenuItems, activeBrand]);
   const categories = useMemo(() => allCategories?.filter(cat => cat.brand === activeBrand) || [], [allCategories, activeBrand]);
@@ -76,7 +70,6 @@ export default function FranchiseMenuPage() {
     setNewItemVariations(item.variations || []);
     setNewItemAddons(item.addons || []);
     setNewItemSides(item.recommendedSides || []);
-    setCustomImage(null);
     setIsAddDialogOpen(true);
   };
 
@@ -84,7 +77,6 @@ export default function FranchiseMenuPage() {
     setEditingCategory(cat);
     setNewCategoryName(cat.name);
     setNewCategoryImageId(cat.imageId || "cat_veg");
-    setCategoryCustomImage(null);
   };
 
   const handleAddItem = () => {
@@ -140,6 +132,10 @@ export default function FranchiseMenuPage() {
             .finally(() => setIsSaving(false));
     }
   };
+
+  // Category Logic
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
 
   const handleAddCategory = () => {
     if (!firestore || !newCategoryName) return;
@@ -279,7 +275,7 @@ export default function FranchiseMenuPage() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
                             <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 bg-white shadow-inner flex-shrink-0">
-                                <Image src={categoryCustomImage || placeholderImageMap.get(newCategoryImageId)?.imageUrl || ''} alt="Preview" fill className="object-cover" />
+                                <Image src={placeholderImageMap.get(newCategoryImageId)?.imageUrl || ''} alt="Preview" fill className="object-cover" />
                             </div>
                             <div className="flex-1">
                                 <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId}>
@@ -323,7 +319,7 @@ export default function FranchiseMenuPage() {
                     <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/30 p-1.5 rounded-2xl border">
                       <TabsTrigger value="general" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">General</TabsTrigger>
                       <TabsTrigger value="variations" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Sizes</TabsTrigger>
-                      <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Toppings</TabsTrigger>
+                      <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Global Toppings</TabsTrigger>
                       <TabsTrigger value="sides" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Sides</TabsTrigger>
                     </TabsList>
 
@@ -389,18 +385,17 @@ export default function FranchiseMenuPage() {
                         </div>
                     </TabsContent>
 
-                    {/* Variations, Addons and Sides content remains same but now wired to firestore */}
                     <TabsContent value="variations" className="space-y-6">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Portion & Size Options</h4>
                             <Button variant="ghost" size="sm" onClick={() => setNewItemVariations([...newItemVariations, { name: "", price: 0, addons: [] }])} className="h-8 font-black uppercase text-[10px] tracking-widest" style={{ color: brandColor }}>+ Add Size</Button>
                         </div>
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
+                        <div className="space-y-6 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
                             {newItemVariations.map((v, i) => (
-                                <div key={i} className="flex flex-col gap-4 bg-white p-4 rounded-2xl border shadow-sm">
+                                <div key={i} className="flex flex-col gap-4 bg-white p-5 rounded-2xl border shadow-sm border-gray-100">
                                     <div className="flex gap-4 items-center">
                                         <div className="flex-1 space-y-1">
-                                            <Label className="text-[8px] font-black text-muted-foreground uppercase">Size Name</Label>
+                                            <Label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Size Name</Label>
                                             <Input placeholder="e.g. Regular" value={v.name} onChange={e => {
                                                 const updated = [...newItemVariations];
                                                 updated[i].name = e.target.value;
@@ -408,7 +403,7 @@ export default function FranchiseMenuPage() {
                                             }} className="h-10 font-bold text-xs" />
                                         </div>
                                         <div className="w-32 space-y-1">
-                                            <Label className="text-[8px] font-black text-muted-foreground uppercase">Price (₹)</Label>
+                                            <Label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Price (₹)</Label>
                                             <Input type="number" value={v.price} onChange={e => {
                                                 const updated = [...newItemVariations];
                                                 updated[i].price = Number(e.target.value);
@@ -417,6 +412,38 @@ export default function FranchiseMenuPage() {
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                     </div>
+                                    
+                                    <div className="space-y-3 bg-gray-50/50 p-4 rounded-xl">
+                                        <div className="flex justify-between items-center">
+                                            <Label className="text-[7px] font-black uppercase text-muted-foreground tracking-[0.2em]">Addons for this size</Label>
+                                            <Button variant="ghost" size="sm" onClick={() => {
+                                                const updated = [...newItemVariations];
+                                                updated[i].addons = [...(updated[i].addons || []), { name: "", price: 0 }];
+                                                setNewItemVariations(updated);
+                                            }} className="h-6 px-2 font-black uppercase text-[8px] tracking-widest" style={{ color: brandColor }}>+ Add Addon</Button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {v.addons?.map((addon, aIdx) => (
+                                                <div key={aIdx} className="flex gap-2 items-center">
+                                                    <Input placeholder="Addon Name" value={addon.name} onChange={e => {
+                                                        const updated = [...newItemVariations];
+                                                        updated[i].addons![aIdx].name = e.target.value;
+                                                        setNewItemVariations(updated);
+                                                    }} className="h-8 font-bold text-[10px]" />
+                                                    <Input type="number" placeholder="₹" value={addon.price} onChange={e => {
+                                                        const updated = [...newItemVariations];
+                                                        updated[i].addons![aIdx].price = Number(e.target.value);
+                                                        setNewItemVariations(updated);
+                                                    }} className="h-8 w-20 font-black text-[10px]" />
+                                                    <Button variant="ghost" size="icon" onClick={() => {
+                                                        const updated = [...newItemVariations];
+                                                        updated[i].addons = updated[i].addons?.filter((_, idx) => idx !== aIdx);
+                                                        setNewItemVariations(updated);
+                                                    }} className="h-8 w-8 text-red-400"><Trash2 className="h-3 w-3" /></Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -424,12 +451,15 @@ export default function FranchiseMenuPage() {
 
                     <TabsContent value="addons" className="space-y-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Extra Toppings & Add-ons</h4>
-                            <Button variant="ghost" size="sm" onClick={() => setNewItemAddons([...newItemAddons, { name: "", price: 0 }])} className="h-8 font-black uppercase text-[10px] tracking-widest" style={{ color: brandColor }}>+ Add Topping</Button>
+                            <div>
+                                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Global Toppings & Add-ons</h4>
+                                <p className="text-[8px] text-muted-foreground uppercase font-bold mt-1">Used if an item has no sizes defined</p>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => setNewItemAddons([...newItemAddons, { name: "", price: 0 }])} className="h-8 font-black uppercase text-[10px] tracking-widest" style={{ color: brandColor }}>+ Add Global Topping</Button>
                         </div>
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
                             {newItemAddons.map((a, i) => (
-                                <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border shadow-sm">
+                                <div key={i} className="flex gap-4 items-center bg-white p-4 rounded-2xl border shadow-sm border-gray-100">
                                     <div className="flex-1 space-y-1">
                                         <Label className="text-[8px] font-black text-muted-foreground uppercase">Add-on Title</Label>
                                         <Input placeholder="e.g. Extra Cheese" value={a.name} onChange={e => {
@@ -536,10 +566,12 @@ export default function FranchiseMenuPage() {
                                                     <p className="font-black uppercase text-[13px] tracking-tight italic text-[#333]">{item.name}</p>
                                                 </div>
                                                 <p className="text-[11px] text-muted-foreground font-medium line-clamp-1 max-w-xs">{item.description}</p>
-                                                {item.variations && (
+                                                {item.variations && item.variations.length > 0 && (
                                                     <div className="flex gap-1.5 pt-1">
                                                         {item.variations.map((v, idx) => (
-                                                            <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">{v.name}: ₹{v.price}</span>
+                                                            <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                                                                {v.name}: ₹{v.price} {v.addons && v.addons.length > 0 && `(+${v.addons.length} opts)`}
+                                                            </span>
                                                         ))}
                                                     </div>
                                                 )}

@@ -70,15 +70,11 @@ export default function MenuPage() {
   };
 
   const handleAddClick = (item: MenuItem) => {
-    const hasOptions = 
-      (item.variations && item.variations.length > 0) || 
-      (item.addons && item.addons.length > 0) || 
-      (item.recommendedSides && item.recommendedSides.length > 0);
-
+    const hasOptions = (item.variations?.length || 0) > 0 || (item.addons?.length || 0) > 0;
     if (hasOptions) {
       setCustomizingItem(item);
-      const firstVar = item.variations?.[0] || null;
-      setSelectedVariation(firstVar);
+      const initialVar = item.variations?.[0] || null;
+      setSelectedVariation(initialVar);
       setSelectedAddons([]);
     } else {
       addItem(item);
@@ -92,6 +88,14 @@ export default function MenuPage() {
     }
   };
 
+  const availableAddons = useMemo(() => {
+    if (!customizingItem) return [];
+    if (customizingItem.variations && customizingItem.variations.length > 0) {
+      return selectedVariation?.addons || [];
+    }
+    return customizingItem.addons || [];
+  }, [customizingItem, selectedVariation]);
+
   const filteredMenuItems = useMemo(() => {
     if (!menuItems) return [];
     if (!searchQuery) return menuItems;
@@ -104,18 +108,9 @@ export default function MenuPage() {
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
     const base = selectedVariation ? selectedVariation.price : customizingItem.price;
-    const addons = selectedAddons.reduce((sum, a) => sum + a.price, 0);
-    return base + addons;
+    const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
+    return base + addonsTotal;
   }, [customizingItem, selectedVariation, selectedAddons]);
-
-  // Determine which addons to show
-  const availableAddons = useMemo(() => {
-    if (!customizingItem) return [];
-    if (selectedVariation?.addons && selectedVariation.addons.length > 0) {
-      return selectedVariation.addons;
-    }
-    return customizingItem.addons || [];
-  }, [customizingItem, selectedVariation]);
 
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
@@ -228,7 +223,7 @@ export default function MenuPage() {
                       className="space-y-3"
                     >
                       {customizingItem.variations.map((v) => (
-                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-muted transition-all">
+                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-current transition-all">
                           <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer">
                             <span className="text-sm font-bold text-[#333333] uppercase">{v.name}</span>
                           </Label>
@@ -244,13 +239,13 @@ export default function MenuPage() {
 
                 <Separator />
 
-                {/* Add-ons */}
+                {/* Add-ons (Variation specific or global) */}
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
                     <div className="space-y-3">
                       {availableAddons.map((addon) => (
-                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-muted transition-all">
+                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-current transition-all">
                           <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
                             <span className="text-sm font-bold text-[#333333] uppercase">{addon.name}</span>
                           </Label>
@@ -362,10 +357,7 @@ export default function MenuPage() {
 }
 
 function MenuItemCard({ item, onAdd, brandColor }: { item: MenuItem, onAdd: () => void, brandColor: string }) {
-  const hasOptions = 
-    (item.variations && item.variations.length > 0) || 
-    (item.addons && item.addons.length > 0) || 
-    (item.recommendedSides && item.recommendedSides.length > 0);
+  const hasOptions = (item.variations?.length || 0) > 0 || (item.addons?.length || 0) > 0;
 
   return (
     <div className="flex gap-5">
