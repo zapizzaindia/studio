@@ -55,15 +55,42 @@ export default function FranchiseBannersPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) {
-        toast({ variant: 'destructive', title: 'File too large', description: 'Please use an image under 1MB for smooth app performance.' });
-        return;
-    }
-
+    // Allow large files, optimize them locally
     const reader = new FileReader();
-    reader.onloadend = () => {
-        setNewImageId(reader.result as string);
-        toast({ title: 'Visual Updated', description: 'Custom photo applied to banner.' });
+    reader.onload = (event) => {
+      const img = new globalThis.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Banner Optimization (HD Horizontal)
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Compress to JPEG to stay within Firestore limits while looking crisp
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        setNewImageId(dataUrl);
+        toast({ title: 'HD Visual Optimized', description: 'Photo processed for high-res display.' });
+      };
+      img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
@@ -201,7 +228,7 @@ export default function FranchiseBannersPage() {
               </div>
               
               <div className="space-y-4">
-                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Banner Visual (Upload or Link)</Label>
+                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Banner Visual (Upload HD Photo)</Label>
                 <div className="grid grid-cols-2 gap-3">
                     <input type="file" hidden ref={fileInputRef} accept="image/*" onChange={handleFileUpload} />
                     <Button 
@@ -209,7 +236,7 @@ export default function FranchiseBannersPage() {
                         className="h-11 rounded-xl font-black uppercase text-[9px] tracking-widest border-2"
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        <Upload className="mr-2 h-3.5 w-3.5" /> Browse Photos
+                        <Upload className="mr-2 h-3.5 w-3.5" /> Pick HD File
                     </Button>
                     <div className="relative">
                         <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />

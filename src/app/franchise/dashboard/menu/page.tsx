@@ -86,19 +86,47 @@ export default function FranchiseMenuPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) {
-        toast({ variant: 'destructive', title: 'File too large', description: 'Please upload an image smaller than 1MB for best performance.' });
-        return;
-    }
-
+    // Allow large files to be picked, then optimize them
     const reader = new FileReader();
-    reader.onloadend = () => {
-        if (isCategory) {
-            setNewCategoryImageId(reader.result as string);
+    reader.onload = (event) => {
+      const img = new globalThis.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // HD Optimization for mobile/web app (Max 1200px)
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
         } else {
-            setNewItemImageId(reader.result as string);
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
         }
-        toast({ title: 'Image Processed', description: 'New visual asset ready for sync.' });
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Compress to high quality JPEG to fit Firestore constraints while staying HD
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        
+        if (isCategory) {
+            setNewCategoryImageId(dataUrl);
+        } else {
+            setNewItemImageId(dataUrl);
+        }
+        toast({ title: 'HD Image Optimized', description: 'Visual asset processed for high performance.' });
+      };
+      img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
@@ -411,7 +439,7 @@ export default function FranchiseMenuPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                                            <Upload className="h-3 w-3" /> Upload Photo
+                                            <Upload className="h-3 w-3" /> Upload HD Photo
                                         </Label>
                                         <input type="file" hidden ref={fileInputRef} accept="image/*" onChange={handleFileUpload} />
                                         <Button 
