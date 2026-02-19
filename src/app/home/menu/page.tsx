@@ -4,10 +4,26 @@
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ShoppingBag, List, X, Search } from "lucide-react";
+import { 
+  ArrowLeft, 
+  ShoppingBag, 
+  List, 
+  X, 
+  Search, 
+  Info, 
+  Clock, 
+  MapPin, 
+  Star, 
+  SlidersHorizontal, 
+  Leaf, 
+  Flame, 
+  Zap,
+  ChevronDown,
+  Plus
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { Category, MenuItem, MenuItemVariation, MenuItemAddon, Outlet } from "@/lib/types";
+import type { Category, MenuItem, MenuItemVariation, MenuItemAddon, Outlet, Coupon } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCollection } from "@/firebase";
@@ -21,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function MenuPage() {
   const router = useRouter();
@@ -29,6 +46,8 @@ export default function MenuPage() {
   const initialCategory = searchParams.get('category');
   
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
+  const [activeFilter, setActiveFilter] = useState<"all" | "veg" | "non-veg">("all");
+  const [showInStockOnly, setShowInStockOnly] = useState(true);
 
   useEffect(() => {
     const savedOutlet = localStorage.getItem("zapizza-outlet");
@@ -41,6 +60,9 @@ export default function MenuPage() {
     where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
   });
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems', {
+    where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
+  });
+  const { data: coupons } = useCollection<Coupon>('coupons', {
     where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
   });
 
@@ -98,12 +120,21 @@ export default function MenuPage() {
 
   const filteredMenuItems = useMemo(() => {
     if (!menuItems) return [];
-    if (!searchQuery) return menuItems;
-    return menuItems.filter(item => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [menuItems, searchQuery]);
+    let items = menuItems;
+
+    if (searchQuery) {
+      items = items.filter(item => 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (activeFilter === "veg") items = items.filter(i => i.isVeg);
+    if (activeFilter === "non-veg") items = items.filter(i => !i.isVeg);
+    if (showInStockOnly) items = items.filter(i => i.isAvailable !== false);
+
+    return items;
+  }, [menuItems, searchQuery, activeFilter, showInStockOnly]);
 
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
@@ -113,175 +144,188 @@ export default function MenuPage() {
   }, [customizingItem, selectedVariation, selectedAddons]);
 
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
+  const topCoupon = coupons?.find(c => c.active);
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-white relative">
-      <div className="sticky top-16 z-20 bg-white border-b shadow-sm px-4 py-3 flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input 
-            placeholder="Search menu..." 
-            className="h-9 pl-9 bg-[#f1f2f6] border-none text-xs font-bold"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      {/* 1. Header with Outlet Info */}
+      <div className="bg-white px-4 pt-4 pb-2 border-b">
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black text-[#333] uppercase italic flex items-center gap-1.5">
+                {selectedOutlet?.name || "Zapizza"} <Info className="h-4 w-4 text-muted-foreground" />
+              </h1>
+              <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] uppercase px-1.5 h-4">OPEN</Badge>
+            </div>
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <div className="flex items-center gap-1 text-[11px] font-bold">
+                <Clock className="h-3 w-3" /> 40 Minutes
+              </div>
+              <div className="flex items-center gap-1 text-[11px] font-bold cursor-pointer" onClick={() => router.push('/home')}>
+                <MapPin className="h-3 w-3" /> Civil lines, Rudrapur <ChevronDown className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1 border rounded-lg p-1 min-w-[60px]">
+            <div className="flex items-center gap-1 bg-green-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black">
+              4.50 <Star className="h-2 w-2 fill-current" />
+            </div>
+            <span className="text-[8px] font-bold text-muted-foreground uppercase text-center">88 Reviews</span>
+          </div>
         </div>
       </div>
 
-      {!searchQuery && (
-        <div className="sticky top-[113px] z-20 bg-white border-b overflow-x-auto px-4 py-3 space-x-6 scrollbar-hide flex items-center">
-          {categoriesLoading ? Array.from({length: 4}).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-24 rounded-full flex-shrink-0" />
-          )) : categories?.map((category) => (
-              <button 
-                  key={category.id} 
-                  style={{ borderColor: brandColor + '20' }}
-                  className="text-[11px] font-black text-[#666666] uppercase whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-200 hover:border-current hover:text-current transition-colors active:bg-muted"
-                  onClick={() => scrollToCategory(category.id)}
-              >
-                  {category.name}
-              </button>
-          ))}
-        </div>
-      )}
-
-      <div className="flex-1 pb-32 bg-white">
-        {searchQuery ? (
-          <div className="p-6">
-             <h3 className="text-sm font-black mb-6 uppercase tracking-widest" style={{ color: brandColor }}>
-                Search Results ({filteredMenuItems.length})
-             </h3>
-             <div className="space-y-8">
-                {filteredMenuItems.map((item) => (
-                  <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} brandColor={brandColor} />
-                ))}
-             </div>
+      {/* 2. Offers Banner */}
+      <div className="bg-white border-b px-4 py-3 flex items-center justify-between cursor-pointer" onClick={() => router.push('/home/offers')}>
+        <div className="flex items-center gap-3">
+          <div className="bg-[#14532d] p-1.5 rounded-lg">
+            <Zap className="h-4 w-4 text-white fill-current" />
           </div>
-        ) : (
-          categories?.map((category) => {
-            const categoryItems = menuItems?.filter(i => i.category === category.id) || [];
+          <div className="flex flex-col">
+            <p className="text-[11px] font-black uppercase text-[#333] tracking-tight">
+              {topCoupon ? `Get Flat Discount of Rs.${topCoupon.discountValue}...` : "Exclusive Offers Available"}
+            </p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase">
+              Use Code <span className="text-[#333]">{topCoupon?.code || "WELCOME"}</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-[9px] font-black text-muted-foreground uppercase">
+          {coupons?.length || 0} OFFERS <ChevronDown className="h-3 w-3" />
+        </div>
+      </div>
+
+      {/* 3. Filters Sticky Row */}
+      <div className="sticky top-16 z-30 bg-white border-b overflow-x-auto px-4 py-3 flex items-center gap-3 scrollbar-hide">
+        <Button variant="outline" className="h-9 px-4 rounded-xl border-gray-200 text-[10px] font-black uppercase gap-2 flex-shrink-0">
+          <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => setShowInStockOnly(!showInStockOnly)}
+          className={cn(
+            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all",
+            showInStockOnly ? "border-primary bg-primary/5 text-primary" : "border-gray-200"
+          )}
+        >
+          <Zap className={cn("h-3.5 w-3.5", showInStockOnly ? "fill-current" : "")} /> In Stock
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => setActiveFilter(activeFilter === "veg" ? "all" : "veg")}
+          className={cn(
+            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all",
+            activeFilter === "veg" ? "border-green-600 bg-green-50 text-green-600" : "border-gray-200"
+          )}
+        >
+          <Leaf className={cn("h-3.5 w-3.5", activeFilter === "veg" ? "fill-current" : "")} /> Veg
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => setActiveFilter(activeFilter === "non-veg" ? "all" : "non-veg")}
+          className={cn(
+            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all",
+            activeFilter === "non-veg" ? "border-red-600 bg-red-50 text-red-600" : "border-gray-200"
+          )}
+        >
+          <Flame className={cn("h-3.5 w-3.5", activeFilter === "non-veg" ? "fill-current" : "")} /> Non-Veg
+        </Button>
+      </div>
+
+      <div className="flex-1 pb-32">
+        {/* 4. Featured Items (Horizontal Carousel) */}
+        {!searchQuery && menuItems && (
+          <div className="py-8 border-b">
+            <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333]">Featured Items</h2>
+            <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide">
+              {menuItems.slice(0, 5).map((item) => (
+                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform" onClick={() => handleAddClick(item)}>
+                  <div className="relative h-44 w-full">
+                    <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                        <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                      </div>
+                      <div className="flex gap-1">
+                        <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">Bestseller</Badge>
+                        <Badge className="bg-orange-100 text-orange-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">New</Badge>
+                      </div>
+                    </div>
+                    <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight mt-1">{item.name}</h4>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Customisable</p>
+                    <div className="mt-auto pt-3 flex items-center justify-between">
+                      <span className="text-sm font-black text-[#333]">₹{item.price}</span>
+                      <Button variant="outline" className="h-8 px-4 rounded-lg border-gray-200 text-[10px] font-black uppercase bg-white hover:bg-gray-50 text-[#333] shadow-sm">
+                        Add <Plus className="h-3 w-3 ml-1" style={{ color: brandColor }} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. Main Menu List */}
+        <div className="flex flex-col">
+          {categoriesLoading || menuItemsLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-6 space-y-4">
+                <Skeleton className="h-6 w-48 rounded" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+              </div>
+            ))
+          ) : categories?.map((category) => {
+            const categoryItems = filteredMenuItems.filter(i => i.category === category.id);
             if (categoryItems.length === 0) return null;
 
             return (
-              <div key={category.id} id={`cat-${category.id}`} className="p-6 border-b last:border-0 scroll-mt-36">
-                <h3 className="text-base font-black mb-6 uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
-                  <div className="h-4 w-1 rounded-full" style={{ backgroundColor: brandColor }} />
-                  {category.name}
-                </h3>
-                <div className="space-y-8">
+              <div key={category.id} id={`cat-${category.id}`} className="scroll-mt-36">
+                <div className="px-6 py-8">
+                  <h3 className="text-lg font-black text-[#333] uppercase italic leading-none text-center">
+                    {category.name}
+                  </h3>
+                  <div className="h-0.5 w-12 bg-[#333] mx-auto mt-2" />
+                </div>
+                <div className="space-y-px bg-gray-100">
                   {categoryItems.map((item) => (
-                    <MenuItemCard key={item.id} item={item} onAdd={() => handleAddClick(item)} brandColor={brandColor} />
+                    <div key={item.id} className="bg-white px-6 py-8 flex gap-6 hover:bg-gray-50 active:bg-gray-100 transition-colors" onClick={() => handleAddClick(item)}>
+                      <div className="flex-1 flex flex-col">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                            <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                          </div>
+                        </div>
+                        <h4 className="text-[15px] font-black text-[#333] uppercase leading-tight tracking-tight mb-1">{item.name}</h4>
+                        <p className="text-[14px] font-black text-[#333] mb-2">₹{item.price}</p>
+                        <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-relaxed">
+                          {item.description} <span className="text-gray-400 font-bold">Read More</span>
+                        </p>
+                      </div>
+                      <div className="relative flex-shrink-0 flex flex-col items-center">
+                        <div className="relative h-28 w-28 rounded-2xl overflow-hidden shadow-md border border-gray-100">
+                          <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
+                        </div>
+                        <div className="absolute -bottom-2 w-20">
+                          <Button className="w-full bg-white hover:bg-gray-50 text-[#333] border border-gray-200 h-8 rounded-lg font-black text-[10px] uppercase shadow-lg flex items-center justify-center gap-1">
+                            Add <span className="text-lg font-normal" style={{ color: brandColor }}>+</span>
+                          </Button>
+                          <p className="text-center text-[8px] font-black text-muted-foreground uppercase mt-3">Customisable</p>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
             );
-          })
-        )}
+          })}
+        </div>
       </div>
 
-      <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
-        <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
-          {customizingItem && (
-            <>
-              <div className="relative h-48 w-full flex-shrink-0">
-                <Image src={getImageUrl(customizingItem.imageId)} alt={customizingItem.name} fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
-                   <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center ${customizingItem.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-                      <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
-                   </div>
-                   <h2 className="text-xl font-black text-white uppercase tracking-tight italic">{customizingItem.name}</h2>
-                </div>
-              </div>
-              <div className="p-6 overflow-y-auto space-y-8 flex-1">
-                {customizingItem.variations && customizingItem.variations.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3>
-                      <Badge variant="secondary" className="text-[9px] uppercase font-black">Required</Badge>
-                    </div>
-                    <RadioGroup 
-                      value={selectedVariation?.name} 
-                      onValueChange={(val) => {
-                        const newVar = customizingItem.variations?.find(v => v.name === val) || null;
-                        setSelectedVariation(newVar);
-                        setSelectedAddons([]); 
-                      }}
-                      className="space-y-3"
-                    >
-                      {customizingItem.variations.map((v) => (
-                        <div key={v.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-current transition-all">
-                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer">
-                            <span className="text-sm font-bold text-[#333333] uppercase">{v.name}</span>
-                          </Label>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-black" style={{ color: brandColor }}>₹{v.price}</span>
-                            <RadioGroupItem value={v.name} id={`v-${v.name}`} />
-                          </div>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                )}
-                <Separator />
-                {availableAddons.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
-                    <div className="space-y-3">
-                      {availableAddons.map((addon) => (
-                        <div key={addon.name} className="flex items-center justify-between bg-[#f1f2f6]/50 p-3 rounded-xl border border-transparent hover:border-current transition-all">
-                          <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
-                            <span className="text-sm font-bold text-[#333333] uppercase">{addon.name}</span>
-                          </Label>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-black" style={{ color: brandColor }}>₹{addon.price}</span>
-                            <Checkbox 
-                              id={`a-${addon.name}`} 
-                              checked={selectedAddons.some(a => a.name === addon.name)}
-                              onCheckedChange={(checked) => {
-                                if (checked) setSelectedAddons([...selectedAddons, addon]);
-                                else setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Final Price</span>
-                  <span className="text-2xl font-black" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
-                </div>
-                <Button 
-                  onClick={handleConfirmCustomization}
-                  style={{ backgroundColor: brandColor }}
-                  className="text-white px-10 h-14 rounded-xl font-black uppercase tracking-widest shadow-xl flex-1"
-                >
-                  ADD TO CART
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {!searchQuery && (
-        <div className="fixed bottom-36 right-6 z-50">
-          <Button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="bg-[#333333] hover:bg-black text-white h-12 w-12 rounded-full shadow-2xl flex items-center justify-center p-0"
-            title="Menu"
-          >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <List className="h-6 w-6" />}
-          </Button>
-        </div>
-      )}
-
+      {/* Floating Action Buttons */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -306,7 +350,7 @@ export default function MenuPage() {
                     onClick={() => scrollToCategory(cat.id)}
                     className="flex items-center justify-between w-full py-3 px-4 rounded-xl hover:bg-[#f1f2f6] transition-colors text-left group"
                   >
-                    <span className="text-sm font-bold text-[#333333] group-hover:text-primary">{cat.name}</span>
+                    <span className="text-sm font-bold text-[#333] group-hover:text-primary">{cat.name}</span>
                     <span className="text-[10px] font-black text-muted-foreground opacity-50">
                       {menuItems?.filter(i => i.category === cat.id).length}
                     </span>
@@ -318,60 +362,103 @@ export default function MenuPage() {
         )}
       </AnimatePresence>
 
+      <div className="fixed bottom-36 right-6 z-50">
+        <Button 
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="bg-[#333333] hover:bg-black text-white h-12 w-12 rounded-full shadow-2xl flex items-center justify-center p-0"
+        >
+          {isMenuOpen ? <X className="h-6 w-6" /> : <List className="h-6 w-6" />}
+        </Button>
+      </div>
+
       {totalItems > 0 && (
         <div className="fixed bottom-20 left-4 right-4 z-40">
           <Button 
             onClick={() => router.push('/home/checkout')}
             style={{ backgroundColor: brandColor }}
-            className="w-full h-14 text-white flex items-center justify-between px-6 rounded-xl shadow-2xl animate-in slide-in-from-bottom-10"
+            className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10"
           >
             <div className="flex flex-col items-start">
               <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
-              <span className="text-lg font-black">₹{totalPrice}</span>
+              <span className="text-xl font-black">₹{totalPrice}</span>
             </div>
-            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[12px]">
+            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">
               VIEW CART <ShoppingBag className="h-5 w-5" />
             </div>
           </Button>
         </div>
       )}
-    </div>
-  );
-}
 
-function MenuItemCard({ item, onAdd, brandColor }: { item: MenuItem, onAdd: () => void, brandColor: string }) {
-  const hasOptions = (item.variations?.length || 0) > 0 || (item.addons?.length || 0) > 0;
-
-  return (
-    <div className="flex gap-5">
-      <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
-        <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
-      </div>
-      <div className="flex-1 flex flex-col">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className={`h-4 w-4 border-2 mb-1.5 flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-              <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
-            </div>
-            <h4 className="text-[14px] font-black text-[#333333] leading-tight uppercase tracking-tight">{item.name}</h4>
-            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed font-medium">{item.description}</p>
-          </div>
-        </div>
-        <div className="mt-auto flex items-center justify-between pt-3">
-          <div className="flex flex-col">
-            <span className="text-[15px] font-black" style={{ color: brandColor }}>₹{item.price}</span>
-            {hasOptions && <span className="text-[8px] font-bold text-muted-foreground uppercase">Options available</span>}
-          </div>
-          <Button 
-            size="sm" 
-            onClick={onAdd}
-            style={{ color: brandColor, borderColor: brandColor }}
-            className="h-8 px-6 bg-white border-2 font-black text-[11px] rounded shadow-md uppercase active:bg-muted transition-colors"
-          >
-            {hasOptions ? 'CUSTOMIZE' : 'ADD'}
-          </Button>
-        </div>
-      </div>
+      {/* Customization Dialog */}
+      <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
+        <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
+          {customizingItem && (
+            <>
+              <div className="relative h-48 w-full flex-shrink-0">
+                <Image src={getImageUrl(customizingItem.imageId)} alt={customizingItem.name} fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
+                   <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center bg-white rounded-sm ${customizingItem.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                      <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                   </div>
+                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">{customizingItem.name}</h2>
+                </div>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide">
+                {customizingItem.variations && customizingItem.variations.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
+                    <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
+                      const newVar = customizingItem.variations?.find(v => v.name === val) || null;
+                      setSelectedVariation(newVar);
+                      setSelectedAddons([]); 
+                    }} className="space-y-3">
+                      {customizingItem.variations.map((v) => (
+                        <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
+                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase">{v.name}</span></Label>
+                          <div className="flex items-center gap-3"><span className="text-xs font-black" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+                <Separator />
+                {availableAddons.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
+                    <div className="space-y-3">
+                      {availableAddons.map((addon) => (
+                        <div key={addon.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
+                          <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
+                            <span className="text-sm font-bold text-[#333] uppercase">{addon.name}</span>
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black" style={{ color: brandColor }}>₹{addon.price}</span>
+                            <Checkbox 
+                              id={`a-${addon.name}`} 
+                              checked={selectedAddons.some(a => a.name === addon.name)}
+                              onCheckedChange={(checked) => {
+                                if (checked) setSelectedAddons([...selectedAddons, addon]);
+                                else setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
+                  <span className="text-2xl font-black" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
+                </div>
+                <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all">ADD TO CART</Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
