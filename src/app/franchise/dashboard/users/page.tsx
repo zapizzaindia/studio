@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -10,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UserProfile, Outlet } from '@/lib/types';
-import { Plus, UserPlus, Shield, Store, Mail, Globe } from 'lucide-react';
+import { Plus, UserPlus, Shield, Store, Mail, Globe, AlertCircle, ExternalLink } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, addDoc, setDoc, doc, updateDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -37,26 +38,28 @@ export default function FranchiseUsersPage() {
   const handleAddUser = async () => {
     if (!newUserEmail || !newUserName || !firestore) return;
     
-    // We use a deterministic ID based on email for the prototype, 
-    // in production this would sync with Firebase Auth UID.
-    const tempUid = newUserEmail.replace(/[.@]/g, '_');
+    // Use the email as a clean ID for the permission record
+    const docId = newUserEmail.toLowerCase().trim();
     const userData: UserProfile = {
-      uid: tempUid,
-      email: newUserEmail,
+      uid: docId, // We use email as UID for the permission document to match easily
+      email: docId,
       displayName: newUserName,
       role: newUserRole,
       ...(newUserRole === 'outlet-admin' && { outletId: selectedOutletId })
     };
 
-    setDoc(doc(firestore, 'users', tempUid), userData)
+    setDoc(doc(firestore, 'users', docId), userData)
       .then(() => {
-        toast({ title: "Success", description: `Access granted to ${newUserName}.` });
+        toast({ 
+            title: "Permissions Set", 
+            description: `Now manually add ${newUserEmail} to the Auth tab in your console.` 
+        });
         setIsUserDialogOpen(false);
         setNewUserName(""); setNewUserEmail(""); setSelectedOutletId("");
       })
       .catch((error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: `users/${tempUid}`,
+          path: `users/${docId}`,
           operation: 'create',
           requestResourceData: userData
         }));
@@ -76,49 +79,65 @@ export default function FranchiseUsersPage() {
                   <UserPlus className="mr-2 h-4 w-4"/> Authorize Admin User
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md rounded-[32px]">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-black uppercase tracking-widest text-primary italic">Create Identity</DialogTitle>
+            <DialogContent className="max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogHeader className="p-8 bg-primary text-white">
+                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic">Create Identity</DialogTitle>
+                  <DialogDescription className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Permission Provisioning</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                        <Input value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Rajesh Kumar" className="h-12 rounded-xl font-bold" />
+                
+                <div className="p-8 space-y-6">
+                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <div>
+                            <p className="text-[10px] font-black text-amber-900 uppercase">Important Step</p>
+                            <p className="text-[9px] font-bold text-amber-700 leading-relaxed uppercase mt-1">
+                                This form only sets the user's role. You must still create the user in the <b>Firebase Auth Console</b> with the same email.
+                            </p>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                        <Input type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="rajesh@zapizza.com" className="h-12 rounded-xl font-bold" />
-                    </div>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Administrative Role</Label>
-                          <Select onValueChange={(val: any) => setNewUserRole(val)} value={newUserRole}>
-                              <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="outlet-admin" className="text-[10px] font-bold uppercase">Outlet Manager</SelectItem>
-                                  <SelectItem value="franchise-owner" className="text-[10px] font-bold uppercase">Super Admin (Global)</SelectItem>
-                              </SelectContent>
-                          </Select>
-                      </div>
-                      {newUserRole === 'outlet-admin' && (
+
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
+                            <Input value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Rajesh Kumar" className="h-12 rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                            <Input type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="rajesh@zapizza.com" className="h-12 rounded-xl font-bold" />
+                        </div>
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Assign Kitchen Pipeline</Label>
-                              <Select onValueChange={setSelectedOutletId} value={selectedOutletId}>
-                                  <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest"><SelectValue placeholder="Select Outlet" /></SelectTrigger>
+                              <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Administrative Role</Label>
+                              <Select onValueChange={(val: any) => setNewUserRole(val)} value={newUserRole}>
+                                  <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest"><SelectValue /></SelectTrigger>
                                   <SelectContent>
-                                      {outlets?.map(outlet => (
-                                          <SelectItem key={outlet.id} value={outlet.id} className="text-[10px] font-bold uppercase">{outlet.name}</SelectItem>
-                                      ))}
+                                      <SelectItem value="outlet-admin" className="text-[10px] font-bold uppercase">Outlet Manager</SelectItem>
+                                      <SelectItem value="franchise-owner" className="text-[10px] font-bold uppercase">Super Admin (Global)</SelectItem>
                                   </SelectContent>
                               </Select>
                           </div>
-                      )}
+                          {newUserRole === 'outlet-admin' && (
+                              <div className="space-y-2">
+                                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Assign Kitchen Pipeline</Label>
+                                  <Select onValueChange={setSelectedOutletId} value={selectedOutletId}>
+                                      <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest"><SelectValue placeholder="Select Outlet" /></SelectTrigger>
+                                      <SelectContent>
+                                          {outlets?.map(outlet => (
+                                              <SelectItem key={outlet.id} value={outlet.id} className="text-[10px] font-bold uppercase">{outlet.name}</SelectItem>
+                                          ))}
+                                      </SelectContent>
+                                  </Select>
+                              </div>
+                          )}
+                        </div>
                     </div>
                 </div>
-                <DialogFooter className="bg-muted/30 p-6 -mx-6 -mb-6 rounded-b-[32px]">
+                
+                <DialogFooter className="bg-muted/30 p-8 border-t flex flex-col gap-4">
                     <Button onClick={handleAddUser} disabled={!newUserName || !newUserEmail || (newUserRole === 'outlet-admin' && !selectedOutletId)} className="w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">
                         Commit Access Level
                     </Button>
+                    <p className="text-[8px] text-center text-muted-foreground uppercase font-bold tracking-[0.2em]">Next: Add User to Authentication Tab</p>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

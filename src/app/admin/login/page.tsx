@@ -19,9 +19,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import { auth } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -31,6 +31,7 @@ const loginSchema = z.object({
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -39,43 +40,38 @@ export default function AdminLoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
+    if (!auth) {
+        toast({ variant: 'destructive', title: 'System Error', description: 'Authentication service is not available.' });
+        return;
+    }
+
     setIsLoading(true);
     
-    if (auth) {
-      try {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
-        toast({
-          title: "Access Granted",
-          description: "Syncing kitchen data...",
-        });
-        // Redirect to dashboard where the layout will verify the role/outlet
-        router.push('/admin/dashboard/orders');
-      } catch (error: any) {
-        // Fallback for demo users
-        if (values.email === 'admin@zapizza.com' || values.email === 'admin@zfry.com') {
-            const isZfry = values.email.includes('zfry');
-            const mockAdmin = {
-                uid: isZfry ? 'admin-zfry' : 'admin-zapizza',
-                email: values.email,
-                displayName: isZfry ? 'Zfry Manager' : 'Zapizza Manager',
-                role: 'outlet-admin',
-                outletId: isZfry ? 'andheri-zfry' : 'andheri-zapizza'
-            };
-            localStorage.setItem('zapizza-mock-session', JSON.stringify(mockAdmin));
-            window.location.href = '/admin/dashboard/orders';
-            return;
-        }
-
-        toast({
-          variant: 'destructive',
-          title: "Login Failed",
-          description: error.message,
-        });
-      } finally {
-        setIsLoading(false);
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({
+        title: "Identity Verified",
+        description: "Accessing kitchen pipeline...",
+      });
+      // The Admin Layout will handle role verification and outlet routing
+      router.push('/admin/dashboard/orders');
+    } catch (error: any) {
+      console.error("Login Error:", error.code);
+      
+      let errorMessage = "Invalid email or password.";
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = "This admin account has not been created in the Auth tab yet.";
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "Incorrect password for this admin account.";
       }
-    } else {
-        toast({ variant: 'destructive', title: 'Auth Error', description: 'Firebase Auth is not initialized.' });
+
+      toast({
+        variant: 'destructive',
+        title: "Login Denied",
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -84,7 +80,7 @@ export default function AdminLoginPage() {
       <div className="mb-6 flex flex-col items-center text-center">
         <ZapizzaLogo className="mb-3 h-14 w-14 text-primary" />
         <h1 className="font-headline text-2xl font-bold text-primary italic">Kitchen Terminal</h1>
-        <p className="text-sm text-muted-foreground uppercase font-black tracking-widest text-[10px] opacity-60">Authentication Required</p>
+        <p className="text-sm text-muted-foreground uppercase font-black tracking-widest text-[10px] opacity-60">Authorized Entry Only</p>
       </div>
 
       <Form {...form}>
@@ -122,8 +118,11 @@ export default function AdminLoginPage() {
         </form>
       </Form>
 
-      <div className="mt-8 p-4 bg-muted/30 rounded-xl border border-dashed text-center">
-        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Authorized Personnel Only</p>
+      <div className="mt-8 p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+        <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+        <p className="text-[9px] font-bold text-amber-800 uppercase tracking-wide leading-relaxed">
+          Admin profiles must be "Authorized" in the Super Admin dashboard AND have their login created in the Firebase Auth console.
+        </p>
       </div>
     </div>
   );
