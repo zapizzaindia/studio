@@ -54,6 +54,11 @@ export default function CheckoutPage() {
     fetchAddresses();
   }, [user, db]);
 
+  const brandCoupons = useMemo(() => {
+    if (!selectedOutlet || !allCoupons) return [];
+    return allCoupons.filter(c => c.brand === selectedOutlet.brand);
+  }, [allCoupons, selectedOutlet]);
+
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
     const gstRate = settings?.gstPercentage ?? 18;
@@ -89,13 +94,18 @@ export default function CheckoutPage() {
     }
   }, [totalPrice, appliedCoupon, toast]);
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = (couponOrCode: Coupon | string) => {
     if (!selectedOutlet) return;
     
-    const found = allCoupons?.find(c => 
-      c.code === couponInput.toUpperCase() && 
-      c.brand === selectedOutlet.brand
-    );
+    let found: Coupon | undefined;
+    if (typeof couponOrCode === 'string') {
+      found = allCoupons?.find(c => 
+        c.code === couponOrCode.toUpperCase() && 
+        c.brand === selectedOutlet.brand
+      );
+    } else {
+      found = couponOrCode;
+    }
 
     if (!found) {
       toast({ variant: 'destructive', title: "Invalid Code", description: `This coupon does not exist or is not valid for ${selectedOutlet.brand.toUpperCase()}.` });
@@ -207,7 +217,7 @@ export default function CheckoutPage() {
         <h1 className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Review Order</h1>
       </div>
 
-      <div className="container mx-auto p-4 space-y-4 max-w-lg">
+      <div className="container mx-auto p-4 space-y-4 max-w-lg text-left">
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
@@ -279,6 +289,34 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
+        {/* Available Coupons Horizontal Scroll */}
+        {brandCoupons.length > 0 && !appliedCoupon && (
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-widest px-1" style={{ color: brandColor }}>Available Coupons</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-1">
+              {brandCoupons.map((coupon) => (
+                <div 
+                  key={coupon.id}
+                  onClick={() => handleApplyCoupon(coupon)}
+                  className="flex-shrink-0 w-48 bg-white rounded-xl border border-dashed p-3 relative cursor-pointer active:scale-95 transition-all shadow-sm"
+                  style={{ borderColor: brandColor + '40' }}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: brandColor }}>{coupon.code}</span>
+                    <Badge variant="outline" className="text-[8px] font-bold h-4 px-1" style={{ borderColor: brandColor + '20', color: brandColor }}>
+                      {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
+                    </Badge>
+                  </div>
+                  <p className="text-[9px] text-muted-foreground font-bold leading-tight line-clamp-1">{coupon.description}</p>
+                  {totalPrice < coupon.minOrderAmount && (
+                    <p className="text-[8px] text-red-500 font-black mt-1 uppercase italic tracking-tight">Add ₹{coupon.minOrderAmount - totalPrice} more</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Card className="border-none shadow-sm">
           <CardContent className="p-4 bg-white">
             <div className="flex items-center gap-2 mb-3">
@@ -298,7 +336,7 @@ export default function CheckoutPage() {
                   onChange={e => setCouponInput(e.target.value)}
                   className="h-10 text-xs font-black"
                 />
-                <Button onClick={handleApplyCoupon} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
+                <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
               </div>
             )}
           </CardContent>
@@ -355,7 +393,7 @@ export default function CheckoutPage() {
           </div>
         )}
         <div className="flex items-center justify-between mb-4 px-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-left">
             <ShieldCheck className="h-5 w-5" style={{ color: brandColor }} />
             <div className="flex flex-col">
               <span className="text-[11px] font-black uppercase text-[#333333]">Secure Online Payment</span>
