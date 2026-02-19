@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/hooks/use-cart";
 import { useEffect, useState } from "react";
 import type { Outlet } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -52,7 +53,7 @@ export function MobileNav() {
             >
               <div className="relative">
                 <item.icon className={cn("h-5 w-5", isActive ? 'scale-110' : '')} strokeWidth={isActive ? 3 : 2} />
-                {item.badge && item.badge > 0 && (
+                {item.badge !== undefined && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#e31837] text-[8px] font-bold text-white border-2 border-white">
                     {item.badge}
                   </span>
@@ -73,8 +74,4 @@ export function MobileNav() {
       </nav>
     </div>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }
