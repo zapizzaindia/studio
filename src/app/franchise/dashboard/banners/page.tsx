@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Edit, ImageIcon, Upload, Pizza, Flame } from 'lucide-react';
-import { useCollection } from "@/firebase";
+import { Plus, Trash2, Edit, ImageIcon, Upload, Pizza, Flame, Loader2 } from 'lucide-react';
+import { useCollection, useFirestore } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -17,19 +17,25 @@ import Image from 'next/image';
 import { placeholderImageMap } from '@/lib/placeholder-images';
 import type { Banner, Brand } from '@/lib/types';
 import { cn } from "@/lib/utils";
+import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function FranchiseBannersPage() {
+  const firestore = useFirestore();
   const { data: allBanners, loading } = useCollection<Banner>('banners');
   const { toast } = useToast();
 
   const [activeBrand, setActiveBrand] = useState<Brand>('zapizza');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [newTitle, setNewTitle] = useState("");
   const [newSubtitle, setNewSubtitle] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newImageId, setNewImageId] = useState("banner_1");
-  const [customImage, setCustomImage] = useState<string | null>(null);
 
   const banners = useMemo(() => allBanners?.filter(b => b.brand === activeBrand) || [], [allBanners, activeBrand]);
   const brandColor = activeBrand === 'zfry' ? '#e31837' : '#14532d';
@@ -40,52 +46,81 @@ export default function FranchiseBannersPage() {
     setNewSubtitle(banner.subtitle || "");
     setNewPrice(banner.price || "");
     setNewImageId(banner.imageId);
-    setCustomImage(null);
     setIsAddDialogOpen(true);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleAddBanner = () => {
-    if (!newImageId && !customImage) {
-      toast({ variant: 'destructive', title: 'Missing Image', description: 'Please select or upload a banner image.' });
-      return;
+    if (!firestore) return;
+
+    setIsSaving(true);
+    const bannerData = {
+        title: newTitle,
+        subtitle: newSubtitle,
+        price: newPrice,
+        imageId: newImageId,
+        active: true,
+        brand: activeBrand
+    };
+
+    if (editingBanner) {
+        updateDoc(doc(firestore, 'banners', editingBanner.id), bannerData)
+            .then(() => {
+                toast({ title: 'Banner Updated' });
+                setIsAddDialogOpen(false);
+                setEditingBanner(null);
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: `banners/${editingBanner.id}`,
+                    operation: 'update',
+                    requestResourceData: bannerData
+                }));
+            })
+            .finally(() => setIsSaving(false));
+    } else {
+        addDoc(collection(firestore, 'banners'), bannerData)
+            .then(() => {
+                toast({ title: 'Banner Published' });
+                setIsAddDialogOpen(false);
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: 'banners',
+                    operation: 'create',
+                    requestResourceData: bannerData
+                }));
+            })
+            .finally(() => setIsSaving(false));
     }
-
-    toast({ 
-      title: `${activeBrand.toUpperCase()} Banner ${editingBanner ? 'Updated' : 'Created'} (Demo)`, 
-      description: newTitle ? `"${newTitle}" is now live.` : "Banner is now live." 
-    });
-
-    setNewTitle("");
-    setNewSubtitle("");
-    setNewPrice("");
-    setNewImageId("banner_1");
-    setCustomImage(null);
-    setEditingBanner(null);
-    setIsAddDialogOpen(false);
   };
 
   const handleToggleActive = (bannerId: string, current: boolean) => {
-    toast({ title: 'Status updated', description: `Banner is now ${!current ? 'active' : 'inactive'}.` });
+    if (!firestore) return;
+    updateDoc(doc(firestore, 'banners', bannerId), { active: !current })
+        .then(() => toast({ title: 'Status Updated' }))
+        .catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `banners/${bannerId}`,
+                operation: 'update',
+                requestResourceData: { active: !current }
+            }));
+        });
   };
 
-  const handleDelete = (title?: string) => {
-    toast({ title: 'Banner deleted', description: title ? `"${title}" has been removed.` : "Banner has been removed." });
+  const handleDelete = (id: string) => {
+    if (!firestore) return;
+    deleteDoc(doc(firestore, 'banners', id))
+        .then(() => toast({ title: 'Banner Removed' }))
+        .catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `banners/${id}`,
+                operation: 'delete'
+            }));
+        });
   };
 
   return (
     <div className="container mx-auto p-0 space-y-8">
-      {/* Brand Selection Toggle */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-[24px] shadow-sm border border-gray-100">
         <div>
             <h1 className="font-headline text-3xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>
@@ -147,26 +182,31 @@ export default function FranchiseBannersPage() {
               </div>
               
               <div className="space-y-4">
-                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Banner Visual</Label>
-                <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 border-dashed group cursor-pointer bg-muted/20" onClick={() => document.getElementById('upload-banner')?.click()}>
+                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Banner Visual (Template)</Label>
+                <Select onValueChange={setNewImageId} value={newImageId}>
+                    <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="banner_1">Promo Large</SelectItem>
+                        <SelectItem value="banner_2">Cheese Lava</SelectItem>
+                        <SelectItem value="banner_3">Dessert Special</SelectItem>
+                    </SelectContent>
+                </Select>
+                <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 bg-muted/20 mt-2">
                     <Image 
-                        src={customImage || placeholderImageMap.get(newImageId)?.imageUrl || ''} 
+                        src={placeholderImageMap.get(newImageId)?.imageUrl || ''} 
                         alt="Preview" 
                         fill 
-                        className="object-cover transition-transform group-hover:scale-105"
+                        className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center text-white">
-                        <Upload className="h-8 w-8 mb-2" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Click to Change Image</span>
-                    </div>
-                    <input id="upload-banner" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                 </div>
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 border-t flex gap-4">
               <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase text-xs tracking-widest">Discard</Button>
-              <Button onClick={handleAddBanner} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
-                {editingBanner ? 'Update and Publish' : 'Save and Publish'}
+              <Button onClick={handleAddBanner} disabled={isSaving} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
+                {isSaving ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : (editingBanner ? 'Update and Publish' : 'Save and Publish')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -224,7 +264,7 @@ export default function FranchiseBannersPage() {
                         variant="ghost" 
                         size="icon" 
                         className="h-10 w-10 rounded-xl bg-gray-50 text-red-500 hover:bg-red-50 hover:shadow-md transition-all"
-                        onClick={() => handleDelete(banner.title)}
+                        onClick={() => handleDelete(banner.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

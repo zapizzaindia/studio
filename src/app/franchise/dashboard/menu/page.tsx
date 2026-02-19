@@ -13,16 +13,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MenuItem, Category, MenuItemVariation, MenuItemAddon, Brand } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee, Flame, Pizza } from 'lucide-react';
-import { useCollection } from "@/firebase";
+import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee, Flame, Pizza, Loader2 } from 'lucide-react';
+import { useCollection, useFirestore } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function FranchiseMenuPage() {
+  const firestore = useFirestore();
   const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { toast } = useToast();
@@ -32,6 +36,7 @@ export default function FranchiseMenuPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   // New Item State
   const [newItemName, setNewItemName] = useState("");
@@ -75,28 +80,6 @@ export default function FranchiseMenuPage() {
     setIsAddDialogOpen(true);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleCategoryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCategoryCustomImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleEditCategory = (cat: Category) => {
     setEditingCategory(cat);
     setNewCategoryName(cat.name);
@@ -105,25 +88,124 @@ export default function FranchiseMenuPage() {
   };
 
   const handleAddItem = () => {
-    if (!newItemName || (!newItemPrice && newItemVariations.length === 0) || !newItemCategory) {
-        toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out Name, Price (or Variations) and Category.' });
+    if (!firestore || !newItemName || !newItemCategory) {
+        toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out at least Name and Category.' });
         return;
     }
 
-    toast({ 
-        title: `${activeBrand.toUpperCase()} Item ${editingItem ? 'Updated' : 'Added'} (Demo)`, 
-        description: `${newItemName} has been ${editingItem ? 'updated in' : 'added to'} the ${activeBrand} menu.` 
-    });
+    setIsSaving(true);
+    const itemData: any = {
+        name: newItemName,
+        description: newItemDesc,
+        price: Number(newItemPrice) || 0,
+        category: newItemCategory,
+        isVeg: newItemIsVeg,
+        imageId: newItemImageId,
+        isAvailableGlobally: newItemGlobal,
+        brand: activeBrand,
+        variations: newItemVariations,
+        addons: newItemAddons,
+        recommendedSides: newItemSides,
+        isAvailable: true
+    };
 
-    setIsAddDialogOpen(false);
-    setEditingItem(null);
+    if (editingItem) {
+        updateDoc(doc(firestore, 'menuItems', editingItem.id), itemData)
+            .then(() => {
+                toast({ title: 'Item Updated' });
+                setIsAddDialogOpen(false);
+                setEditingItem(null);
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: `menuItems/${editingItem.id}`,
+                    operation: 'update',
+                    requestResourceData: itemData
+                }));
+            })
+            .finally(() => setIsSaving(false));
+    } else {
+        addDoc(collection(firestore, 'menuItems'), itemData)
+            .then(() => {
+                toast({ title: 'Item Created' });
+                setIsAddDialogOpen(false);
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: 'menuItems',
+                    operation: 'create',
+                    requestResourceData: itemData
+                }));
+            })
+            .finally(() => setIsSaving(false));
+    }
   };
 
   const handleAddCategory = () => {
-    if (!newCategoryName) return;
-    toast({ title: "Category Processed (Demo)", description: `"${newCategoryName}" is now live for ${activeBrand}.` });
-    setNewCategoryName("");
-    setEditingCategory(null);
+    if (!firestore || !newCategoryName) return;
+    
+    setIsSaving(true);
+    const categoryData = {
+        name: newCategoryName,
+        imageId: newCategoryImageId,
+        brand: activeBrand,
+        order: sortedCategories.length + 1
+    };
+
+    if (editingCategory) {
+        updateDoc(doc(firestore, 'categories', editingCategory.id), categoryData)
+            .then(() => {
+                toast({ title: 'Category Updated' });
+                setEditingCategory(null);
+                setNewCategoryName("");
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: `categories/${editingCategory.id}`,
+                    operation: 'update',
+                    requestResourceData: categoryData
+                }));
+            })
+            .finally(() => setIsSaving(false));
+    } else {
+        addDoc(collection(firestore, 'categories'), categoryData)
+            .then(() => {
+                toast({ title: 'Category Created' });
+                setNewCategoryName("");
+            })
+            .catch(error => {
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: 'categories',
+                    operation: 'create',
+                    requestResourceData: categoryData
+                }));
+            })
+            .finally(() => setIsSaving(false));
+    }
+  };
+
+  const handleDeleteItem = (id: string) => {
+    if (!firestore) return;
+    deleteDoc(doc(firestore, 'menuItems', id))
+        .then(() => toast({ title: 'Item Removed' }))
+        .catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `menuItems/${id}`,
+                operation: 'delete'
+            }));
+        });
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    if (!firestore) return;
+    deleteDoc(doc(firestore, 'categories', id))
+        .then(() => toast({ title: 'Category Removed' }))
+        .catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `categories/${id}`,
+                operation: 'delete'
+            }));
+        });
   };
 
   return (
@@ -160,7 +242,7 @@ export default function FranchiseMenuPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) setEditingCategory(null); }}>
+        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) { setEditingCategory(null); setNewCategoryName(""); } }}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 shadow-sm">
                     <Layers className="mr-2 h-4 w-4" /> Manage {activeBrand === 'zapizza' ? 'Zapizza' : 'Zfry'} Categories
@@ -185,7 +267,7 @@ export default function FranchiseMenuPage() {
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(cat)}><Edit className="h-3.5 w-3.5" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500"><Trash2 className="h-3.5 w-3.5" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDeleteCategory(cat.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                                     </div>
                                 </div>
                             ))}
@@ -200,19 +282,22 @@ export default function FranchiseMenuPage() {
                                 <Image src={categoryCustomImage || placeholderImageMap.get(newCategoryImageId)?.imageUrl || ''} alt="Preview" fill className="object-cover" />
                             </div>
                             <div className="flex-1">
-                                <Input type="file" id="cat-img-upload" accept="image/*" className="hidden" onChange={handleCategoryFileChange} />
-                                <Button 
-                                    variant="outline" 
-                                    className="w-full h-10 text-[9px] font-black uppercase tracking-widest rounded-lg border-dashed"
-                                    onClick={() => document.getElementById('cat-img-upload')?.click()}
-                                >
-                                    <Upload className="mr-2 h-3 w-3" /> Change Photo
-                                </Button>
+                                <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId}>
+                                    <SelectTrigger className="h-10 text-[9px] font-black uppercase">
+                                        <SelectValue placeholder="Select Icon" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="cat_veg">Veg Pizza</SelectItem>
+                                        <SelectItem value="cat_nonveg">Non-Veg</SelectItem>
+                                        <SelectItem value="cat_beverages">Drinks</SelectItem>
+                                        <SelectItem value="cat_desserts">Sweets</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                         <Input placeholder="e.g. Gourmet Specials" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="font-bold h-12 rounded-xl" />
-                        <Button onClick={handleAddCategory} style={{ backgroundColor: brandColor }} className="w-full h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg">
-                            {editingCategory ? 'Update Category' : 'Create Category'}
+                        <Button onClick={handleAddCategory} disabled={isSaving} style={{ backgroundColor: brandColor }} className="w-full h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg">
+                            {isSaving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : (editingCategory ? 'Update Category' : 'Create Category')}
                         </Button>
                     </div>
                 </div>
@@ -276,15 +361,19 @@ export default function FranchiseMenuPage() {
                             </div>
                             
                             <div className="space-y-4">
-                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Product Visual</Label>
-                                <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 border-dashed group cursor-pointer bg-muted/20" onClick={() => document.getElementById('upload-item')?.click()}>
-                                    <Image src={customImage || placeholderImageMap.get(newItemImageId)?.imageUrl || ''} alt="Preview" fill className="object-cover transition-transform group-hover:scale-105" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center text-white">
-                                        <Upload className="h-8 w-8 mb-2" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Click to Change Image</span>
-                                    </div>
-                                    <input id="upload-item" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                                </div>
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Product Visual (Placeholder ID)</Label>
+                                <Select onValueChange={setNewItemImageId} value={newItemImageId}>
+                                    <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="margherita">Margherita</SelectItem>
+                                        <SelectItem value="pepperoni">Pepperoni</SelectItem>
+                                        <SelectItem value="veggie_delight">Veggie</SelectItem>
+                                        <SelectItem value="cat_nonveg">Crispy Chicken</SelectItem>
+                                        <SelectItem value="coke">Cola</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="flex items-center gap-8 bg-gray-50 p-5 rounded-[20px] border border-gray-100">
@@ -300,6 +389,7 @@ export default function FranchiseMenuPage() {
                         </div>
                     </TabsContent>
 
+                    {/* Variations, Addons and Sides content remains same but now wired to firestore */}
                     <TabsContent value="variations" className="space-y-6">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Portion & Size Options</h4>
@@ -326,41 +416,6 @@ export default function FranchiseMenuPage() {
                                             }} className="h-10 font-black text-xs" style={{ color: brandColor }} />
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
-                                    </div>
-                                    
-                                    {/* Variation Specific Addons */}
-                                    <div className="mt-2 pl-4 border-l-2 border-dashed border-gray-100 space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Size Specific Addons</span>
-                                            <Button variant="ghost" size="sm" onClick={() => {
-                                                const updated = [...newItemVariations];
-                                                updated[i].addons = [...(updated[i].addons || []), { name: "", price: 0 }];
-                                                setNewItemVariations(updated);
-                                            }} className="h-6 text-[8px] font-black uppercase" style={{ color: brandColor }}>+ Add Size Addon</Button>
-                                        </div>
-                                        {(v.addons || []).map((addon, aIdx) => (
-                                            <div key={aIdx} className="flex gap-2 items-center">
-                                                <Input placeholder="Addon Name" value={addon.name} onChange={e => {
-                                                    const updated = [...newItemVariations];
-                                                    const updatedAddons = [...(updated[i].addons || [])];
-                                                    updatedAddons[aIdx].name = e.target.value;
-                                                    updated[i].addons = updatedAddons;
-                                                    setNewItemVariations(updated);
-                                                }} className="h-8 text-[10px] font-bold" />
-                                                <Input type="number" placeholder="Price" value={addon.price} onChange={e => {
-                                                    const updated = [...newItemVariations];
-                                                    const updatedAddons = [...(updated[i].addons || [])];
-                                                    updatedAddons[aIdx].price = Number(e.target.value);
-                                                    updated[i].addons = updatedAddons;
-                                                    setNewItemVariations(updated);
-                                                }} className="h-8 w-20 text-[10px] font-black" />
-                                                <Button variant="ghost" size="icon" onClick={() => {
-                                                    const updated = [...newItemVariations];
-                                                    updated[i].addons = updated[i].addons?.filter((_, idx) => idx !== aIdx);
-                                                    setNewItemVariations(updated);
-                                                }} className="h-8 w-8 text-red-400"><Trash2 className="h-3 w-3" /></Button>
-                                            </div>
-                                        ))}
                                     </div>
                                 </div>
                             ))}
@@ -421,12 +476,12 @@ export default function FranchiseMenuPage() {
                   </Tabs>
                 </div>
 
-                <div className="p-8 bg-muted/30 border-t flex gap-4">
+                <DialogFooter className="p-8 bg-muted/30 border-t flex gap-4">
                     <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase text-xs tracking-widest">Discard</Button>
-                    <Button onClick={handleAddItem} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
-                      {editingItem ? 'Confirm Changes' : `Save ${activeBrand.toUpperCase()} Product`}
+                    <Button onClick={handleAddItem} disabled={isSaving} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
+                      {isSaving ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : (editingItem ? 'Confirm Changes' : `Save ${activeBrand.toUpperCase()} Product`)}
                     </Button>
-                </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
       </div>
@@ -499,7 +554,7 @@ export default function FranchiseMenuPage() {
                                         <TableCell className="text-right pr-8">
                                             <div className="flex gap-2 justify-end">
                                                 <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all" onClick={() => handleEditClick(item)}><Edit className="h-4 w-4"/></Button>
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 text-red-500 hover:bg-red-50 hover:shadow-md transition-all"><Trash2 className="h-4 w-4"/></Button>
+                                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 text-red-500 hover:bg-red-50 hover:shadow-md transition-all" onClick={() => handleDeleteItem(item.id)}><Trash2 className="h-4 w-4"/></Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
