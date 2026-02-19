@@ -4,18 +4,18 @@
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ShoppingBag, List, X, Search, Check, Info, PlusCircle } from "lucide-react";
+import { ArrowLeft, ShoppingBag, List, X, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { Category, MenuItem, MenuItemVariation, MenuItemAddon, Outlet } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCollection } from "@/firebase";
-import { placeholderImageMap } from "@/lib/placeholder-images";
+import { getImageUrl } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
 import { AnimatePresence, motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -116,7 +116,6 @@ export default function MenuPage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-white relative">
-      {/* Menu Header */}
       <div className="sticky top-16 z-20 bg-white border-b shadow-sm px-4 py-3 flex items-center gap-4">
         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
@@ -132,7 +131,6 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* Categories Horizontal Scroll */}
       {!searchQuery && (
         <div className="sticky top-[113px] z-20 bg-white border-b overflow-x-auto px-4 py-3 space-x-6 scrollbar-hide flex items-center">
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => (
@@ -150,7 +148,6 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* Menu Sections */}
       <div className="flex-1 pb-32 bg-white">
         {searchQuery ? (
           <div className="p-6">
@@ -185,18 +182,12 @@ export default function MenuPage() {
         )}
       </div>
 
-      {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none max-h-[85vh] flex flex-col">
           {customizingItem && (
             <>
               <div className="relative h-48 w-full flex-shrink-0">
-                <Image 
-                  src={placeholderImageMap.get(customizingItem.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
-                  alt={customizingItem.name} 
-                  fill 
-                  className="object-cover" 
-                />
+                <Image src={getImageUrl(customizingItem.imageId)} alt={customizingItem.name} fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
                    <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center ${customizingItem.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
                       <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
@@ -204,9 +195,7 @@ export default function MenuPage() {
                    <h2 className="text-xl font-black text-white uppercase tracking-tight italic">{customizingItem.name}</h2>
                 </div>
               </div>
-
               <div className="p-6 overflow-y-auto space-y-8 flex-1">
-                {/* Variations (Sizes) */}
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -236,10 +225,7 @@ export default function MenuPage() {
                     </RadioGroup>
                   </div>
                 )}
-
                 <Separator />
-
-                {/* Add-ons (Variation specific or global) */}
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
@@ -266,7 +252,6 @@ export default function MenuPage() {
                   </div>
                 )}
               </div>
-
               <div className="p-6 bg-white border-t flex items-center justify-between gap-4">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Final Price</span>
@@ -285,7 +270,6 @@ export default function MenuPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Floating Menu Button */}
       {!searchQuery && (
         <div className="fixed bottom-36 right-6 z-50">
           <Button 
@@ -298,7 +282,6 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* Category Selection Overlay */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -362,12 +345,7 @@ function MenuItemCard({ item, onAdd, brandColor }: { item: MenuItem, onAdd: () =
   return (
     <div className="flex gap-5">
       <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
-        <Image
-          src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-          alt={item.name}
-          fill
-          className="object-cover"
-        />
+        <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
       </div>
       <div className="flex-1 flex flex-col">
         <div className="flex items-start justify-between">

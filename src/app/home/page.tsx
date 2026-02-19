@@ -13,10 +13,7 @@ import {
   ShoppingBasket, 
   ShoppingBag,
   PlusCircle,
-  Ticket,
-  Flame,
-  Award,
-  Plus
+  Flame
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -25,10 +22,9 @@ import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useUser } from "@/firebase/auth/use-user";
 import { useCollection } from "@/firebase/firestore/use-collection";
-import { placeholderImageMap } from "@/lib/placeholder-images";
+import { getImageUrl } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
 import {
@@ -42,14 +38,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { AnimatePresence, motion } from "framer-motion";
-import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import { Label } from "@/components/ui/label";
 
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const { addItem, totalItems, totalPrice } = useCart();
-  const { toast } = useToast();
   
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
@@ -66,12 +61,11 @@ export default function HomePage() {
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
   const { data: allBanners, loading: bannersLoading } = useCollection<Banner>('banners');
-  const { data: allCoupons, loading: couponsLoading } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
+  const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
   
   const categories = useMemo(() => allCategories?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCategories, selectedOutlet]);
   const menuItems = useMemo(() => allMenuItems?.filter(i => i.brand === selectedOutlet?.brand) || [], [allMenuItems, selectedOutlet]);
   const banners = useMemo(() => allBanners?.filter(b => b.brand === selectedOutlet?.brand) || [], [allBanners, selectedOutlet]);
-  const coupons = useMemo(() => allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCoupons, selectedOutlet]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -86,7 +80,6 @@ export default function HomePage() {
     }
   }, []);
 
-  // 3-Second Auto Scroll Logic for Banners
   useEffect(() => {
     if (!api) return;
     const intervalId = setInterval(() => {
@@ -128,13 +121,9 @@ export default function HomePage() {
 
   const availableAddons = useMemo(() => {
     if (!customizingItem) return [];
-    
-    // If variations exist, only showaddons for that specific variation
     if (customizingItem.variations && customizingItem.variations.length > 0) {
       return selectedVariation?.addons || [];
     }
-    
-    // If no variations exist, show the base item addons
     return customizingItem.addons || [];
   }, [customizingItem, selectedVariation]);
 
@@ -156,7 +145,6 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      {/* Welcome Header */}
       <div style={{ backgroundColor: brandColor }} className="text-white px-6 pt-10 pb-12 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700">
         <div className="relative z-10 flex justify-between items-end">
           <div className="flex flex-col">
@@ -181,7 +169,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Search Section */}
       <div className="px-6 -mt-6">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors" />
@@ -189,7 +176,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Hero Banners */}
       <div className="mt-6 px-6">
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
           <CarouselContent>
@@ -198,7 +184,7 @@ export default function HomePage() {
             ) : banners?.filter(b => b.active).map((banner, index) => (
               <CarouselItem key={index}>
                 <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-lg group">
-                  <Image src={placeholderImageMap.get(banner.imageId)?.imageUrl || 'https://picsum.photos/seed/banner/800/400'} alt={banner.title || 'Promotion'} fill className="object-cover" />
+                  <Image src={getImageUrl(banner.imageId)} alt={banner.title || 'Promotion'} fill className="object-cover" />
                   <div style={{ background: `linear-gradient(to right, ${brandColor}E6, ${brandColor}66, transparent)` }} className="absolute inset-0 flex flex-col justify-center p-6">
                     {banner.subtitle && <Badge className="w-fit mb-2 bg-yellow-400 text-black font-black uppercase text-[8px] tracking-widest rounded-sm">{banner.subtitle}</Badge>}
                     {banner.title && <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md">{banner.title}</h2>}
@@ -211,7 +197,6 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      {/* Categories */}
       <div className="mt-4">
         <div className="px-6 flex justify-between items-center mb-3">
           <h2 className="text-lg font-black uppercase tracking-tighter" style={{ color: brandColor }}>Explore Menu</h2>
@@ -221,7 +206,7 @@ export default function HomePage() {
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
             <div key={cat.id} className="flex flex-col items-center gap-2 group cursor-pointer flex-shrink-0" onClick={() => router.push(`/home/menu?category=${cat.id}`)}>
               <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
-                <Image src={placeholderImageMap.get(cat.imageId || 'cat_veg')?.imageUrl || ''} alt={cat.name} fill className="object-cover" />
+                <Image src={getImageUrl(cat.imageId || 'cat_veg')} alt={cat.name} fill className="object-cover" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1" style={{ color: brandColor }}>{cat.name}</span>
             </div>
@@ -229,7 +214,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Trending Now Section */}
       <div className="mt-4">
         <div className="px-6 flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
@@ -243,7 +227,7 @@ export default function HomePage() {
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-56 w-44 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
             <motion.div key={item.id} whileTap={{ scale: 0.95 }} className="flex flex-col gap-3 w-44 flex-shrink-0 cursor-pointer group bg-white p-2.5 rounded-[32px] border border-gray-100 shadow-sm" onClick={() => handleAddClick(item)}>
               <div className="relative h-40 w-full rounded-[24px] overflow-hidden shadow-sm border border-black/5">
-                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute bottom-3 right-3"><div style={{ backgroundColor: brandColor }} className="p-2.5 rounded-2xl shadow-lg ring-4 ring-white/10"><PlusCircle className="h-5 w-5 text-white" /></div></div>
                 <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-xl shadow-sm flex items-center gap-1 border border-white/20">
                   <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
@@ -259,7 +243,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Explore Items Section */}
       <div className="mt-4 px-6 pb-12">
         <div className="flex items-center gap-2 mb-6">
           <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
@@ -303,7 +286,7 @@ export default function HomePage() {
               </div>
               <div className="relative flex-shrink-0 flex flex-col items-center">
                 <div className="relative h-28 w-28 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                  <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                  <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
                 </div>
                 <div className="absolute -bottom-2 w-20">
                   <Button 
@@ -319,13 +302,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
           {customizingItem && (
             <>
               <div className="relative h-48 w-full flex-shrink-0">
-                <Image src={placeholderImageMap.get(customizingItem.imageId)?.imageUrl || ''} alt={customizingItem.name} fill className="object-cover" />
+                <Image src={getImageUrl(customizingItem.imageId)} alt={customizingItem.name} fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
                    <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center bg-white rounded-sm ${customizingItem.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                       <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
@@ -334,14 +316,13 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide">
-                {/* Variations (Sizes) */}
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
                     <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
                       const newVar = customizingItem.variations?.find(v => v.name === val) || null;
                       setSelectedVariation(newVar);
-                      setSelectedAddons([]); // Reset addons when size changes
+                      setSelectedAddons([]); 
                     }} className="space-y-3">
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
@@ -352,10 +333,7 @@ export default function HomePage() {
                     </RadioGroup>
                   </div>
                 )}
-
                 <Separator />
-
-                {/* Add-ons (Variation specific or global) */}
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
@@ -394,7 +372,6 @@ export default function HomePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Floating View Cart */}
       {totalItems > 0 && (
         <div className="fixed bottom-20 left-4 right-4 z-40">
           <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none transition-all duration-500">

@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MenuItem, Category, MenuItemVariation, MenuItemAddon, Brand } from '@/lib/types';
 import Image from 'next/image';
-import { placeholderImageMap } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Layers, Upload, ImageIcon, PlusCircle, Settings2, ShoppingBasket, IndianRupee, Flame, Pizza, Loader2, ListPlus } from 'lucide-react';
+import { placeholderImageMap, getImageUrl } from '@/lib/placeholder-images';
+import { Plus, Trash2, Edit, Layers, ImageIcon, PlusCircle, IndianRupee, Flame, Pizza, Loader2, Link as LinkIcon, Globe } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { collection, doc, addDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { collection, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
@@ -206,7 +206,6 @@ export default function FranchiseMenuPage() {
 
   return (
     <div className="container mx-auto p-0 space-y-8">
-      {/* Brand Selection Toggle */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-[24px] shadow-sm border border-gray-100">
         <div>
             <h1 className="font-headline text-3xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>
@@ -257,7 +256,7 @@ export default function FranchiseMenuPage() {
                                 <div key={cat.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100 group">
                                     <div className="flex items-center gap-3">
                                         <div className="relative h-8 w-8 rounded-full overflow-hidden border bg-white">
-                                            <Image src={placeholderImageMap.get(cat.imageId || 'cat_veg')?.imageUrl || ''} alt={cat.name} fill className="object-cover" />
+                                            <Image src={getImageUrl(cat.imageId || 'cat_veg')} alt={cat.name} fill className="object-cover" />
                                         </div>
                                         <span className="font-bold text-sm uppercase tracking-tight">{cat.name}</span>
                                     </div>
@@ -269,13 +268,11 @@ export default function FranchiseMenuPage() {
                             ))}
                         </div>
                     </div>
-                    
                     <Separator className="opacity-50" />
-                    
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
                             <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 bg-white shadow-inner flex-shrink-0">
-                                <Image src={placeholderImageMap.get(newCategoryImageId)?.imageUrl || ''} alt="Preview" fill className="object-cover" />
+                                <Image src={getImageUrl(newCategoryImageId)} alt="Preview" fill className="object-cover" />
                             </div>
                             <div className="flex-1">
                                 <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId}>
@@ -320,7 +317,7 @@ export default function FranchiseMenuPage() {
                       <TabsTrigger value="general" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">General</TabsTrigger>
                       <TabsTrigger value="variations" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Sizes</TabsTrigger>
                       <TabsTrigger value="addons" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Global Toppings</TabsTrigger>
-                      <TabsTrigger value="sides" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Sides</TabsTrigger>
+                      <TabsTrigger value="visual" className="font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm">Visual Asset</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className="space-y-6">
@@ -355,23 +352,6 @@ export default function FranchiseMenuPage() {
                                     </Select>
                                 </div>
                             </div>
-                            
-                            <div className="space-y-4">
-                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Product Visual (Placeholder ID)</Label>
-                                <Select onValueChange={setNewItemImageId} value={newItemImageId}>
-                                    <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="margherita">Margherita</SelectItem>
-                                        <SelectItem value="pepperoni">Pepperoni</SelectItem>
-                                        <SelectItem value="veggie_delight">Veggie</SelectItem>
-                                        <SelectItem value="cat_nonveg">Crispy Chicken</SelectItem>
-                                        <SelectItem value="coke">Cola</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
                             <div className="flex items-center gap-8 bg-gray-50 p-5 rounded-[20px] border border-gray-100">
                                 <div className="flex items-center space-x-3">
                                     <Checkbox id="isVeg" checked={newItemIsVeg} onCheckedChange={(val: any) => setNewItemIsVeg(!!val)} />
@@ -380,6 +360,58 @@ export default function FranchiseMenuPage() {
                                 <div className="flex items-center space-x-3">
                                     <Checkbox id="isGlobal" checked={newItemGlobal} onCheckedChange={(val: any) => setNewItemGlobal(!!val)} />
                                     <Label htmlFor="isGlobal" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Live Globally</Label>
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="visual" className="space-y-6">
+                        <div className="space-y-6">
+                            <div className="bg-gray-50 rounded-[24px] p-6 border border-dashed flex flex-col items-center justify-center min-h-[200px]">
+                                <div className="relative h-40 w-40 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white">
+                                    <Image src={getImageUrl(newItemImageId)} alt="Preview" fill className="object-cover" />
+                                </div>
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-4">Current Asset Preview</p>
+                            </div>
+
+                            <div className="grid gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                        <LinkIcon className="h-3 w-3" /> External Image URL (Direct)
+                                    </Label>
+                                    <Input 
+                                        value={newItemImageId.startsWith('http') ? newItemImageId : ''} 
+                                        onChange={e => setNewItemImageId(e.target.value)} 
+                                        placeholder="https://images.unsplash.com/photo-..." 
+                                        className="font-bold h-12 rounded-xl text-xs"
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <span className="w-full border-t" />
+                                    </div>
+                                    <div className="relative flex justify-center text-[10px] uppercase font-black">
+                                        <span className="bg-white px-2 text-muted-foreground">OR Quick Select</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Brand Photography Library</Label>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {Array.from(placeholderImageMap.keys()).map(id => (
+                                            <button 
+                                                key={id}
+                                                onClick={() => setNewItemImageId(id)}
+                                                className={cn(
+                                                    "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
+                                                    newItemImageId === id ? "border-primary ring-2 ring-primary/20 scale-95" : "border-transparent opacity-60 hover:opacity-100"
+                                                )}
+                                            >
+                                                <Image src={getImageUrl(id)} alt={id} fill className="object-cover" />
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -412,7 +444,6 @@ export default function FranchiseMenuPage() {
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                     </div>
-                                    
                                     <div className="space-y-3 bg-gray-50/50 p-4 rounded-xl">
                                         <div className="flex justify-between items-center">
                                             <Label className="text-[7px] font-black uppercase text-muted-foreground tracking-[0.2em]">Addons for this size</Label>
@@ -481,28 +512,6 @@ export default function FranchiseMenuPage() {
                             ))}
                         </div>
                     </TabsContent>
-
-                    <TabsContent value="sides" className="space-y-6">
-                        <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-4">Recommended Combos</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-                            {allMenuItems?.filter(i => i.brand === activeBrand).map(item => (
-                                <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm hover:ring-2 hover:ring-muted transition-all">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 relative rounded-lg overflow-hidden border shadow-inner">
-                                            <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold uppercase tracking-tight line-clamp-1">{item.name}</span>
-                                            <span className="text-[9px] font-black text-muted-foreground">₹{item.price}</span>
-                                        </div>
-                                    </div>
-                                    <Checkbox checked={newItemSides.includes(item.id)} onCheckedChange={(val) => {
-                                        setNewItemSides(prev => val ? [...prev, item.id] : prev.filter(id => id !== item.id));
-                                    }} />
-                                </div>
-                            ))}
-                        </div>
-                    </TabsContent>
                   </Tabs>
                 </div>
 
@@ -533,7 +542,7 @@ export default function FranchiseMenuPage() {
             <div key={category.id} className="space-y-6">
                 <div className="flex items-center gap-4">
                     <div className="relative h-12 w-12 rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-black/5">
-                        <Image src={placeholderImageMap.get(category.imageId || 'cat_veg')?.imageUrl || ''} alt={category.name} fill className="object-cover" />
+                        <Image src={getImageUrl(category.imageId || 'cat_veg')} alt={category.name} fill className="object-cover" />
                     </div>
                     <div>
                         <h2 className="text-xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>{category.name}</h2>
@@ -556,7 +565,7 @@ export default function FranchiseMenuPage() {
                                     <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
                                         <TableCell className="pl-8 py-6">
                                             <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5">
-                                                <Image src={placeholderImageMap.get(item.imageId)?.imageUrl || ''} alt={item.name} fill className="object-cover" />
+                                                <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
                                             </div>
                                         </TableCell>
                                         <TableCell>
