@@ -40,7 +40,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<Step>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   useEffect(() => {
-    if (!window.recaptchaVerifier) {
+    if (typeof window !== "undefined" && !window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
         auth,
         "recaptcha-container",
@@ -48,8 +48,11 @@ export default function LoginPage() {
           size: "invisible",
         }
       );
+  
+      window.recaptchaVerifier.render().catch(console.error);
     }
-  }, []);  
+  }, []);
+    
   
   const router = useRouter();
   const { toast } = useToast();
@@ -197,7 +200,7 @@ export default function LoginPage() {
                         <Input placeholder="123456" {...field} className="h-12 rounded-xl border-gray-200 font-black text-center text-xl tracking-[0.5em] focus:ring-primary" />
                       </FormControl>
                       <FormDescription className="text-[10px] font-medium text-center italic opacity-60">
-                        Demo: Any 6 digits will work.
+                        
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
