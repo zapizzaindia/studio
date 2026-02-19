@@ -124,13 +124,14 @@ export type Outlet = {
 
 export type UserProfile = {
     uid: string;
-    email: string;
+    email?: string;
     displayName?: string;
     photoURL?: string;
     role: 'customer' | 'outlet-admin' | 'franchise-owner';
     outletId?: string;
     loyaltyPoints?: number;
     phoneNumber?: string;
+    birthday?: string;
 };
 
 export type Address = {

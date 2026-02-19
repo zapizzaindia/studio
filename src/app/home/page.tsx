@@ -24,7 +24,7 @@ import {
   ChevronRightCircle,
   MapPin,
   Loader2
-} from "lucide-react";
+} from "lucide-center";
 import { useRouter } from "next/navigation";
 
 import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon, Coupon, UserProfile } from "@/lib/types";
@@ -83,13 +83,8 @@ export default function HomePage() {
   const [api, setApi] = useState<CarouselApi>();
   const [isDetecting, setIsDetecting] = useState(false);
 
-  // Fetch actual user profile for loyalty coins
+  // Fetch actual user profile for loyalty coins and display name
   const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
-
-  // Customization State
-  const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
-  const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
-  const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -264,7 +259,7 @@ export default function HomePage() {
           <div className="flex flex-col">
             <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">Welcome Back,</p>
             <h1 className="text-2xl font-black italic tracking-tighter leading-none">
-              {user?.displayName?.split(' ')[0] || 'Gourmet'}!
+              {userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Gourmet'}!
             </h1>
           </div>
           <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
@@ -356,53 +351,6 @@ export default function HomePage() {
           ))}
         </div>
       </div>
-
-      {/* TOP OFFERS SECTION */}
-      {coupons.length > 0 && (
-        <div className="mt-6">
-          <div className="px-6 text-center mb-4">
-            <h2 className="text-base font-black uppercase tracking-widest text-[#333]">Top Offers</h2>
-          </div>
-          <div className="flex gap-4 overflow-x-auto px-6 scrollbar-hide pb-4">
-            {coupons.map((coupon) => (
-              <div 
-                key={coupon.id} 
-                className="flex-shrink-0 w-[280px] h-24 bg-white rounded-2xl shadow-sm border border-gray-100 flex overflow-hidden group active:scale-[0.98] transition-transform"
-              >
-                {/* Left Part - Value */}
-                <div 
-                  style={{ backgroundColor: brandColor + '08' }} 
-                  className="w-20 flex flex-col items-center justify-center relative border-r border-dashed"
-                >
-                  {/* Scalloped notches between sections */}
-                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-[#f8f9fa] rounded-full" />
-                  <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-[#f8f9fa] rounded-full" />
-                  
-                  <div className="flex flex-col items-center">
-                    <span className="text-lg font-black leading-none" style={{ color: brandColor }}>
-                      {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
-                    </span>
-                    <span className="text-[9px] font-black uppercase tracking-widest mt-1 opacity-80" style={{ color: brandColor }}>OFF</span>
-                  </div>
-                </div>
-                
-                {/* Right Part - Info */}
-                <div className="flex-1 p-4 flex flex-col justify-center bg-white">
-                  <h4 className="text-[11px] font-black uppercase text-[#333] line-clamp-1 leading-snug tracking-tight">
-                    {coupon.description || `Get ${coupon.discountValue}${coupon.discountType === 'percentage' ? '%' : ''} Flat Discount`}
-                  </h4>
-                  <div className="flex items-center gap-1 mt-1.5 overflow-hidden">
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase whitespace-nowrap">Use</span>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#333] whitespace-nowrap">{coupon.code}</span>
-                    <span className="text-muted-foreground/30 px-1">|</span>
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase whitespace-nowrap truncate">Above ₹{coupon.minOrderAmount}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="mt-4 px-6 pb-12">
         <div className="flex items-center gap-2 mb-6">

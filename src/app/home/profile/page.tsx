@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ArrowLeft, 
@@ -20,7 +20,8 @@ import {
   Navigation,
   Facebook,
   Instagram,
-  ChevronRight
+  ChevronRight,
+  Cake
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,25 +39,40 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { doc, updateDoc } from "firebase/firestore";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
+  const db = useFirestore();
   const { data: profile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   const { data: outlet } = useDoc<Outlet>('outlets', profile?.outletId || 'andheri');
 
   const [isHydrated, setIsHydrated] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newDisplayName, setNewDisplayName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newBirthday, setNewBirthday] = useState("");
 
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (profile?.displayName) {
-      setNewDisplayName(profile.displayName);
+    if (profile) {
+      setNewDisplayName(profile.displayName || "");
+      setNewEmail(profile.email || "");
+      setNewBirthday(profile.birthday || "");
     }
+  }, [profile]);
+
+  const completionPercentage = useMemo(() => {
+    if (!profile) return 0;
+    let points = 0;
+    if (profile.displayName) points += 33;
+    if (profile.email) points += 33;
+    if (profile.birthday) points += 34;
+    return points;
   }, [profile]);
 
   const handleLogout = () => {
@@ -64,15 +80,21 @@ export default function ProfilePage() {
     window.location.href = '/login';
   };
 
-  const handleUpdateProfile = () => {
-    if (!user) return;
-    // Update the mock session
-    const mockUser = JSON.parse(localStorage.getItem('zapizza-mock-session') || '{}');
-    mockUser.displayName = newDisplayName;
-    localStorage.setItem('zapizza-mock-session', JSON.stringify(mockUser));
+  const handleUpdateProfile = async () => {
+    if (!user || !db) return;
     
-    setIsEditDialogOpen(false);
-    window.location.reload(); // Refresh to show the new name
+    const updatedData = {
+      displayName: newDisplayName,
+      email: newEmail,
+      birthday: newBirthday,
+    };
+
+    try {
+      await updateDoc(doc(db, 'users', user.uid), updatedData);
+      setIsEditDialogOpen(false);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (!isHydrated || userLoading || profileLoading) {
@@ -86,7 +108,7 @@ export default function ProfilePage() {
 
   const menuItems = [
     { label: "My Orders", icon: <ShoppingBag className="h-5 w-5" />, href: "/home/orders" },
-    { label: "LP Rewards", icon: <Wallet className="h-5 w-5" />, href: "#" },
+    { label: "LP Rewards", icon: <Wallet className="h-5 w-5" />, href: "/home/rewards" },
     { label: "Manage Addresses", icon: <MapPin className="h-5 w-5" />, href: "/home/addresses" },
     { label: "FAQs", icon: <HelpCircle className="h-5 w-5" />, href: "#" },
     { label: "How to track my Refund?", icon: <RefreshCcw className="h-5 w-5" />, href: "#" },
@@ -119,18 +141,36 @@ export default function ProfilePage() {
                   EDIT
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-[90vw] rounded-2xl">
+              <DialogContent className="max-w-[90vw] rounded-2xl p-6">
                 <DialogHeader>
                   <DialogTitle className="text-[#14532d] font-black uppercase tracking-widest">Edit Profile</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Full Name</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Full Name</Label>
                     <Input 
                       value={newDisplayName} 
                       onChange={e => setNewDisplayName(e.target.value)}
-                      className="font-bold h-12"
+                      className="font-bold h-12 rounded-xl"
                       placeholder="Enter your name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Email Address</Label>
+                    <Input 
+                      value={newEmail} 
+                      onChange={e => setNewEmail(e.target.value)}
+                      className="font-bold h-12 rounded-xl"
+                      placeholder="name@example.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Birthday</Label>
+                    <Input 
+                      type="date"
+                      value={newBirthday} 
+                      onChange={e => setNewBirthday(e.target.value)}
+                      className="font-bold h-12 rounded-xl"
                     />
                   </div>
                 </div>
@@ -144,19 +184,24 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex justify-between items-end">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight italic uppercase">{profile?.displayName || 'Gourmet'}</h1>
-              <p className="text-sm font-bold text-white/70 mt-1">+91-{user?.phoneNumber?.slice(-10) || '9131024724'}</p>
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black tracking-tight italic uppercase leading-none">{profile?.displayName || 'Gourmet'}</h1>
+              <p className="text-xs font-bold text-white/70 tracking-widest">+91-{user?.phoneNumber?.slice(-10) || profile?.phoneNumber?.slice(-10) || '9131024724'}</p>
+              {profile?.birthday && (
+                <p className="text-[10px] font-black text-yellow-400 uppercase tracking-[0.2em] flex items-center gap-1">
+                  <Cake className="h-3 w-3" /> {new Date(profile.birthday).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="space-y-3">
             <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/80">
               <span>Complete your profile</span>
-              <span>60%</span>
+              <span>{completionPercentage}%</span>
             </div>
             <div className="relative h-2.5 w-full bg-black/20 rounded-full overflow-hidden border border-white/5">
-              <Progress value={60} className="h-full bg-white" />
+              <Progress value={completionPercentage} className="h-full bg-white transition-all duration-1000" />
             </div>
           </div>
         </div>
@@ -194,10 +239,10 @@ export default function ProfilePage() {
           <CardContent className="p-6">
             <div className="mb-4">
               <h3 className="text-lg font-black text-[#14532d] uppercase italic tracking-tighter">
-                Zapizza {outlet?.name.split('Zapizza')[1] || 'Andheri West'}
+                {outlet?.name || 'Zapizza Rudrapur'}
               </h3>
               <p className="text-[11px] font-bold text-muted-foreground mt-1 leading-relaxed uppercase">
-                {outlet?.name || 'Zapizza Outlet'}, first floor infront of PNB bank, Near janta inter college {outlet?.cityId || 'Mumbai'}
+                {outlet?.address || 'Zapizza Outlet, first floor infront of PNB bank, Near janta inter college Rudrapur'}
               </p>
             </div>
             
@@ -238,11 +283,11 @@ export default function ProfilePage() {
 
         {/* Footer */}
         <div className="py-10 text-center space-y-4">
-          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">v2.8.1 (2.7.8)</p>
+          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">v2.8.5 (Gold Edition)</p>
           <div className="flex flex-col items-center gap-1 opacity-40">
             <span className="text-[9px] font-bold text-[#333333] uppercase tracking-widest">Powered by</span>
             <div className="flex items-center gap-1 text-[#14532d] font-black italic text-sm">
-              <ShoppingBag className="h-4 w-4" /> Zapizza
+              <ShoppingBag className="h-4 w-4" /> Zapizza Mesh
             </div>
           </div>
           <button 

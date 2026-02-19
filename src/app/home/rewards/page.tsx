@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Trophy, 
@@ -42,6 +42,15 @@ export default function RewardsPage() {
     }
   }, []);
 
+  const completionPercentage = useMemo(() => {
+    if (!profile) return 0;
+    let points = 0;
+    if (profile.displayName) points += 33;
+    if (profile.email) points += 33;
+    if (profile.birthday) points += 34;
+    return points;
+  }, [profile]);
+
   const { data: allCoupons } = useCollection<Coupon>('coupons', { 
     where: ['active', '==', true] 
   });
@@ -61,7 +70,7 @@ export default function RewardsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24">
-      {/* Immersive Green Header */}
+      {/* Immersive Brand Header */}
       <div 
         style={{ backgroundColor: brandColor }} 
         className="text-white px-6 pt-12 pb-16 rounded-b-[40px] relative overflow-hidden shadow-xl"
@@ -115,7 +124,7 @@ export default function RewardsPage() {
               <User className="h-6 w-6" />
               <span className="text-[8px] font-black uppercase tracking-widest mt-1">Profile</span>
             </div>
-            <Badge className="absolute -top-1 -right-1 bg-[#14532d] text-white border-white text-[8px] h-auto px-1 font-black">60%</Badge>
+            <Badge className="absolute -top-1 -right-1 bg-[#14532d] text-white border-white text-[8px] h-auto px-1 font-black">{completionPercentage}%</Badge>
           </button>
         </div>
 
@@ -176,10 +185,17 @@ export default function RewardsPage() {
         </Card>
 
         {/* Profile Completion Banner */}
-        <div className="bg-gradient-to-r from-yellow-100 via-orange-50 to-yellow-100 p-4 rounded-2xl border border-yellow-200 shadow-sm flex items-center justify-center gap-2">
-          <span className="text-lg">🎉</span>
-          <p className="text-[10px] font-black uppercase text-orange-900 tracking-tight">Complete your profile to unlock personalized rewards</p>
-        </div>
+        {completionPercentage < 100 && (
+          <div 
+            onClick={() => router.push('/home/profile')}
+            className="bg-gradient-to-r from-yellow-100 via-orange-50 to-yellow-100 p-4 rounded-2xl border border-yellow-200 shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
+          >
+            <span className="text-lg">🎉</span>
+            <p className="text-[10px] font-black uppercase text-orange-900 tracking-tight text-center">
+              Complete your profile to {completionPercentage === 0 ? 'start' : 'unlock more'} personalized rewards
+            </p>
+          </div>
+        )}
 
         {/* Redeemed Rewards Link */}
         <Card className="border-none shadow-sm rounded-2xl bg-white active:scale-[0.98] transition-all">

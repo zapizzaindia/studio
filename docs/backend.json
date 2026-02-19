@@ -19,9 +19,10 @@
             "type": "string",
             "description": "The ID of the outlet this user manages, if they are an outlet-admin."
         },
-        "loyaltyPoints": { "type": "number", "description": "Accumulated loyalty points for the customer." }
+        "loyaltyPoints": { "type": "number", "description": "Accumulated loyalty points for the customer." },
+        "birthday": { "type": "string", "format": "date", "description": "User's date of birth for rewards." }
       },
-      "required": ["uid", "email", "role"]
+      "required": ["uid", "role"]
     },
     "city": {
         "title": "City",
@@ -46,7 +47,11 @@
             "closingTime": { "type": "string", "format": "time", "description": "The closing time of the outlet." },
             "latitude": { "type": "number" },
             "longitude": { "type": "number" },
-            "brand": { "type": "string", "enum": ["zapizza", "zfry"] }
+            "brand": { "type": "string", "enum": ["zapizza", "zfry"] },
+            "address": { "type": "string" },
+            "deliveryTime": { "type": "string" },
+            "rating": { "type": "number" },
+            "reviewCount": { "type": "number" }
         },
         "required": ["name", "cityId", "isOpen", "brand"]
     },

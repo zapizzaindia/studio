@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -115,7 +116,8 @@ export default function LoginPage() {
         description: "Welcome to Zapizza!",
       });
   
-      window.location.href = "/home";
+      // Redirect to onboarding to capture user name and birthday
+      router.push("/home/onboarding");
     } catch (error: any) {
       toast({
         title: "Invalid OTP",
