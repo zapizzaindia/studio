@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 import type { Category, MenuItem, MenuItemVariation, MenuItemAddon, Outlet, Coupon } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCollection } from "@/firebase";
+import { useCollection, useDoc } from "@/firebase";
 import { getImageUrl } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
@@ -45,16 +45,22 @@ export default function MenuPage() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category');
   
-  const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
+  const [savedOutletId, setSavedOutletId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "veg" | "non-veg">("all");
   const [showInStockOnly, setShowInStockOnly] = useState(true);
 
   useEffect(() => {
-    const savedOutlet = localStorage.getItem("zapizza-outlet");
-    if (savedOutlet) {
-      try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
+    const saved = localStorage.getItem("zapizza-outlet");
+    if (saved) {
+      try { 
+        const parsed = JSON.parse(saved);
+        setSavedOutletId(parsed.id);
+      } catch(e) {}
     }
   }, []);
+
+  // Real-time subscription to the selected outlet
+  const { data: selectedOutlet, loading: outletLoading } = useDoc<Outlet>('outlets', savedOutletId || 'dummy');
 
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories', {
     where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
@@ -152,45 +158,70 @@ export default function MenuPage() {
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
   const topCoupon = coupons?.find(c => c.active);
 
+  if (outletLoading) {
+    return (
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-12 w-3/4 rounded-xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col w-full min-h-screen bg-white relative">
-      {/* 1. Header with Outlet Info */}
+      {/* 1. Header with Real-Time Outlet Info */}
       <div className="bg-white px-4 pt-4 pb-2 border-b">
         <div className="flex justify-between items-start">
-          <div className="space-y-1">
+          <div className="space-y-1 flex-1">
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-black text-[#333] uppercase italic flex items-center gap-1.5">
                 {selectedOutlet?.name || "Zapizza"} <Info className="h-4 w-4 text-muted-foreground" />
               </h1>
-              <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] uppercase px-1.5 h-4">OPEN</Badge>
+              <Badge 
+                className={cn(
+                  "border-none font-black text-[8px] uppercase px-1.5 h-4",
+                  selectedOutlet?.isOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                )}
+              >
+                {selectedOutlet?.isOpen ? "OPEN" : "CLOSED"}
+              </Badge>
             </div>
-            <div className="flex items-center gap-4 text-muted-foreground">
-              <div className="flex items-center gap-1 text-[11px] font-bold">
-                <Clock className="h-3 w-3" /> 40 Minutes
+            <div className="flex flex-col gap-1.5 text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1 text-[11px] font-bold">
+                  <Clock className="h-3 w-3" /> {selectedOutlet?.deliveryTime || "35-45 Mins"}
+                </div>
+                <div className="flex items-center gap-1 text-[11px] font-bold">
+                  <Clock className="h-3 w-3 opacity-50" /> {selectedOutlet?.openingTime} - {selectedOutlet?.closingTime}
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold cursor-pointer" onClick={handleLocationChange}>
-                <MapPin className="h-3 w-3" /> {selectedOutlet?.name || "Civil lines, Rudrapur"} <ChevronDown className="h-3 w-3" />
+              <div className="flex items-center gap-1 text-[11px] font-bold cursor-pointer hover:text-foreground transition-colors pr-4" onClick={handleLocationChange}>
+                <MapPin className="h-3 w-3 flex-shrink-0" /> 
+                <span className="truncate">{selectedOutlet?.address || "Selecting Location..."}</span> 
+                <ChevronDown className="h-3 w-3 flex-shrink-0" />
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-1 border rounded-lg p-1 min-w-[60px]">
-            <div className="flex items-center gap-1 bg-green-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black">
-              4.50 <Star className="h-2 w-2 fill-current" />
+          <div className="flex flex-col items-center gap-1 border rounded-lg p-1.5 min-w-[65px] bg-gray-50/50">
+            <div className="flex items-center gap-1 bg-green-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm">
+              {selectedOutlet?.rating?.toFixed(2) || "4.50"} <Star className="h-2 w-2 fill-current" />
             </div>
-            <span className="text-[8px] font-bold text-muted-foreground uppercase text-center">88 Reviews</span>
+            <span className="text-[8px] font-bold text-muted-foreground uppercase text-center leading-tight">
+              {selectedOutlet?.reviewCount || "88"}<br/>Reviews
+            </span>
           </div>
         </div>
       </div>
 
       {/* 2. Offers Banner */}
-      <div className="bg-white border-b px-4 py-3 flex items-center justify-between cursor-pointer" onClick={() => router.push('/home/offers')}>
+      <div className="bg-white border-b px-4 py-3 flex items-center justify-between cursor-pointer group" onClick={() => router.push('/home/offers')}>
         <div className="flex items-center gap-3">
-          <div className="bg-[#14532d] p-1.5 rounded-lg" style={{ backgroundColor: brandColor }}>
+          <div className="p-1.5 rounded-lg transition-transform group-hover:scale-110" style={{ backgroundColor: brandColor }}>
             <Zap className="h-4 w-4 text-white fill-current" />
           </div>
           <div className="flex flex-col">
             <p className="text-[11px] font-black uppercase text-[#333] tracking-tight">
-              {topCoupon ? `Get Flat Discount of Rs.${topCoupon.discountValue}...` : "Exclusive Offers Available"}
+              {topCoupon ? `Get Flat Discount of ₹${topCoupon.discountValue}...` : "Exclusive Offers Available"}
             </p>
             <p className="text-[9px] font-bold text-muted-foreground uppercase">
               Use Code <span className="text-[#333]">{topCoupon?.code || "WELCOME"}</span>
@@ -246,14 +277,14 @@ export default function MenuPage() {
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333]">Featured Items</h2>
             <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide">
               {menuItems.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform" onClick={() => handleAddClick(item)}>
+                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer" onClick={() => handleAddClick(item)}>
                   <div className="relative h-44 w-full">
                     <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
                   </div>
                   <div className="p-4 flex-1 flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                        <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                        <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                       </div>
                       <div className="flex gap-1">
                         <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">Bestseller</Badge>
@@ -298,7 +329,7 @@ export default function MenuPage() {
                 </div>
                 <div className="space-y-px bg-gray-100">
                   {categoryItems.map((item) => (
-                    <div key={item.id} className="bg-white px-6 py-8 flex gap-6 hover:bg-gray-50 active:bg-gray-100 transition-colors" onClick={() => handleAddClick(item)}>
+                    <div key={item.id} className="bg-white px-6 py-8 flex gap-6 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer" onClick={() => handleAddClick(item)}>
                       <div className="flex-1 flex flex-col">
                         <div className="flex items-center gap-2 mb-2">
                           <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>

@@ -111,6 +111,10 @@ export type Outlet = {
     openingTime: string;
     closingTime: string;
     brand: Brand;
+    address?: string;
+    deliveryTime?: string;
+    rating?: number;
+    reviewCount?: number;
 };
 
 export type UserProfile = {
