@@ -22,8 +22,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useUser, useDoc } from "@/firebase";
-import type { UserProfile, Outlet } from "@/lib/types";
+import { useUser, useDoc, useCollection } from "@/firebase";
+import type { UserProfile, Outlet, Coupon } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,11 @@ export default function RewardsPage() {
       try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
     }
   }, []);
+
+  const { data: allCoupons } = useCollection<Coupon>('coupons', { 
+    where: ['active', '==', true] 
+  });
+  const coupons = allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [];
 
   if (userLoading || profileLoading) {
     return (
@@ -80,7 +85,7 @@ export default function RewardsPage() {
       <div className="px-4 -mt-10 relative z-20 space-y-4">
         {/* Quick Action Icons */}
         <div className="grid grid-cols-4 gap-3">
-          <button className="flex flex-col items-center gap-2">
+          <button className="flex flex-col items-center gap-2" onClick={() => router.push('/home/offers')}>
             <div className="w-full aspect-square bg-white rounded-2xl shadow-md flex items-center justify-center border border-gray-100">
               <span className="text-[10px] font-black text-[#333] uppercase leading-tight text-center px-2">How it works</span>
             </div>
@@ -93,12 +98,16 @@ export default function RewardsPage() {
             </div>
           </button>
 
-          <button className="flex flex-col items-center gap-2 relative">
+          <button className="flex flex-col items-center gap-2 relative" onClick={() => router.push('/home/offers')}>
             <div className="w-full aspect-square bg-[#4ade80]/20 rounded-2xl shadow-md flex flex-col items-center justify-center border border-[#4ade80]/30 text-[#14532d]">
               <Ticket className="h-6 w-6" />
               <span className="text-[8px] font-black uppercase tracking-widest mt-1">Offers</span>
             </div>
-            <Badge className="absolute -top-1 -right-1 bg-[#e31837] text-white border-white text-[8px] h-4 w-4 p-0 flex items-center justify-center font-black">8</Badge>
+            {coupons.length > 0 && (
+              <Badge className="absolute -top-1 -right-1 bg-[#e31837] text-white border-white text-[8px] h-4 w-4 p-0 flex items-center justify-center font-black">
+                {coupons.length}
+              </Badge>
+            )}
           </button>
 
           <button className="flex flex-col items-center gap-2 relative" onClick={() => router.push('/home/profile')}>
