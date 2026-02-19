@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck, MapPinned } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -346,7 +347,13 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+        {!selectedAddress && (
+          <div className="flex items-center gap-2 mb-4 bg-amber-50 p-3 rounded-xl border border-amber-100 animate-pulse">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <p className="text-[10px] font-black text-amber-800 uppercase tracking-tight">Please select a delivery address first</p>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5" style={{ color: brandColor }} />
@@ -359,7 +366,7 @@ export default function CheckoutPage() {
         <Button 
           onClick={handlePlaceOrder}
           disabled={isPlacing || !selectedAddress}
-          className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg"
+          className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95"
           style={{ backgroundColor: brandColor }}
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : `PROCEED TO PAY ₹${Math.round(calculations.finalTotal)}`}

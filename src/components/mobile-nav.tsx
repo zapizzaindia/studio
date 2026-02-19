@@ -31,8 +31,9 @@ export function MobileNav() {
     { href: "/home/rewards", label: "LP Rewards", icon: Crown },
   ];
 
-  // Hide navigation on success pages to focus user on the transaction
-  if (pathname === '/home/checkout/success') {
+  // Hide navigation on checkout and success pages to focus user on the transaction
+  // This also prevents layout overlap with the fixed checkout payment bar
+  if (pathname === '/home/checkout' || pathname === '/home/checkout/success') {
     return null;
   }
 
