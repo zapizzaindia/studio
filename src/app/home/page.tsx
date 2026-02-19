@@ -18,7 +18,11 @@ import {
   Crown,
   History,
   Info,
-  Timer
+  Timer,
+  AlertTriangle,
+  Trophy,
+  ChevronRightCircle,
+  MapPin
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -46,6 +50,7 @@ import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
+import { ZapizzaLogo } from "@/components/icons";
 
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
@@ -165,7 +170,7 @@ export default function HomePage() {
           </div>
           <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
             <button onClick={() => setOrderType("delivery")} className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${orderType === "delivery" ? 'bg-white text-[#333] shadow-sm' : 'text-white/80'}`}>
-              <Bike className="h-3.5 w-3.5" />
+              < Bike className="h-3.5 w-3.5" />
               <span className="text-[10px] font-black uppercase tracking-widest">Delivery</span>
             </button>
             <button onClick={() => setOrderType("takeaway")} className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${orderType === "takeaway" ? 'bg-white text-[#333] shadow-sm' : 'text-white/80'}`}>
@@ -365,7 +370,6 @@ export default function HomePage() {
           style={{ backgroundColor: brandColor }} 
           className="w-full px-6 py-12 text-center text-white relative"
         >
-          {/* Sunburst Radial Effect */}
           <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_center,_white_0%,_transparent_70%)]" />
           
           <div className="relative z-10 space-y-2">
@@ -417,6 +421,122 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* FRANCHISE ENQUIRY SECTION */}
+      <div className="mt-12 px-6">
+        <h2 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-4">
+          ENQUIRE ABOUT {selectedOutlet.brand.toUpperCase()} FRANCHISE
+        </h2>
+        <div 
+          style={{ backgroundColor: brandColor }} 
+          className="rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl"
+        >
+          <div className="relative z-10">
+            <h3 className="text-2xl font-black uppercase leading-tight italic">
+              {selectedOutlet.brand === 'zapizza' ? 'Zapizza' : 'Zfry'} 700+
+            </h3>
+            <p className="text-sm font-bold uppercase tracking-widest opacity-80 mt-1">Outlets across the World</p>
+            
+            <Button 
+              className="mt-8 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 text-white rounded-2xl h-14 px-8 font-black uppercase text-xs tracking-widest"
+            >
+              Enquire about Franchise
+            </Button>
+          </div>
+          
+          <div className="absolute top-1/2 -right-10 -translate-y-1/2 w-48 h-48 opacity-10 rotate-12 pointer-events-none">
+             {selectedOutlet.brand === 'zapizza' ? <Pizza className="w-full h-full" /> : <Flame className="w-full h-full" />}
+          </div>
+        </div>
+      </div>
+
+      {/* OUTLET INFO SECTION */}
+      <div className="mt-8 px-6">
+        <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white">
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="h-14 w-14 rounded-full border-2 border-gray-100 flex items-center justify-center p-2 bg-[#f8f9fa]">
+               <ZapizzaLogo className="w-full h-full" />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-black text-[#333] uppercase">{selectedOutlet.name}</h4>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
+                <MapPin className="h-2.5 w-2.5" /> Rudrapur, Uttarakhand
+              </p>
+              <button className="text-[9px] font-black text-red-500 uppercase mt-1 flex items-center gap-1">
+                View Store Reviews <ChevronRightCircle className="h-2.5 w-2.5" />
+              </button>
+            </div>
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px]">
+               <div className="flex items-center gap-1 bg-[#14532d] text-white px-1.5 py-0.5 rounded-lg">
+                  <span className="text-[10px] font-black">3.52</span>
+                  <Star className="h-2 w-2 fill-current" />
+               </div>
+               <span className="text-[8px] font-black text-muted-foreground uppercase">88 Reviews</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* BEWARE / SAFETY SECTION */}
+      <div className="mt-8 px-6">
+        <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white relative">
+          <CardContent className="p-8 flex items-center justify-between">
+            <div className="space-y-2 max-w-[200px]">
+              <h2 className="text-3xl font-black text-[#14532d] uppercase italic tracking-tighter">Beware!</h2>
+              <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase">
+                {selectedOutlet.brand === 'zapizza' ? 'Zapizza' : 'Zfry'} or its employees Do not call for any transaction OTP
+              </p>
+            </div>
+            <div className="h-20 w-20 bg-yellow-400/10 rounded-full flex items-center justify-center">
+               <AlertTriangle className="h-12 w-12 text-yellow-500" strokeWidth={2.5} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AWARDS AND MEDIA SECTION */}
+      <div className="mt-12">
+        <h2 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-6">
+          AWARDS AND MEDIA
+        </h2>
+        <div className="flex gap-4 overflow-x-auto px-6 scrollbar-hide pb-4">
+          {[
+            { title: "Times Food Awards", desc: "Awarded 4 Times in a Row For Our Quality services", bg: "#e3f2fd" },
+            { title: "Zomato Quality Choice", desc: "Highest Rated Pizza brand in Rudrapur for 2024", bg: "#fff3e0" }
+          ].map((award, i) => (
+            <div 
+              key={i} 
+              style={{ backgroundColor: award.bg }}
+              className="flex-shrink-0 w-[300px] rounded-[32px] p-8 flex items-center justify-between shadow-sm border border-black/5"
+            >
+              <div className="space-y-3">
+                <h3 className="text-xl font-black uppercase italic leading-tight text-[#333]">{award.title}</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed">{award.desc}</p>
+              </div>
+              <div className="relative h-20 w-20 flex-shrink-0">
+                <Trophy className="h-full w-full text-yellow-500 drop-shadow-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* QUOTE FOOTER SECTION */}
+      <div className="mt-16 px-10 text-center space-y-6 pb-12">
+        <p className="text-muted-foreground font-medium italic text-lg leading-relaxed opacity-60">
+          "The secret of success in life is to eat what you like and let the food fight it out inside." - Mark Twain
+        </p>
+        <div className="flex items-center justify-center gap-4">
+           <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-muted-foreground/30" />
+           <div className="text-muted-foreground/30 flex gap-1">
+              {Array.from({length: 3}).map((_, i) => (
+                <div key={i} className="h-1.5 w-1.5 rounded-full bg-current" />
+              ))}
+           </div>
+           <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-muted-foreground/30" />
+        </div>
+      </div>
+
+      {/* CUSTOMIZATION DIALOG */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
           {customizingItem && (
@@ -495,6 +615,43 @@ export default function HomePage() {
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+function MenuItemCard({ item, onAdd, brandColor }: { item: MenuItem, onAdd: () => void, brandColor: string }) {
+  const hasOptions = (item.variations?.length || 0) > 0 || (item.addons?.length || 0) > 0;
+
+  return (
+    <div className="flex gap-5">
+      <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
+        <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
+      </div>
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className={`h-4 w-4 border-2 mb-1.5 flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
+              <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+            </div>
+            <h4 className="text-[14px] font-black text-[#333333] leading-tight uppercase tracking-tight">{item.name}</h4>
+            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed font-medium">{item.description}</p>
+          </div>
+        </div>
+        <div className="mt-auto flex items-center justify-between pt-3">
+          <div className="flex flex-col">
+            <span className="text-[15px] font-black" style={{ color: brandColor }}>₹{item.price}</span>
+            {hasOptions && <span className="text-[8px] font-bold text-muted-foreground uppercase">Options available</span>}
+          </div>
+          <Button 
+            size="sm" 
+            onClick={onAdd}
+            style={{ color: brandColor, borderColor: brandColor }}
+            className="h-8 px-6 bg-white border-2 font-black text-[11px] rounded shadow-md uppercase active:bg-muted transition-colors"
+          >
+            {hasOptions ? 'CUSTOMIZE' : 'ADD'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
