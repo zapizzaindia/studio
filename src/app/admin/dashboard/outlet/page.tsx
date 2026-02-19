@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,7 +18,8 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function AdminOutletPage() {
     const { user } = useUser();
-    const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+    const profileId = user?.email?.toLowerCase().trim() || 'dummy';
+    const { data: userProfile } = useDoc<UserProfile>('users', profileId);
     const outletId = userProfile?.outletId;
     const { data: outlet, loading } = useDoc<Outlet>('outlets', outletId || 'dummy');
     
@@ -42,7 +44,7 @@ export default function AdminOutletPage() {
     }, [outlet]);
     
     const handleSaveChanges = () => {
-        if (!db || !outletId) return;
+        if (!firestore || !outletId) return;
 
         const outletRef = doc(firestore, 'outlets', outletId);
         const updatedData = {

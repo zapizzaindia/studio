@@ -22,7 +22,8 @@ import { firestore as db } from '@/firebase/config';
 
 export default function AdminMenuPage() {
   const { user } = useUser();
-  const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
+  const { data: userProfile } = useDoc<UserProfile>('users', profileId);
   const outletId = userProfile?.outletId;
   
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');

@@ -43,7 +43,10 @@ export default function AdminDashboardLayout({
   const router = useRouter();
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
-  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  
+  // Use email as doc ID for admins as per the "Authorize" logic
+  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId);
   const { data: outlet, loading: outletLoading } = useDoc<Outlet>('outlets', userProfile?.outletId || 'dummy');
 
 
@@ -52,6 +55,7 @@ export default function AdminDashboardLayout({
       router.replace('/admin/login');
     }
     if (!profileLoading && userProfile && userProfile.role !== 'outlet-admin') {
+      // If the user has a profile but isn't an admin, sign them out
       auth?.signOut();
       router.replace('/admin/login');
     }

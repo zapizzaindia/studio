@@ -44,7 +44,10 @@ export default function FranchiseDashboardLayout({
   const router = useRouter();
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
-  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  
+  // Lookup by email or UID to handle both pre-authorized and manual Superadmins
+  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId);
 
   useEffect(() => {
     if (!userLoading && !user) {

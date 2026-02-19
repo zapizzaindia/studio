@@ -55,7 +55,8 @@ const OrderTimer = ({ createdAt, orderId, onTimeout }: { createdAt: any, orderId
 
 export default function AdminOrdersPage() {
   const { user } = useUser();
-  const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
+  const { data: userProfile } = useDoc<UserProfile>('users', profileId);
   const outletId = userProfile?.outletId;
   const { data: outlet } = useDoc<Outlet>('outlets', outletId || 'dummy');
   
@@ -166,7 +167,7 @@ export default function AdminOrdersPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
-              <p className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{outlet?.name || 'Connecting...'}</p>
+              <p className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">{outlet?.name || 'Authorized'}</p>
             </div>
         </div>
         <Button variant="outline" size="sm" className="rounded-2xl h-12 w-12 p-0 border-none bg-gray-50 shadow-inner" onClick={() => setIsMuted(!isMuted)}>
