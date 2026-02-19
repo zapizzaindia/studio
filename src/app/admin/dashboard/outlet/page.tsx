@@ -55,7 +55,7 @@ export default function AdminOutletPage() {
             closingTime,
         };
 
-        // Non-blocking mutation
+        // Non-blocking mutation as per guidelines
         updateDoc(outletRef, updatedData)
             .then(() => {
                 toast({ title: 'Success', description: 'Outlet details synchronized with master database.' });
@@ -93,14 +93,16 @@ export default function AdminOutletPage() {
         )
     }
 
+    const brandColor = outlet?.brand === 'zfry' ? '#e31837' : '#14532d';
+
     return (
         <div className="container mx-auto p-0 max-w-2xl">
             <div className="mb-8 bg-white p-6 rounded-[32px] border shadow-sm flex items-center justify-between">
                 <div>
-                    <h1 className="font-headline text-3xl font-black uppercase tracking-tight italic text-[#14532d]">Kitchen Profile</h1>
+                    <h1 className="font-headline text-3xl font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Profile</h1>
                     <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Configure your outlet's local identity and timings</p>
                 </div>
-                <div className="h-12 w-12 rounded-2xl bg-[#14532d]/10 flex items-center justify-center text-[#14532d]">
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandColor + '10', color: brandColor }}>
                     <Clock className="h-6 w-6" />
                 </div>
             </div>
@@ -171,7 +173,8 @@ export default function AdminOutletPage() {
                         <Button 
                             onClick={handleSaveChanges} 
                             disabled={isSaving}
-                            className="h-14 px-10 rounded-2xl bg-[#14532d] hover:bg-[#0f4023] text-white font-black uppercase tracking-widest shadow-lg transition-all active:scale-95"
+                            className="h-14 px-10 rounded-2xl text-white font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 border-none"
+                            style={{ backgroundColor: brandColor }}
                         >
                             {isSaving ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />}
                             Update Outlet Settings
