@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { 
   Search, 
@@ -22,7 +22,8 @@ import {
   AlertTriangle,
   Trophy,
   ChevronRightCircle,
-  MapPin
+  MapPin,
+  Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -31,7 +32,7 @@ import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useUser, useDoc, useCollection } from "@/firebase";
+import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
 import { getImageUrl } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
@@ -51,11 +52,28 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ZapizzaLogo } from "@/components/icons";
+import { collection, getDocs } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+
+// Haversine formula to calculate distance in KM
+const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
 
 export default function HomePage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const { addItem, totalItems, totalPrice } = useCart();
+  const db = useFirestore();
+  const { toast } = useToast();
   
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
@@ -63,6 +81,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
   const [api, setApi] = useState<CarouselApi>();
+  const [isDetecting, setIsDetecting] = useState(false);
 
   // Fetch actual user profile for loyalty coins
   const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
@@ -82,18 +101,89 @@ export default function HomePage() {
   const banners = useMemo(() => allBanners?.filter(b => b.brand === selectedOutlet?.brand) || [], [allBanners, selectedOutlet]);
   const coupons = useMemo(() => allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCoupons, selectedOutlet]);
 
+  const detectAndSetLocation = useCallback(async () => {
+    if (!db || !navigator.geolocation) return;
+
+    setIsDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          // 1. Find nearest city
+          const citySnap = await getDocs(collection(db, 'cities'));
+          const cities = citySnap.docs.map(d => ({ id: d.id, ...d.data() } as City));
+          
+          let nearestCity: City | null = null;
+          let minCityDist = Infinity;
+
+          cities.forEach(city => {
+            if (city.latitude && city.longitude) {
+              const d = getDistance(latitude, longitude, city.latitude, city.longitude);
+              if (d < minCityDist) {
+                minCityDist = d;
+                nearestCity = city;
+              }
+            }
+          });
+
+          if (nearestCity) {
+            handleCitySelect(nearestCity);
+            
+            // 2. Find nearest outlet in that city
+            const outletSnap = await getDocs(collection(db, 'outlets'));
+            const outlets = outletSnap.docs
+              .map(d => ({ id: d.id, ...d.data() } as Outlet))
+              .filter(o => o.cityId === (nearestCity as City).id);
+
+            let nearestOutlet: Outlet | null = null;
+            let minOutletDist = Infinity;
+
+            outlets.forEach(outlet => {
+              if (outlet.latitude && outlet.longitude) {
+                const d = getDistance(latitude, longitude, outlet.latitude, outlet.longitude);
+                if (d < minOutletDist) {
+                  minOutletDist = d;
+                  nearestOutlet = outlet;
+                }
+              }
+            });
+
+            if (nearestOutlet) {
+              handleOutletSelect(nearestOutlet);
+              toast({ title: "Location Detected", description: `Welome to ${nearestOutlet.name}!` });
+            }
+          }
+        } catch (e) {
+          console.error("Auto-location failed", e);
+        } finally {
+          setIsDetecting(false);
+        }
+      },
+      () => {
+        setIsDetecting(false);
+        // Silently fail, user can pick manually
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  }, [db, toast]);
+
   useEffect(() => {
     setIsHydrated(true);
     const savedCity = localStorage.getItem("zapizza-city");
     const savedOutlet = localStorage.getItem("zapizza-outlet");
     
-    if (savedCity) {
-        try { setSelectedCity(JSON.parse(savedCity)); } catch(e) {}
+    if (savedCity && savedOutlet) {
+        try { 
+          setSelectedCity(JSON.parse(savedCity)); 
+          setSelectedOutlet(JSON.parse(savedOutlet));
+        } catch(e) {
+          detectAndSetLocation();
+        }
+    } else {
+      detectAndSetLocation();
     }
-    if (savedOutlet) {
-        try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
-    }
-  }, []);
+  }, [detectAndSetLocation]);
 
   useEffect(() => {
     if (!api) return;
@@ -151,8 +241,17 @@ export default function HomePage() {
 
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
-  if (!isHydrated || userLoading) {
-    return <div className="flex justify-center items-center h-screen bg-white"><Skeleton className="h-12 w-12 rounded-full animate-spin" /></div>;
+  if (!isHydrated || userLoading || isDetecting) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-white">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <ZapizzaLogo className="h-16 w-16 text-primary" />
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" /> Identifying Nearest Outlet
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!selectedCity) return <CitySelector onCitySelect={handleCitySelect} />;
@@ -615,43 +714,6 @@ export default function HomePage() {
           </Button>
         </div>
       )}
-    </div>
-  );
-}
-
-function MenuItemCard({ item, onAdd, brandColor }: { item: MenuItem, onAdd: () => void, brandColor: string }) {
-  const hasOptions = (item.variations?.length || 0) > 0 || (item.addons?.length || 0) > 0;
-
-  return (
-    <div className="flex gap-5">
-      <div className="relative h-28 w-28 flex-shrink-0 rounded-xl overflow-hidden shadow-lg border">
-        <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
-      </div>
-      <div className="flex-1 flex flex-col">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className={`h-4 w-4 border-2 mb-1.5 flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-              <div className={`h-2 w-2 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
-            </div>
-            <h4 className="text-[14px] font-black text-[#333333] leading-tight uppercase tracking-tight">{item.name}</h4>
-            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed font-medium">{item.description}</p>
-          </div>
-        </div>
-        <div className="mt-auto flex items-center justify-between pt-3">
-          <div className="flex flex-col">
-            <span className="text-[15px] font-black" style={{ color: brandColor }}>₹{item.price}</span>
-            {hasOptions && <span className="text-[8px] font-bold text-muted-foreground uppercase">Options available</span>}
-          </div>
-          <Button 
-            size="sm" 
-            onClick={onAdd}
-            style={{ color: brandColor, borderColor: brandColor }}
-            className="h-8 px-6 bg-white border-2 font-black text-[11px] rounded shadow-md uppercase active:bg-muted transition-colors"
-          >
-            {hasOptions ? 'CUSTOMIZE' : 'ADD'}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

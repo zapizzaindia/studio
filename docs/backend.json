@@ -28,7 +28,9 @@
         "description": "A city where Zapizza has outlets.",
         "type": "object",
         "properties": {
-            "name": { "type": "string", "description": "The name of the city." }
+            "name": { "type": "string", "description": "The name of the city." },
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
         },
         "required": ["name"]
     },
@@ -41,9 +43,12 @@
             "cityId": { "type": "string", "description": "The ID of the city this outlet belongs to." },
             "isOpen": { "type": "boolean", "description": "Whether the outlet is currently open and accepting orders." },
             "openingTime": { "type": "string", "format": "time", "description": "The opening time of the outlet." },
-            "closingTime": { "type": "string", "format": "time", "description": "The closing time of the outlet." }
+            "closingTime": { "type": "string", "format": "time", "description": "The closing time of the outlet." },
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" },
+            "brand": { "type": "string", "enum": ["zapizza", "zfry"] }
         },
-        "required": ["name", "cityId", "isOpen"]
+        "required": ["name", "cityId", "isOpen", "brand"]
     },
     "category": {
         "title": "Menu Category",

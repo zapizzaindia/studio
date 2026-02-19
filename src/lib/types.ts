@@ -6,6 +6,8 @@ export type Brand = 'zapizza' | 'zfry';
 export type City = {
   id: string;
   name: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 export type Category = {
@@ -116,6 +118,8 @@ export type Outlet = {
     deliveryTime?: string;
     rating?: number;
     reviewCount?: number;
+    latitude?: number;
+    longitude?: number;
 };
 
 export type UserProfile = {
