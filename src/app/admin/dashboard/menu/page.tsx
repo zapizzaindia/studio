@@ -7,18 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import type { MenuItem, Category, UserProfile, OutletMenuAvailability } from '@/lib/types';
 import Image from 'next/image';
-import { useUser } from '@/firebase/auth/use-user';
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { useDoc } from '@/firebase/firestore/use-doc';
-import { firestore } from '@/firebase/config';
+import { useUser, useCollection, useDoc, useFirestore } from '@/firebase';
 import { placeholderImageMap } from '@/lib/placeholder-images';
 import { Skeleton } from '@/components/ui/skeleton';
 import { doc, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
-import { firestore as db } from '@/firebase/config';
-
 
 export default function AdminMenuPage() {
   const { user } = useUser();
@@ -30,7 +25,7 @@ export default function AdminMenuPage() {
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: availabilityData, loading: availabilityLoading } = useCollection<OutletMenuAvailability>(`outlets/${outletId}/menuAvailability`);
   
- 
+  const db = useFirestore();
   const { toast } = useToast();
 
   const [availabilityMap, setAvailabilityMap] = useState<Record<string, boolean>>({});
@@ -38,23 +33,22 @@ export default function AdminMenuPage() {
   useEffect(() => {
     if (availabilityData) {
       const newMap: Record<string, boolean> = {};
-      availabilityData.forEach((item: OutletMenuAvailability & { id: string }) => {
-        const id = (item as any).id; // The document ID is the menuItemId
-        newMap[id] = item.isAvailable;
+      availabilityData.forEach((item: any) => {
+        newMap[item.id] = item.isAvailable;
       });
       setAvailabilityMap(newMap);
     }
   }, [availabilityData]);
 
   const handleToggleAvailability = (itemId: string, isGloballyAvailable: boolean) => {
-    if (!db || !outletId) return;
+    if (!db || !outletId || outletId === 'dummy') return;
 
     if (!isGloballyAvailable) {
         toast({ variant: 'destructive', title: 'Action not allowed', description: 'This item is managed by the franchise and cannot be toggled here.'});
         return;
     }
 
-    const currentStatus = availabilityMap[itemId] ?? true; // Default to available
+    const currentStatus = availabilityMap[itemId] ?? true; 
     const newStatus = !currentStatus;
 
     const availabilityRef = doc(
@@ -63,12 +57,16 @@ export default function AdminMenuPage() {
       itemId
     );    
 
-    setDoc(availabilityRef, { isAvailable: newStatus })
+    // Optimistic Update
+    setAvailabilityMap(prev => ({ ...prev, [itemId]: newStatus }));
+
+    setDoc(availabilityRef, { isAvailable: newStatus }, { merge: true })
         .then(() => {
-            setAvailabilityMap(prev => ({ ...prev, [itemId]: newStatus }));
-            toast({ title: 'Availability updated' });
+            toast({ title: 'Availability updated', duration: 2000 });
         })
         .catch(error => {
+            // Revert on error
+            setAvailabilityMap(prev => ({ ...prev, [itemId]: currentStatus }));
             const permissionError = new FirestorePermissionError({
                 path: availabilityRef.path,
                 operation: 'write',
@@ -79,13 +77,13 @@ export default function AdminMenuPage() {
   };
 
   const isLoading = menuItemsLoading || categoriesLoading || availabilityLoading;
-  const sortedCategories = categories ? [...categories].sort((a,b) => (a as any).order - (b as any).order) : [];
+  const sortedCategories = categories ? [...categories].sort((a,b) => (a.order || 0) - (b.order || 0)) : [];
 
   return (
     <div className="container mx-auto p-0">
-      <div className="mb-4">
-        <h1 className="font-headline text-3xl font-bold">Menu Management</h1>
-        <p className="text-muted-foreground">Toggle availability of menu items for your outlet.</p>
+      <div className="mb-8">
+        <h1 className="font-headline text-3xl font-bold">Kitchen Stock</h1>
+        <p className="text-muted-foreground">Toggle availability of menu items for your local outlet.</p>
       </div>
 
       {isLoading ? (
@@ -95,54 +93,64 @@ export default function AdminMenuPage() {
             <Card><CardContent className="p-0"><Skeleton className="w-full h-64" /></CardContent></Card>
           </div>
         ))
-      ) : sortedCategories.map(category => (
-        <div key={category.id} className="mb-8">
-            <h2 className="font-headline text-2xl font-bold mb-4">{category.name}</h2>
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[80px]">Image</TableHead>
-                                <TableHead>Item</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead className="text-right">Available</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {menuItems
-  ?.filter((item: MenuItem) => item.category === category.id)
-  .map((item: MenuItem) => (
-                                <TableRow key={item.id}>
-                                    <TableCell>
-                                      <Image
-                                        src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-                                        alt={item.name}
-                                        width={56}
-                                        height={56}
-                                        className="rounded-md object-cover"
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                        <p className="font-medium">{item.name}</p>
-                                        <p className="text-sm text-muted-foreground hidden md:block">{item.description}</p>
-                                    </TableCell>
-                                    <TableCell>₹{item.price.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Switch
-                                            checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}
-                                            disabled={!item.isAvailableGlobally}
-                                            onCheckedChange={() => handleToggleAvailability(item.id, item.isAvailableGlobally)}
-                                        />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
-      ))}
+      ) : sortedCategories.map(category => {
+        const catItems = menuItems?.filter((item: MenuItem) => item.category === category.id) || [];
+        if (catItems.length === 0) return null;
+
+        return (
+          <div key={category.id} className="mb-10">
+              <h2 className="font-headline text-2xl font-bold mb-4 italic uppercase tracking-tight text-[#333]">{category.name}</h2>
+              <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                  <CardContent className="p-0">
+                      <Table>
+                          <TableHeader className="bg-gray-50/50">
+                              <TableRow className="border-b-gray-100 hover:bg-transparent">
+                                  <TableHead className="w-[80px] pl-8">Image</TableHead>
+                                  <TableHead>Item</TableHead>
+                                  <TableHead>Price</TableHead>
+                                  <TableHead className="text-right pr-8">Available</TableHead>
+                              </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                              {catItems.map((item: MenuItem) => (
+                                  <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
+                                      <TableCell className="pl-8 py-4">
+                                        <div className="relative h-14 w-14 rounded-xl overflow-hidden border-2 border-white shadow-md">
+                                          <Image
+                                            src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+                                            alt={item.name}
+                                            fill
+                                            className="object-cover"
+                                          />
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                          <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                              <span className={cn("h-2 w-2 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
+                                              <p className="font-black uppercase text-xs tracking-tight">{item.name}</p>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground hidden md:block mt-0.5">{item.description}</p>
+                                          </div>
+                                      </TableCell>
+                                      <TableCell className="font-bold">₹{item.price.toFixed(2)}</TableCell>
+                                      <TableCell className="text-right pr-8">
+                                          <Switch
+                                              checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}
+                                              disabled={!item.isAvailableGlobally}
+                                              onCheckedChange={() => handleToggleAvailability(item.id, item.isAvailableGlobally)}
+                                              className="data-[state=checked]:bg-green-500"
+                                          />
+                                      </TableCell>
+                                  </TableRow>
+                              ))}
+                          </TableBody>
+                      </Table>
+                  </CardContent>
+              </Card>
+          </div>
+        )
+      })}
     </div>
   );
 }

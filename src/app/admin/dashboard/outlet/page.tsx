@@ -31,7 +31,7 @@ export default function AdminOutletPage() {
     const [isOutletOpen, setIsOutletOpen] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
-    const firestore = useFirestore();
+    const db = useFirestore();
     const { toast } = useToast();
 
     useEffect(() => {
@@ -44,10 +44,14 @@ export default function AdminOutletPage() {
     }, [outlet]);
     
     const handleSaveChanges = () => {
-        if (!firestore || !outletId) return;
+        if (!db || !outletId || outletId === 'dummy') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Outlet ID not found. Please re-login.' });
+            return;
+        }
+        
         setIsSaving(true);
 
-        const outletRef = doc(firestore, 'outlets', outletId);
+        const outletRef = doc(db, 'outlets', outletId);
         const updatedData = {
             name: outletName,
             isOpen: isOutletOpen,
