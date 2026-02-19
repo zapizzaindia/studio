@@ -14,17 +14,20 @@ import {
   ShoppingBag,
   PlusCircle,
   Flame,
-  Ticket
+  Ticket,
+  Crown,
+  History,
+  Info,
+  Timer
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon, Coupon } from "@/lib/types";
+import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon, Coupon, UserProfile } from "@/lib/types";
 import { CitySelector } from "@/components/city-selector";
 import { OutletSelector } from "@/components/outlet-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useUser } from "@/firebase/auth/use-user";
-import { useCollection } from "@/firebase/firestore/use-collection";
+import { useUser, useDoc, useCollection } from "@/firebase";
 import { getImageUrl } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
@@ -55,6 +58,9 @@ export default function HomePage() {
   const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
   const [api, setApi] = useState<CarouselApi>();
 
+  // Fetch actual user profile for loyalty coins
+  const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+
   // Customization State
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
@@ -63,7 +69,7 @@ export default function HomePage() {
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
   const { data: allBanners, loading: bannersLoading } = useCollection<Banner>('banners');
-  const { data: allCoupons, loading: couponsLoading } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
+  const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
   
   const categories = useMemo(() => allCategories?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCategories, selectedOutlet]);
   const menuItems = useMemo(() => allMenuItems?.filter(i => i.brand === selectedOutlet?.brand) || [], [allMenuItems, selectedOutlet]);
@@ -315,7 +321,7 @@ export default function HomePage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                      <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+                      <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                     </div>
                     <div className="flex gap-1">
                       <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1.5 py-0 rounded-sm border-none">Bestseller</Badge>
@@ -349,6 +355,64 @@ export default function HomePage() {
               </div>
             </motion.div>
           ))}
+        </div>
+      </div>
+
+      {/* LOYALTY PROGRAM INFO SECTION */}
+      <div className="mt-4 relative overflow-hidden">
+        <div 
+          style={{ backgroundColor: brandColor }} 
+          className="w-full px-6 py-12 text-center text-white relative"
+        >
+          {/* Sunburst Radial Effect */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_center,_white_0%,_transparent_70%)]" />
+          
+          <div className="relative z-10 space-y-2">
+            <h2 className="text-xl font-black uppercase leading-tight px-4 drop-shadow-sm">
+              Place Orders Worth Rs.1000 to Upgrade Your Account to ACE Level
+            </h2>
+            <p className="text-xs font-bold uppercase tracking-widest opacity-80">
+              Get LP Coins on Every Order
+            </p>
+          </div>
+
+          <div className="mt-8 px-2 relative z-10">
+            <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden">
+              <CardContent className="p-6 text-left">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-2xl font-black text-[#333] leading-none">
+                    {userProfile?.loyaltyPoints || 0} LP Coins
+                  </h3>
+                  <div className="flex items-center gap-2 mt-3 text-muted-foreground">
+                    <Timer className="h-3.5 w-3.5" />
+                    <p className="text-[10px] font-black uppercase tracking-tight">
+                      10% of the Subtotal Value can be paid using the LP ...
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-px bg-gray-100 rounded-2xl border border-gray-100 mt-6 overflow-hidden">
+                  <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
+                    <span className="text-lg font-black text-[#333]">{userProfile?.loyaltyPoints || 0}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Total Coins</span>
+                  </div>
+                  <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
+                    <span className="text-lg font-black text-[#333]">0</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Coins Used</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-black text-[#333] uppercase">1 LP Coin = ₹1</span>
+                  </div>
+                  <Button variant="link" className="p-0 h-auto font-black text-xs uppercase tracking-widest underline decoration-2 underline-offset-4" style={{ color: brandColor }}>
+                    Rewards Details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
