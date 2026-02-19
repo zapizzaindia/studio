@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MenuItem, Category, MenuItemVariation, MenuItemAddon, Brand } from '@/lib/types';
 import Image from 'next/image';
 import { placeholderImageMap, getImageUrl } from '@/lib/placeholder-images';
-import { Plus, Trash2, Edit, Layers, ImageIcon, PlusCircle, IndianRupee, Flame, Pizza, Loader2, Link as LinkIcon, Globe } from 'lucide-react';
+import { Plus, Trash2, Edit, Layers, ImageIcon, PlusCircle, IndianRupee, Flame, Pizza, Loader2, Link as LinkIcon, Upload, Check } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -38,6 +38,9 @@ export default function FranchiseMenuPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const catFileInputRef = useRef<HTMLInputElement>(null);
+
   // New Item State
   const [newItemName, setNewItemName] = useState("");
   const [newItemDesc, setNewItemDesc] = useState("");
@@ -77,6 +80,27 @@ export default function FranchiseMenuPage() {
     setEditingCategory(cat);
     setNewCategoryName(cat.name);
     setNewCategoryImageId(cat.imageId || "cat_veg");
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, isCategory = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'File too large', description: 'Please upload an image smaller than 1MB for best performance.' });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        if (isCategory) {
+            setNewCategoryImageId(reader.result as string);
+        } else {
+            setNewItemImageId(reader.result as string);
+        }
+        toast({ title: 'Image Processed', description: 'New visual asset ready for sync.' });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddItem = () => {
@@ -274,16 +298,25 @@ export default function FranchiseMenuPage() {
                             <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 bg-white shadow-inner flex-shrink-0">
                                 <Image src={getImageUrl(newCategoryImageId)} alt="Preview" fill className="object-cover" />
                             </div>
-                            <div className="flex-1">
-                                <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId}>
+                            <div className="flex-1 space-y-2">
+                                <input type="file" hidden ref={catFileInputRef} accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
+                                <Button 
+                                    variant="outline" 
+                                    className="w-full h-10 rounded-xl font-black uppercase text-[9px] tracking-widest border-dashed"
+                                    onClick={() => catFileInputRef.current?.click()}
+                                >
+                                    <Upload className="mr-2 h-3 w-3" /> Upload Icon
+                                </Button>
+                                <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId.startsWith('data:') ? 'custom' : newCategoryImageId}>
                                     <SelectTrigger className="h-10 text-[9px] font-black uppercase">
-                                        <SelectValue placeholder="Select Icon" />
+                                        <SelectValue placeholder="Or Select Default" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="cat_veg">Veg Pizza</SelectItem>
                                         <SelectItem value="cat_nonveg">Non-Veg</SelectItem>
                                         <SelectItem value="cat_beverages">Drinks</SelectItem>
                                         <SelectItem value="cat_desserts">Sweets</SelectItem>
+                                        {newCategoryImageId.startsWith('data:') && <SelectItem value="custom">Custom Image</SelectItem>}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -375,16 +408,31 @@ export default function FranchiseMenuPage() {
                             </div>
 
                             <div className="grid gap-6">
-                                <div className="space-y-2">
-                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                                        <LinkIcon className="h-3 w-3" /> External Image URL (Direct)
-                                    </Label>
-                                    <Input 
-                                        value={newItemImageId.startsWith('http') ? newItemImageId : ''} 
-                                        onChange={e => setNewItemImageId(e.target.value)} 
-                                        placeholder="https://images.unsplash.com/photo-..." 
-                                        className="font-bold h-12 rounded-xl text-xs"
-                                    />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                            <Upload className="h-3 w-3" /> Upload Photo
+                                        </Label>
+                                        <input type="file" hidden ref={fileInputRef} accept="image/*" onChange={handleFileUpload} />
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 bg-white shadow-sm"
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            Browse Files
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                            <LinkIcon className="h-3 w-3" /> External URL
+                                        </Label>
+                                        <Input 
+                                            value={newItemImageId.startsWith('http') ? newItemImageId : ''} 
+                                            onChange={e => setNewItemImageId(e.target.value)} 
+                                            placeholder="https://..." 
+                                            className="font-bold h-12 rounded-xl text-xs"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="relative">

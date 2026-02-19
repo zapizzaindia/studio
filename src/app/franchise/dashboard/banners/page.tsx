@@ -1,20 +1,20 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Edit, ImageIcon, Upload, Pizza, Flame, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit, ImageIcon, Upload, Pizza, Flame, Loader2, Link as LinkIcon } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
-import { placeholderImageMap } from '@/lib/placeholder-images';
+import { placeholderImageMap, getImageUrl } from '@/lib/placeholder-images';
 import type { Banner, Brand } from '@/lib/types';
 import { cn } from "@/lib/utils";
 import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
@@ -31,6 +31,8 @@ export default function FranchiseBannersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newTitle, setNewTitle] = useState("");
   const [newSubtitle, setNewSubtitle] = useState("");
@@ -47,6 +49,23 @@ export default function FranchiseBannersPage() {
     setNewPrice(banner.price || "");
     setNewImageId(banner.imageId);
     setIsAddDialogOpen(true);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'File too large', description: 'Please use an image under 1MB for smooth app performance.' });
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        setNewImageId(reader.result as string);
+        toast({ title: 'Visual Updated', description: 'Custom photo applied to banner.' });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddBanner = () => {
@@ -182,25 +201,45 @@ export default function FranchiseBannersPage() {
               </div>
               
               <div className="space-y-4">
-                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Banner Visual (Template)</Label>
-                <Select onValueChange={setNewImageId} value={newImageId}>
-                    <SelectTrigger className="h-12 rounded-xl font-bold uppercase text-[10px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="banner_1">Promo Large</SelectItem>
-                        <SelectItem value="banner_2">Cheese Lava</SelectItem>
-                        <SelectItem value="banner_3">Dessert Special</SelectItem>
-                    </SelectContent>
-                </Select>
-                <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 bg-muted/20 mt-2">
+                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Banner Visual (Upload or Link)</Label>
+                <div className="grid grid-cols-2 gap-3">
+                    <input type="file" hidden ref={fileInputRef} accept="image/*" onChange={handleFileUpload} />
+                    <Button 
+                        variant="outline" 
+                        className="h-11 rounded-xl font-black uppercase text-[9px] tracking-widest border-2"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <Upload className="mr-2 h-3.5 w-3.5" /> Browse Photos
+                    </Button>
+                    <div className="relative">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                        <Input 
+                            value={newImageId.startsWith('http') ? newImageId : ''} 
+                            onChange={e => setNewImageId(e.target.value)} 
+                            placeholder="Direct URL" 
+                            className="pl-8 h-11 text-[10px] font-bold rounded-xl"
+                        />
+                    </div>
+                </div>
+                <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 bg-muted/20 mt-2 shadow-inner">
                     <Image 
-                        src={placeholderImageMap.get(newImageId)?.imageUrl || ''} 
+                        src={getImageUrl(newImageId)} 
                         alt="Preview" 
                         fill 
                         className="object-cover"
                     />
                 </div>
+                <Select onValueChange={setNewImageId} value={newImageId.startsWith('data:') || newImageId.startsWith('http') ? 'custom' : newImageId}>
+                    <SelectTrigger className="h-10 rounded-xl font-bold uppercase text-[9px]">
+                        <SelectValue placeholder="Or select from library" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="banner_1">Promo Large</SelectItem>
+                        <SelectItem value="banner_2">Cheese Lava</SelectItem>
+                        <SelectItem value="banner_3">Dessert Special</SelectItem>
+                        {(newImageId.startsWith('data:') || newImageId.startsWith('http')) && <SelectItem value="custom">Custom Asset Ready</SelectItem>}
+                    </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 border-t flex gap-4">
@@ -233,7 +272,7 @@ export default function FranchiseBannersPage() {
                   <TableCell className="pl-8 py-6">
                     <div className="relative h-20 w-32 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5">
                       <Image
-                        src={placeholderImageMap.get(banner.imageId)?.imageUrl || ''}
+                        src={getImageUrl(banner.imageId)}
                         alt={banner.title || 'Banner'}
                         fill
                         className="object-cover"
