@@ -109,11 +109,15 @@ export default function AdminOrdersPage() {
     const payNote = order.paymentMethod === 'Cash' ? `\n\n💵 *COLLECT CASH:* ₹${order.total.toFixed(2)}` : `\n\n✅ *PRE-PAID ORDER*`;
     
     // Construct the "Magic Link" for the rider to mark as delivered
-    const host = window.location.origin;
-    const magicLink = `\n\n✅ *MARK DELIVERED:* ${host}/delivery/${order.id}`;
+    // Ensure we strip any double slashes from the final URL
+    const host = window.location.origin.replace(/\/$/, "");
+    const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery/${order.id}`;
 
-    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${payNote}${magicLink}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const text = `🍕 *${outlet?.brand === 'zfry' ? 'ZFRY' : 'ZAPIZZA'} ORDER* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${payNote}${magicLink}`;
+    
+    // Using WhatsApp API for better mobile support
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
   };
 
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
