@@ -23,7 +23,8 @@ import {
   Trophy,
   ChevronRightCircle,
   MapPin,
-  Loader2
+  Loader2,
+  Wallet
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -269,12 +270,24 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
       <div style={{ backgroundColor: brandColor }} className="text-white px-6 pt-10 pb-12 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700">
-        <div className="relative z-10 flex justify-between items-end">
+        <div className="relative z-10 flex justify-between items-start">
           <div className="flex flex-col">
             <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">Welcome Back,</p>
-            <h1 className="text-2xl font-black italic tracking-tighter leading-none">
+            <h1 className="text-2xl font-black italic tracking-tighter leading-none mb-3">
               {userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Gourmet'}!
             </h1>
+            
+            {/* Live Loyalty Point Badge */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => router.push('/home/rewards')}
+              className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer active:scale-95 transition-all"
+            >
+              <Wallet className="h-3 w-3 text-yellow-400 fill-current" />
+              <span className="text-[10px] font-black uppercase tracking-widest">{userProfile?.loyaltyPoints || 0} LP COINS</span>
+              <ChevronRight className="h-2.5 w-2.5 opacity-50" />
+            </motion.div>
           </div>
           <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
             <button onClick={() => setOrderType("delivery")} className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${orderType === "delivery" ? 'bg-white text-[#333] shadow-sm' : 'text-white/80'}`}>
@@ -472,7 +485,7 @@ export default function HomePage() {
                   <div className="flex flex-col">
                     <span className="text-[11px] font-black text-[#333] uppercase">1 LP Coin = ₹1</span>
                   </div>
-                  <Button variant="link" className="p-0 h-auto font-black text-xs uppercase tracking-widest underline decoration-2 underline-offset-4" style={{ color: brandColor }}>
+                  <Button variant="link" onClick={() => router.push('/home/rewards')} className="p-0 h-auto font-black text-xs uppercase tracking-widest underline decoration-2 underline-offset-4" style={{ color: brandColor }}>
                     Rewards Details
                   </Button>
                 </div>

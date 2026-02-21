@@ -141,6 +141,7 @@ export default function CheckoutPage() {
     setIsPlacing(true);
     
     const outlet = selectedOutlet || { id: 'default' };
+    const pointsEarned = Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1));
 
     const orderData: any = {
       customerId: user.uid,
@@ -173,14 +174,13 @@ export default function CheckoutPage() {
       },
       paymentMethod: paymentMethod,
       paymentStatus: paymentMethod === 'Online' ? "Success" : "Pending",
-      paymentId: paymentMethod === 'Online' ? `pay_${Math.random().toString(36).substring(7)}` : null
+      paymentId: paymentMethod === 'Online' ? `pay_${Math.random().toString(36).substring(7)}` : null,
+      loyaltyPointsEarned: pointsEarned
     };
 
     if (specialNote.trim()) {
       orderData.specialNote = specialNote.trim();
     }
-
-    const pointsEarned = Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1));
 
     if (paymentMethod === 'Online') {
         toast({ title: "Connecting to Secure Gateway...", description: "Processing your transaction..." });
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
 
     addDoc(collection(db, 'orders'), orderData)
     .then(() => {
-      // Update Loyalty Points in User Profile
+      // Update Loyalty Points in User Profile - ensure it's a number and profile exists
       if (user && pointsEarned > 0) {
         updateDoc(doc(db, 'users', user.uid), {
           loyaltyPoints: increment(pointsEarned)

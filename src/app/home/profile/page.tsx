@@ -21,7 +21,9 @@ import {
   Facebook,
   Instagram,
   ChevronRight,
-  Cake
+  Cake,
+  Crown,
+  Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -135,7 +137,14 @@ export default function ProfilePage() {
               <ArrowLeft className="h-6 w-6" />
             </Button>
             
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+                setIsEditDialogOpen(open);
+                if (profile) {
+                    setNewDisplayName(profile.displayName || "");
+                    setNewEmail(profile.email || "");
+                    setNewBirthday(profile.birthday || "");
+                }
+            }}>
               <DialogTrigger asChild>
                 <button className="text-[10px] font-black uppercase tracking-widest border-b border-white/40 pb-0.5">
                   EDIT
@@ -211,6 +220,30 @@ export default function ProfilePage() {
       </div>
 
       <div className="px-4 -mt-6 space-y-4 relative z-20">
+        
+        {/* Loyalty Snapshot Card */}
+        <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+            <CardContent className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-[#14532d] flex items-center justify-center text-white shadow-lg shadow-green-900/20">
+                        <Crown className="h-7 w-7" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14532d]">Loyalty Balance</p>
+                        <h3 className="text-2xl font-black text-[#333] italic tracking-tighter">{profile?.loyaltyPoints || 0} LP COINS</h3>
+                    </div>
+                </div>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => router.push('/home/rewards')}
+                    className="h-10 w-10 rounded-full bg-gray-50 text-[#14532d]"
+                >
+                    <ChevronRight className="h-5 w-5" />
+                </Button>
+            </CardContent>
+        </Card>
+
         {/* Action Menu Card */}
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden">
           <CardContent className="p-0">
