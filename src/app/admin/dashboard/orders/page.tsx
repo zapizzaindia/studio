@@ -92,7 +92,6 @@ export default function AdminOrdersPage() {
       .then(() => {
         toast({ title: "Status Updated" });
         if (selectedOrder?.id === orderId) {
-            // Update local selected order state if the dialog is open
             setSelectedOrder(prev => prev ? { ...prev, status } : null);
         }
       })
@@ -107,7 +106,12 @@ export default function AdminOrdersPage() {
     const addr = order.deliveryAddress;
     const mapLink = addr?.latitude ? `\n📍 *Map:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
     const note = order.specialNote ? `\n\n📝 *KITCHEN NOTE:* ${order.specialNote.toUpperCase()}` : '';
-    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}\n\n*Items:*\n${order.items.map(i => `- ${i.quantity}x ${i.name} (${i.variation || 'Standard'})${i.addons ? ' +' + i.addons.join(', ') : ''}`).join('\n')}`;
+    
+    // Construct the "Magic Link" for the rider to mark as delivered
+    const host = window.location.origin;
+    const magicLink = `\n\n✅ *MARK DELIVERED:* ${host}/delivery/${order.id}`;
+
+    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${magicLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -220,7 +224,6 @@ export default function AdminOrdersPage() {
               </DialogHeader>
               
               <div className="p-8 space-y-8 overflow-y-auto scrollbar-hide flex-1 bg-white">
-                {/* 1. URGENT: Special Instructions */}
                 {selectedOrder.specialNote && (
                   <div className="space-y-3">
                     <h4 className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -234,7 +237,6 @@ export default function AdminOrdersPage() {
                   </div>
                 )}
 
-                {/* 2. Customer & Delivery Intelligence */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2"><UserCheck className="h-3 w-3" /> Customer Profile</h4>
@@ -272,7 +274,6 @@ export default function AdminOrdersPage() {
                     </div>
                 </div>
 
-                {/* 3. Detailed Order Manifest */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Kitchen Preparation List</h4>
@@ -300,7 +301,6 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                {/* 4. Financial Reconciliation */}
                 <div className="bg-gray-50 p-8 rounded-[32px] border border-gray-100 space-y-4 shadow-inner">
                   <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest"><span>Net Item Total</span><span>₹{selectedOrder.subtotal.toFixed(2)}</span></div>
                   <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest"><span>Applied Taxes (GST)</span><span>₹{selectedOrder.gst.toFixed(2)}</span></div>
@@ -319,7 +319,6 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                {/* 5. Loyalty & Customer Retention */}
                 <div className="flex items-center gap-4 p-6 rounded-[24px] border border-dashed transition-all" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '20' }}>
                     <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-white shadow-xl rotate-[-5deg]" style={{ backgroundColor: brandColor }}>
                         <Crown className="h-6 w-6" />
