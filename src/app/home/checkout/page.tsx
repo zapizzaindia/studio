@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/hooks/use-cart";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
-import { doc, collection, addDoc, serverTimestamp, query, getDocs } from "firebase/firestore";
+import { doc, collection, addDoc, serverTimestamp, query, getDocs, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import type { GlobalSettings, Coupon, Address, Outlet, UserProfile } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -180,6 +180,8 @@ export default function CheckoutPage() {
       orderData.specialNote = specialNote.trim();
     }
 
+    const pointsEarned = Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1));
+
     if (paymentMethod === 'Online') {
         toast({ title: "Connecting to Secure Gateway...", description: "Processing your transaction..." });
     } else {
@@ -188,6 +190,15 @@ export default function CheckoutPage() {
 
     addDoc(collection(db, 'orders'), orderData)
     .then(() => {
+      // Update Loyalty Points in User Profile
+      if (user && pointsEarned > 0) {
+        updateDoc(doc(db, 'users', user.uid), {
+          loyaltyPoints: increment(pointsEarned)
+        }).catch(err => {
+          console.error("Failed to update loyalty points", err);
+        });
+      }
+      
       clearCart();
       router.push('/home/checkout/success');
     })
