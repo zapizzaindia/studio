@@ -48,7 +48,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,7 +90,7 @@ export default function HomePage() {
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
   // Fetch actual user profile for loyalty coins and display name
-  const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -279,13 +279,17 @@ export default function HomePage() {
             
             {/* Live Loyalty Point Badge */}
             <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              key={userProfile?.loyaltyPoints}
+              initial={{ opacity: 0, x: -20, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => router.push('/home/rewards')}
-              className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer active:scale-95 transition-all"
+              className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer active:scale-95 transition-all shadow-sm group"
             >
-              <Wallet className="h-3 w-3 text-yellow-400 fill-current" />
-              <span className="text-[10px] font-black uppercase tracking-widest">{userProfile?.loyaltyPoints || 0} LP COINS</span>
+              <Wallet className="h-3 w-3 text-yellow-400 fill-current group-hover:rotate-12 transition-transform" />
+              <span className="text-[10px] font-black uppercase tracking-widest tabular-nums">
+                {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP COINS
+              </span>
               <ChevronRight className="h-2.5 w-2.5 opacity-50" />
             </motion.div>
           </div>
@@ -459,8 +463,8 @@ export default function HomePage() {
             <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden">
               <CardContent className="p-6 text-left">
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-2xl font-black text-[#333] leading-none">
-                    {userProfile?.loyaltyPoints || 0} LP Coins
+                  <h3 className="text-2xl font-black text-[#333] leading-none tabular-nums">
+                    {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP Coins
                   </h3>
                   <div className="flex items-center gap-2 mt-3 text-muted-foreground">
                     <Timer className="h-3.5 w-3.5" />
@@ -472,11 +476,13 @@ export default function HomePage() {
 
                 <div className="grid grid-cols-2 gap-px bg-gray-100 rounded-2xl border border-gray-100 mt-6 overflow-hidden">
                   <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-lg font-black text-[#333]">{userProfile?.loyaltyPoints || 0}</span>
+                    <span className="text-lg font-black text-[#333] tabular-nums">
+                      {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)}
+                    </span>
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Total Coins</span>
                   </div>
                   <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-lg font-black text-[#333]">0</span>
+                    <span className="text-lg font-black text-[#333] tabular-nums">0</span>
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Coins Used</span>
                   </div>
                 </div>

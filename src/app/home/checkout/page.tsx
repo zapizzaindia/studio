@@ -190,7 +190,7 @@ export default function CheckoutPage() {
 
     addDoc(collection(db, 'orders'), orderData)
     .then(() => {
-      // Update Loyalty Points in User Profile - ensure it's a number and profile exists
+      // ATOMIC UPDATE: Ensure points are added correctly without race conditions
       if (user && pointsEarned > 0) {
         updateDoc(doc(db, 'users', user.uid), {
           loyaltyPoints: increment(pointsEarned)
@@ -481,7 +481,7 @@ export default function CheckoutPage() {
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2 text-left">
             <ShieldCheck className="h-5 w-5" style={{ color: brandColor }} />
-            <div className="flex flex-col">
+            <div className="flex items-center flex-col">
               <span className="text-[11px] font-black uppercase text-[#333333]">Secure Terminal Entry</span>
               <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
                 {paymentMethod === 'Online' ? '100% Encrypted' : 'Verification Required'}
