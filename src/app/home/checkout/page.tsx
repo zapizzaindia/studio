@@ -140,18 +140,17 @@ export default function CheckoutPage() {
     
     const outlet = selectedOutlet || { id: 'default' };
 
-    const orderData = {
+    const orderData: any = {
       customerId: user.uid,
       customerName: user.displayName || "Gourmet Customer",
       customerPhone: user.phoneNumber || "+91-9876543210",
-      specialNote: specialNote.trim() || undefined,
       items: items.map(i => ({
         menuItemId: i.id,
         name: i.name,
         quantity: i.quantity,
         price: i.price,
-        variation: i.selectedVariation?.name,
-        addons: i.selectedAddons?.map(a => a.name)
+        variation: i.selectedVariation?.name || null,
+        addons: i.selectedAddons?.map(a => a.name) || []
       })),
       subtotal: calculations.subtotal,
       gst: calculations.gstTotal,
@@ -165,15 +164,19 @@ export default function CheckoutPage() {
         label: selectedAddress.label,
         flatNo: selectedAddress.flatNo,
         area: selectedAddress.area,
-        landmark: selectedAddress.landmark,
+        landmark: selectedAddress.landmark || null,
         city: selectedAddress.city,
-        latitude: selectedAddress.latitude,
-        longitude: selectedAddress.longitude
+        latitude: selectedAddress.latitude || null,
+        longitude: selectedAddress.longitude || null
       },
       paymentMethod: paymentMethod,
       paymentStatus: paymentMethod === 'Online' ? "Success" : "Pending",
-      paymentId: paymentMethod === 'Online' ? `pay_${Math.random().toString(36).substring(7)}` : undefined
+      paymentId: paymentMethod === 'Online' ? `pay_${Math.random().toString(36).substring(7)}` : null
     };
+
+    if (specialNote.trim()) {
+      orderData.specialNote = specialNote.trim();
+    }
 
     if (paymentMethod === 'Online') {
         toast({ title: "Connecting to Secure Gateway...", description: "Processing your transaction..." });
@@ -187,6 +190,7 @@ export default function CheckoutPage() {
       router.push('/home/checkout/success');
     })
     .catch(async (error) => {
+      console.error("Order error:", error);
       const permissionError = new FirestorePermissionError({
         path: 'orders',
         operation: 'create',
