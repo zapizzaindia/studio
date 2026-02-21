@@ -11,7 +11,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
 import { doc, collection, addDoc, serverTimestamp, query, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import type { GlobalSettings, Coupon, Address, Outlet } from "@/lib/types";
+import type { GlobalSettings, Coupon, Address, Outlet, UserProfile } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -28,6 +28,8 @@ export default function CheckoutPage() {
   const { user } = useUser();
   const db = useFirestore();
   
+  // Fetch user profile to get the actual name provided during onboarding
+  const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   const { data: settings } = useDoc<GlobalSettings>('settings', 'global');
   const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
 
@@ -142,8 +144,8 @@ export default function CheckoutPage() {
 
     const orderData: any = {
       customerId: user.uid,
-      customerName: user.displayName || "Gourmet Customer",
-      customerPhone: user.phoneNumber || "+91-9876543210",
+      customerName: userProfile?.displayName || user.displayName || "Gourmet Customer",
+      customerPhone: userProfile?.phoneNumber || user.phoneNumber || "+91-0000000000",
       items: items.map(i => ({
         menuItemId: i.id,
         name: i.name,
