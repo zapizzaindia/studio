@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Map, Check, Navigation, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Map, Check, Navigation, Loader2, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useUser, useFirestore } from "@/firebase";
 import { collection, doc, addDoc, deleteDoc, updateDoc, query, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import dynamic from 'next/dynamic';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { Address } from "@/lib/types";
+
+// Dynamically import Map component to prevent SSR issues with Leaflet
+const LocationPicker = dynamic(() => import('@/components/location-picker'), { 
+  ssr: false,
+  loading: () => <div className="h-[450px] w-full bg-muted animate-pulse rounded-2xl flex flex-col items-center justify-center gap-4">
+    <Map className="h-12 w-12 text-muted-foreground/20 animate-bounce" />
+    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Satellites...</p>
+  </div>
+});
 
 const labelIcons = {
   Home: <Home className="h-4 w-4" />,
@@ -36,6 +46,7 @@ export default function AddressesPage() {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
 
   // Form State
@@ -79,11 +90,11 @@ export default function AddressesPage() {
           lng: position.coords.longitude,
         });
         setIsDetecting(false);
-        toast({ title: "Location captured!", description: "We've pinned your exact coordinates." });
+        toast({ title: "Location captured!", description: "We've pinned your general area. Use the map for precision." });
       },
       (error) => {
         setIsDetecting(false);
-        toast({ title: "Permission Denied", description: "Please allow location access to use this feature.", variant: "destructive" });
+        toast({ title: "Permission Denied", description: "Please allow location access or select manually on map.", variant: "destructive" });
       },
       { enableHighAccuracy: true }
     );
@@ -104,8 +115,8 @@ export default function AddressesPage() {
       landmark,
       city,
       isDefault: addresses.length === 0,
-      latitude: coords.lat,
-      longitude: coords.lng,
+      latitude: coords.lat || null,
+      longitude: coords.lng || null,
     };
 
     try {
@@ -158,7 +169,7 @@ export default function AddressesPage() {
         <h1 className="text-xl font-black text-[#14532d] uppercase tracking-widest">Saved Addresses</h1>
       </div>
 
-      <div className="p-4 space-y-4 container max-w-lg mx-auto">
+      <div className="p-4 space-y-4 container max-w-lg mx-auto text-left">
         {addresses.length === 0 ? (
           <div className="text-center py-20">
             <MapPin className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
@@ -222,23 +233,41 @@ export default function AddressesPage() {
               ADD NEW ADDRESS <Plus className="h-5 w-5" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[90vw] rounded-2xl p-6 overflow-y-auto max-h-[90vh]">
+          <DialogContent className="max-w-[95vw] rounded-3xl p-6 overflow-y-auto max-h-[95vh] border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-black text-[#14532d] uppercase tracking-widest">New Address</DialogTitle>
+              <DialogTitle className="text-xl font-black text-[#14532d] uppercase tracking-widest italic">New Destination</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <Button 
-                onClick={handleDetectLocation}
-                disabled={isDetecting}
-                variant="outline"
-                className="w-full h-12 border-dashed border-[#14532d] text-[#14532d] font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
-              >
-                {isDetecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
-                {coords.lat ? "GPS LOCATION PINNED!" : "DETECT CURRENT LOCATION"}
-              </Button>
+            <div className="space-y-6 mt-4">
+              
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                    onClick={handleDetectLocation}
+                    disabled={isDetecting}
+                    variant="outline"
+                    className="h-12 border-dashed border-[#14532d] text-[#14532d] font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 px-2"
+                >
+                    {isDetecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Navigation className="h-3.5 w-3.5" />}
+                    {coords.lat ? "AUTO-DETECTED" : "AUTO-DETECT"}
+                </Button>
+                <Button 
+                    onClick={() => setIsMapOpen(true)}
+                    variant="outline"
+                    className="h-12 border-dashed border-[#14532d] text-[#14532d] font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 px-2"
+                >
+                    <LocateFixed className="h-3.5 w-3.5" />
+                    {coords.lat ? "PIN ON MAP" : "PIN ON MAP"}
+                </Button>
+              </div>
+
+              {coords.lat && (
+                <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl flex items-center gap-2">
+                    <Check className="h-4 w-4 text-blue-600" />
+                    <p className="text-[10px] font-black uppercase text-blue-800 tracking-tight">Exact GPS Coordinates Pinned</p>
+                </div>
+              )}
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground">Save as</Label>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Save as</Label>
                 <div className="flex gap-2">
                   {(['Home', 'Work', 'Other'] as const).map(l => (
                     <Button 
@@ -254,34 +283,52 @@ export default function AddressesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground">Flat / House / Building No.</Label>
-                <Input value={flatNo} onChange={e => setFlatNo(e.target.value)} className="font-bold" placeholder="e.g. A-101, Galaxy Apts" />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Flat / House / Building No.</Label>
+                <Input value={flatNo} onChange={e => setFlatNo(e.target.value)} className="font-bold h-12 rounded-xl" placeholder="e.g. A-101, Galaxy Apts" />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground">Area / Locality</Label>
-                <Input value={area} onChange={e => setArea(e.target.value)} className="font-bold" placeholder="e.g. Andheri West" />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Area / Locality</Label>
+                <Input value={area} onChange={e => setArea(e.target.value)} className="font-bold h-12 rounded-xl" placeholder="e.g. Andheri West" />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground">Landmark (Optional)</Label>
-                <Input value={landmark} onChange={e => setLandmark(e.target.value)} className="font-bold" placeholder="e.g. Near City Mall" />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Landmark (Optional)</Label>
+                <Input value={landmark} onChange={e => setLandmark(e.target.value)} className="font-bold h-12 rounded-xl" placeholder="e.g. Near City Mall" />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground">City</Label>
-                <Input value={city} onChange={e => setCity(e.target.value)} className="font-bold" placeholder="Mumbai" />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">City</Label>
+                <Input value={city} onChange={e => setCity(e.target.value)} className="font-bold h-12 rounded-xl" placeholder="Mumbai" />
               </div>
 
               <Button 
                 onClick={handleAddAddress} 
                 disabled={isAdding}
-                className="w-full h-12 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl"
+                className="w-full h-14 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-2xl shadow-xl mt-4"
               >
-                {isAdding ? "SAVING..." : "SAVE ADDRESS"}
+                {isAdding ? <Loader2 className="animate-spin h-5 w-5" /> : "SAVE DESTINATION"}
               </Button>
             </div>
           </DialogContent>
+        </Dialog>
+
+        {/* Location Picker Map Modal */}
+        <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+            <DialogContent className="max-w-[95vw] rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogHeader className="p-6 bg-white border-b">
+                    <DialogTitle className="text-xl font-black uppercase tracking-widest italic text-[#14532d]">Adjust Your Pin</DialogTitle>
+                </DialogHeader>
+                <LocationPicker 
+                    initialLat={coords.lat} 
+                    initialLng={coords.lng} 
+                    onConfirm={(lat, lng) => {
+                        setCoords({ lat, lng });
+                        setIsMapOpen(false);
+                        toast({ title: "Precision Pinned!", description: "We've captured your exact spot on the map." });
+                    }} 
+                />
+            </DialogContent>
         </Dialog>
       </div>
     </div>
