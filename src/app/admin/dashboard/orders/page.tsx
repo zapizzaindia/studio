@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile, Outlet } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket, MessageSquareText, UserCheck, PackageCheck } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket, MessageSquareText, UserCheck, PackageCheck, Wallet } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -106,12 +106,13 @@ export default function AdminOrdersPage() {
     const addr = order.deliveryAddress;
     const mapLink = addr?.latitude ? `\n📍 *Map:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
     const note = order.specialNote ? `\n\n📝 *KITCHEN NOTE:* ${order.specialNote.toUpperCase()}` : '';
+    const payNote = order.paymentMethod === 'Cash' ? `\n\n💵 *COLLECT CASH:* ₹${order.total.toFixed(2)}` : `\n\n✅ *PRE-PAID ORDER*`;
     
     // Construct the "Magic Link" for the rider to mark as delivered
     const host = window.location.origin;
     const magicLink = `\n\n✅ *MARK DELIVERED:* ${host}/delivery/${order.id}`;
 
-    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${magicLink}`;
+    const text = `🍕 *Zapizza/Zfry Order* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${payNote}${magicLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -134,11 +135,16 @@ export default function AdminOrdersPage() {
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1 font-bold uppercase tracking-wide">
                     <MapPin className="h-3 w-3" /> {order.deliveryAddress?.area || "N/A"}
                   </p>
-                  {order.specialNote && (
-                    <div className="flex items-center gap-1.5 mt-1 text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full w-fit uppercase animate-pulse">
-                      <MessageSquareText className="h-2.5 w-2.5" /> Special Instructions
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    {order.specialNote && (
+                        <div className="flex items-center gap-1.5 text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full w-fit uppercase">
+                        <MessageSquareText className="h-2.5 w-2.5" /> Note
+                        </div>
+                    )}
+                    <Badge variant="outline" className={cn("text-[8px] font-black uppercase h-4 px-1.5", order.paymentMethod === 'Cash' ? "border-amber-200 text-amber-600" : "border-green-200 text-green-600")}>
+                        {order.paymentMethod === 'Cash' ? 'Cash' : 'Paid'}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="text-right space-y-1">
                   <p className="font-black text-sm">₹{order.total.toFixed(2)}</p>
@@ -309,10 +315,14 @@ export default function AdminOrdersPage() {
                   <Separator className="bg-gray-200" />
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col">
-                        <span className="text-[14px] font-black uppercase text-[#333] tracking-tighter italic">Total Amount Collected</span>
+                        <span className="text-[14px] font-black uppercase text-[#333] tracking-tighter italic">Total Amount to Settle</span>
                         <div className="flex items-center gap-1.5 mt-1">
-                            <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">PAID: {selectedOrder.paymentMethod || 'Razorpay'}</Badge>
-                            <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                            {selectedOrder.paymentMethod === 'Cash' ? (
+                                <Badge className="bg-amber-500/10 text-amber-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">UNPAID: CASH ON DELIVERY</Badge>
+                            ) : (
+                                <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">PAID: {selectedOrder.paymentMethod || 'Online'}</Badge>
+                            )}
+                            {selectedOrder.paymentMethod === 'Cash' ? <Wallet className="h-3.5 w-3.5 text-muted-foreground" /> : <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />}
                         </div>
                     </div>
                     <span className="text-3xl font-black tracking-tighter italic" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(2)}</span>
