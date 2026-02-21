@@ -637,45 +637,55 @@ export default function FranchiseMenuPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {catItems.map(item => (
-                                    <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
-                                        <TableCell className="pl-8 py-6">
-                                            <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5">
-                                                <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={cn("h-2.5 w-2.5 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
-                                                    <p className="font-black uppercase text-[13px] tracking-tight italic text-[#333]">{item.name}</p>
-                                                </div>
-                                                <p className="text-[11px] text-muted-foreground font-medium line-clamp-1 max-w-xs">{item.description}</p>
-                                                {item.variations && item.variations.length > 0 && (
-                                                    <div className="flex gap-1.5 pt-1">
-                                                        {item.variations.map((v, idx) => (
-                                                            <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
-                                                                {v.name}: ₹{v.price} {v.addons && v.addons.length > 0 && `(+${v.addons.length} opts)`}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1.5 font-black text-sm" style={{ color: brandColor }}>
-                                                <IndianRupee className="h-3.5 w-3.5" />
-                                                <span>{item.price.toFixed(2)}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right pr-8">
-                                            <div className="flex gap-2 justify-end">
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all" onClick={() => handleEditClick(item)}><Edit className="h-4 w-4"/></Button>
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 text-red-500 hover:bg-red-50 hover:shadow-md transition-all" onClick={() => handleDeleteItem(item.id)}><Trash2 className="h-4 w-4"/></Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {catItems.map(item => {
+                                    const hasVariations = item.variations && item.variations.length > 0;
+                                    const prices = hasVariations ? item.variations!.map(v => v.price) : [item.price];
+                                    const minPrice = Math.min(...prices);
+                                    const maxPrice = Math.max(...prices);
+                                    const priceDisplay = hasVariations && minPrice !== maxPrice 
+                                      ? `₹${minPrice.toFixed(2)} - ₹${maxPrice.toFixed(2)}`
+                                      : `₹${minPrice.toFixed(2)}`;
+
+                                    return (
+                                      <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
+                                          <TableCell className="pl-8 py-6">
+                                              <div className="relative h-16 w-16 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5">
+                                                  <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
+                                              </div>
+                                          </TableCell>
+                                          <TableCell>
+                                              <div className="space-y-1">
+                                                  <div className="flex items-center gap-2">
+                                                      <span className={cn("h-2.5 w-2.5 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
+                                                      <p className="font-black uppercase text-[13px] tracking-tight italic text-[#333]">{item.name}</p>
+                                                  </div>
+                                                  <p className="text-[11px] text-muted-foreground font-medium line-clamp-1 max-w-xs">{item.description}</p>
+                                                  {item.variations && item.variations.length > 0 && (
+                                                      <div className="flex gap-1.5 pt-1">
+                                                          {item.variations.map((v, idx) => (
+                                                              <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                                                                  {v.name}: ₹{v.price} {v.addons && v.addons.length > 0 && `(+${v.addons.length} opts)`}
+                                                              </span>
+                                                          ))}
+                                                      </div>
+                                                  )}
+                                              </div>
+                                          </TableCell>
+                                          <TableCell>
+                                              <div className="flex items-center gap-1.5 font-black text-sm whitespace-nowrap" style={{ color: brandColor }}>
+                                                  <IndianRupee className="h-3.5 w-3.5" />
+                                                  <span>{priceDisplay.replace('₹', '')}</span>
+                                              </div>
+                                          </TableCell>
+                                          <TableCell className="text-right pr-8">
+                                              <div className="flex gap-2 justify-end">
+                                                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md transition-all" onClick={() => handleEditClick(item)}><Edit className="h-4 w-4"/></Button>
+                                                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-gray-50 text-red-500 hover:bg-red-50 hover:shadow-md transition-all" onClick={() => handleDeleteItem(item.id)}><Trash2 className="h-4 w-4"/></Button>
+                                              </div>
+                                          </TableCell>
+                                      </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </CardContent>

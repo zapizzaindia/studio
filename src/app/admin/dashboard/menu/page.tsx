@@ -113,38 +113,50 @@ export default function AdminMenuPage() {
                               </TableRow>
                           </TableHeader>
                           <TableBody>
-                              {catItems.map((item: MenuItem) => (
-                                  <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
-                                      <TableCell className="pl-8 py-4">
-                                        <div className="relative h-14 w-14 rounded-xl overflow-hidden border-2 border-white shadow-md">
-                                          <Image
-                                            src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
-                                            alt={item.name}
-                                            fill
-                                            className="object-cover"
-                                          />
-                                        </div>
-                                      </TableCell>
-                                      <TableCell>
-                                          <div className="flex flex-col">
-                                            <div className="flex items-center gap-2">
-                                              <span className={cn("h-2 w-2 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
-                                              <p className="font-black uppercase text-xs tracking-tight">{item.name}</p>
-                                            </div>
-                                            <p className="text-[10px] text-muted-foreground hidden md:block mt-0.5">{item.description}</p>
+                              {catItems.map((item: MenuItem) => {
+                                  const hasVariations = item.variations && item.variations.length > 0;
+                                  const prices = hasVariations ? item.variations!.map(v => v.price) : [item.price];
+                                  const minPrice = Math.min(...prices);
+                                  const maxPrice = Math.max(...prices);
+                                  const priceDisplay = hasVariations && minPrice !== maxPrice 
+                                    ? `₹${minPrice.toFixed(2)} - ₹${maxPrice.toFixed(2)}`
+                                    : `₹${minPrice.toFixed(2)}`;
+
+                                  return (
+                                    <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
+                                        <TableCell className="pl-8 py-4">
+                                          <div className="relative h-14 w-14 rounded-xl overflow-hidden border-2 border-white shadow-md">
+                                            <Image
+                                              src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
+                                              alt={item.name}
+                                              fill
+                                              className="object-cover"
+                                            />
                                           </div>
-                                      </TableCell>
-                                      <TableCell className="font-bold">₹{item.price.toFixed(2)}</TableCell>
-                                      <TableCell className="text-right pr-8">
-                                          <Switch
-                                              checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}
-                                              disabled={!item.isAvailableGlobally}
-                                              onCheckedChange={() => handleToggleAvailability(item.id, item.isAvailableGlobally)}
-                                              className="data-[state=checked]:bg-green-500"
-                                          />
-                                      </TableCell>
-                                  </TableRow>
-                              ))}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                              <div className="flex items-center gap-2">
+                                                <span className={cn("h-2 w-2 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
+                                                <p className="font-black uppercase text-xs tracking-tight">{item.name}</p>
+                                              </div>
+                                              <p className="text-[10px] text-muted-foreground hidden md:block mt-0.5">{item.description}</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="font-bold whitespace-nowrap">
+                                            {priceDisplay}
+                                        </TableCell>
+                                        <TableCell className="text-right pr-8">
+                                            <Switch
+                                                checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}
+                                                disabled={!item.isAvailableGlobally}
+                                                onCheckedChange={() => handleToggleAvailability(item.id, item.isAvailableGlobally)}
+                                                className="data-[state=checked]:bg-green-500"
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                  );
+                              })}
                           </TableBody>
                       </Table>
                   </CardContent>

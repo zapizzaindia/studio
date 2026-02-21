@@ -24,7 +24,7 @@ import {
   ChevronRightCircle,
   MapPin,
   Loader2
-} from "lucide-center";
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { City, Category, MenuItem, Outlet, Banner, MenuItemVariation, MenuItemAddon, Coupon, UserProfile } from "@/lib/types";
@@ -83,6 +83,11 @@ export default function HomePage() {
   const [api, setApi] = useState<CarouselApi>();
   const [isDetecting, setIsDetecting] = useState(false);
 
+  // Customization Dialog State
+  const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
+  const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
+
   // Fetch actual user profile for loyalty coins and display name
   const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
@@ -105,14 +110,13 @@ export default function HomePage() {
         const { latitude, longitude } = position.coords;
         
         try {
-          // 1. Find nearest city
           const citySnap = await getDocs(collection(db, 'cities'));
-          const cities = citySnap.docs.map(d => ({ id: d.id, ...d.data() } as City));
+          const citiesList = citySnap.docs.map(d => ({ id: d.id, ...d.data() } as City));
           
           let nearestCity: City | null = null;
           let minCityDist = Infinity;
 
-          cities.forEach(city => {
+          citiesList.forEach(city => {
             if (city.latitude && city.longitude) {
               const d = getDistance(latitude, longitude, city.latitude, city.longitude);
               if (d < minCityDist) {
@@ -125,16 +129,15 @@ export default function HomePage() {
           if (nearestCity) {
             handleCitySelect(nearestCity);
             
-            // 2. Find nearest outlet in that city
             const outletSnap = await getDocs(collection(db, 'outlets'));
-            const outlets = outletSnap.docs
+            const outletsList = outletSnap.docs
               .map(d => ({ id: d.id, ...d.data() } as Outlet))
               .filter(o => o.cityId === (nearestCity as City).id);
 
             let nearestOutlet: Outlet | null = null;
             let minOutletDist = Infinity;
 
-            outlets.forEach(outlet => {
+            outletsList.forEach(outlet => {
               if (outlet.latitude && outlet.longitude) {
                 const d = getDistance(latitude, longitude, outlet.latitude, outlet.longitude);
                 if (d < minOutletDist) {
@@ -146,7 +149,7 @@ export default function HomePage() {
 
             if (nearestOutlet) {
               handleOutletSelect(nearestOutlet);
-              toast({ title: "Location Detected", description: `Welome to ${nearestOutlet.name}!` });
+              toast({ title: "Location Detected", description: `Welcome to ${nearestOutlet.name}!` });
             }
           }
         } catch (e) {
@@ -157,7 +160,6 @@ export default function HomePage() {
       },
       () => {
         setIsDetecting(false);
-        // Silently fail, user can pick manually
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
@@ -217,6 +219,18 @@ export default function HomePage() {
       addItem(customizingItem, selectedVariation || undefined, selectedAddons);
       setCustomizingItem(null);
     }
+  };
+
+  const getPriceDisplay = (item: MenuItem) => {
+    const hasVariations = item.variations && item.variations.length > 0;
+    const prices = hasVariations ? item.variations!.map(v => v.price) : [item.price];
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    
+    if (hasVariations && minPrice !== maxPrice) {
+      return `₹${minPrice} - ₹${maxPrice}`;
+    }
+    return `₹${minPrice}`;
   };
 
   const availableAddons = useMemo(() => {
@@ -345,7 +359,7 @@ export default function HomePage() {
               </div>
               <div className="px-2 pb-1 space-y-0.5">
                 <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight tracking-tight line-clamp-1">{item.name}</h4>
-                <div className="flex items-center gap-1.5"><span className="text-[14px] font-black" style={{ color: brandColor }}>₹{item.price}</span></div>
+                <div className="flex items-center gap-1.5"><span className="text-[14px] font-black" style={{ color: brandColor }}>{getPriceDisplay(item)}</span></div>
               </div>
             </motion.div>
           ))}
@@ -382,7 +396,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <h3 className="text-sm font-black text-[#333] uppercase leading-tight tracking-tight">{item.name}</h3>
-                  <p className="text-sm font-black" style={{ color: brandColor }}>₹{item.price}</p>
+                  <p className="text-sm font-black" style={{ color: brandColor }}>{getPriceDisplay(item)}</p>
                   <div className="flex items-center gap-0.5">
                     {Array.from({length: 5}).map((_, i) => (
                       <Star key={i} className={`h-2.5 w-2.5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
@@ -506,7 +520,7 @@ export default function HomePage() {
             <div className="flex-1">
               <h4 className="text-sm font-black text-[#333] uppercase">{selectedOutlet.name}</h4>
               <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
-                <MapPin className="h-2.5 w-2.5" /> Rudrapur, Uttarakhand
+                <MapPin className="h-2.5 w-2.5" /> {selectedOutlet.address || 'Location Not Specified'}
               </p>
               <button className="text-[9px] font-black text-red-500 uppercase mt-1 flex items-center gap-1">
                 View Store Reviews <ChevronRightCircle className="h-2.5 w-2.5" />
@@ -514,10 +528,10 @@ export default function HomePage() {
             </div>
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px]">
                <div className="flex items-center gap-1 bg-[#14532d] text-white px-1.5 py-0.5 rounded-lg">
-                  <span className="text-[10px] font-black">3.52</span>
+                  <span className="text-[10px] font-black">{selectedOutlet.rating || "4.5"}</span>
                   <Star className="h-2 w-2 fill-current" />
                </div>
-               <span className="text-[8px] font-black text-muted-foreground uppercase">88 Reviews</span>
+               <span className="text-[8px] font-black text-muted-foreground uppercase">{selectedOutlet.reviewCount || "0"} Reviews</span>
             </div>
           </CardContent>
         </Card>

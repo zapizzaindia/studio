@@ -148,6 +148,18 @@ export default function MenuPage() {
     return items;
   }, [menuItems, searchQuery, activeFilter, showInStockOnly]);
 
+  const getPriceDisplay = (item: MenuItem) => {
+    const hasVariations = item.variations && item.variations.length > 0;
+    const prices = hasVariations ? item.variations!.map(v => v.price) : [item.price];
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    
+    if (hasVariations && minPrice !== maxPrice) {
+      return `₹${minPrice} - ₹${maxPrice}`;
+    }
+    return `₹${minPrice}`;
+  };
+
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
     const base = selectedVariation ? selectedVariation.price : customizingItem.price;
@@ -294,7 +306,7 @@ export default function MenuPage() {
                     <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight mt-1">{item.name}</h4>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase">Customisable</p>
                     <div className="mt-auto pt-3 flex items-center justify-between">
-                      <span className="text-sm font-black text-[#333]">₹{item.price}</span>
+                      <span className="text-[13px] font-black text-[#333]">{getPriceDisplay(item)}</span>
                       <Button variant="outline" className="h-8 px-4 rounded-lg border-gray-200 text-[10px] font-black uppercase bg-white hover:bg-gray-50 text-[#333] shadow-sm">
                         Add <Plus className="h-3 w-3 ml-1" style={{ color: brandColor }} />
                       </Button>
@@ -337,7 +349,7 @@ export default function MenuPage() {
                           </div>
                         </div>
                         <h4 className="text-[15px] font-black text-[#333] uppercase leading-tight tracking-tight mb-1">{item.name}</h4>
-                        <p className="text-[14px] font-black text-[#333] mb-2">₹{item.price}</p>
+                        <p className="text-[14px] font-black text-[#333] mb-2">{getPriceDisplay(item)}</p>
                         <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-relaxed">
                           {item.description} <span className="text-gray-400 font-bold">Read More</span>
                         </p>
