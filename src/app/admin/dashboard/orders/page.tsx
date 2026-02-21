@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile, Outlet } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket, MessageSquareText, UserCheck } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket, MessageSquareText, UserCheck, PackageCheck } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -91,7 +91,10 @@ export default function AdminOrdersPage() {
     updateDoc(orderRef, updateData)
       .then(() => {
         toast({ title: "Status Updated" });
-        if (selectedOrder?.id === orderId) setSelectedOrder(null);
+        if (selectedOrder?.id === orderId) {
+            // Update local selected order state if the dialog is open
+            setSelectedOrder(prev => prev ? { ...prev, status } : null);
+        }
       })
       .catch(() => {
         toast({ variant: 'destructive', title: "Error updating status" });
@@ -114,7 +117,7 @@ export default function AdminOrdersPage() {
     
     return (
       <div className="space-y-4">
-        {filteredOrders && filteredOrders.length > 0 ? filteredOrders.map((order) => (
+        {filteredOrders && filteredOrders.length > 0 ? [...filteredOrders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()).map((order) => (
           <Card key={order.id} className="border-none shadow-sm overflow-hidden group active:scale-[0.99] transition-all rounded-2xl">
             <CardContent className="p-0">
               <div className="p-5 flex justify-between items-start bg-white border-b border-gray-50">
@@ -148,6 +151,12 @@ export default function AdminOrdersPage() {
                     <Button variant="ghost" size="sm" className="text-red-600 font-black text-[10px] uppercase h-9" onClick={() => handleUpdateStatus(order.id, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
                     <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-primary/20" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept Order</Button>
                   </div>
+                )}
+                {order.status === 'Preparing' && (
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-primary/20" onClick={() => handleUpdateStatus(order.id, 'Out for Delivery')}>Mark Dispatched</Button>
+                )}
+                {order.status === 'Out for Delivery' && (
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-green-900/20" onClick={() => handleUpdateStatus(order.id, 'Completed')}>Mark Delivered</Button>
                 )}
               </div>
             </CardContent>
@@ -334,6 +343,9 @@ export default function AdminOrdersPage() {
                 )}
                 {selectedOrder.status === 'Preparing' && (
                   <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Out for Delivery')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95" style={{ backgroundColor: brandColor }}>Mark as Dispatched</Button>
+                )}
+                {selectedOrder.status === 'Out for Delivery' && (
+                  <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Completed')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-green-900/20 transition-all active:scale-95 bg-green-600 hover:bg-green-700">Confirm Delivery</Button>
                 )}
               </div>
             </>

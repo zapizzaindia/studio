@@ -1,12 +1,13 @@
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, XCircle, AlertCircle, RefreshCcw } from "lucide-react";
+import { ArrowLeft, Clock, ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, XCircle, AlertCircle, RefreshCcw, CookingPot, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCollection, useUser } from "@/firebase";
-import type { Order } from "@/lib/types";
+import type { Order, OrderStatus } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,13 +17,58 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const statusIcons: Record<string, React.ReactNode> = {
   "New": <Package className="h-4 w-4 text-blue-500" />,
-  "Preparing": <div className="h-4 w-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />,
-  "Out for Delivery": <Truck className="h-4 w-4 text-orange-500" />,
+  "Preparing": <CookingPot className="h-4 w-4 text-yellow-500 animate-bounce" />,
+  "Out for Delivery": <Truck className="h-4 w-4 text-orange-500 animate-pulse" />,
   "Completed": <CheckCircle2 className="h-4 w-4 text-green-500" />,
   "Cancelled": <XCircle className="h-4 w-4 text-red-500" />,
+};
+
+const StatusTracker = ({ status }: { status: OrderStatus }) => {
+  const steps: { label: string; icon: any; targetStatus: OrderStatus[] }[] = [
+    { label: "Placed", icon: Package, targetStatus: ["New", "Preparing", "Out for Delivery", "Completed"] },
+    { label: "Preparing", icon: CookingPot, targetStatus: ["Preparing", "Out for Delivery", "Completed"] },
+    { label: "Dispatched", icon: Truck, targetStatus: ["Out for Delivery", "Completed"] },
+    { label: "Delivered", icon: Home, targetStatus: ["Completed"] },
+  ];
+
+  if (status === 'Cancelled') return null;
+
+  return (
+    <div className="py-6 px-2">
+      <div className="relative flex justify-between">
+        {/* Progress Line */}
+        <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-100 z-0" />
+        
+        {steps.map((step, idx) => {
+          const isDone = step.targetStatus.includes(status) && status !== step.targetStatus[0];
+          const isCurrent = status === step.targetStatus[0];
+          
+          return (
+            <div key={idx} className="relative z-10 flex flex-col items-center gap-2">
+              <div className={cn(
+                "h-10 w-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm transition-all duration-500",
+                isDone ? "bg-green-500 text-white" : 
+                isCurrent ? "bg-[#14532d] text-white scale-110 ring-4 ring-green-100" : 
+                "bg-gray-100 text-gray-400"
+              )}>
+                {isDone ? <CheckCircle2 className="h-5 w-5" /> : <step.icon className="h-4 w-4" />}
+              </div>
+              <span className={cn(
+                "text-[8px] font-black uppercase tracking-widest text-center",
+                (isDone || isCurrent) ? "text-[#333]" : "text-gray-400"
+              )}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 export default function OrdersPage() {
@@ -105,7 +151,7 @@ export default function OrdersPage() {
                     onClick={() => setSelectedOrder(order)}
                     className="text-[10px] font-black uppercase text-[#14532d] gap-1 pr-0"
                   >
-                    VIEW DETAILS <ChevronRight className="h-3 w-3" />
+                    TRACK ORDER <ChevronRight className="h-3 w-3" />
                   </Button>
                 </div>
               </CardContent>
@@ -115,114 +161,109 @@ export default function OrdersPage() {
       </div>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-[90vw] rounded-2xl p-0 overflow-hidden border-none">
+        <DialogContent className="max-w-[95vw] md:max-w-lg rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
           {selectedOrder && (
-            <div className="flex flex-col">
-              <DialogHeader className="p-6 bg-[#14532d] text-white">
-                <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center justify-between">
-                  Order Details
-                  <Badge variant="outline" className="text-white border-white text-[10px]">
+            <div className="flex flex-col bg-white">
+              <DialogHeader className="p-8 bg-[#14532d] text-white">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Real-Time Tracking</p>
+                    <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">
+                      #{selectedOrder.id.slice(-6).toUpperCase()}
+                    </DialogTitle>
+                  </div>
+                  <Badge variant="outline" className="text-white border-white/20 bg-white/10 uppercase text-[10px] font-black px-4 py-1.5 rounded-full">
                     {selectedOrder.status}
                   </Badge>
-                </DialogTitle>
-                <p className="text-xs font-bold text-white/70 uppercase tracking-widest mt-1">
-                  ID: {selectedOrder.id.toUpperCase()}
-                </p>
+                </div>
               </DialogHeader>
 
-              <div className="p-6 space-y-6">
+              <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh] scrollbar-hide">
+                {/* 1. Tracker Component */}
+                <div className="bg-gray-50/50 p-6 rounded-[24px] border border-gray-100">
+                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Journey Progress</h4>
+                  <StatusTracker status={selectedOrder.status} />
+                </div>
+
                 {selectedOrder.status === 'Cancelled' && (
-                  <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div className="bg-red-50 border border-red-100 p-6 rounded-[24px] flex items-start gap-4">
+                    <AlertCircle className="h-6 w-6 text-red-600 mt-0.5" />
                     <div>
-                      <p className="text-xs font-black text-red-900 uppercase">Order Cancelled</p>
-                      <p className="text-[10px] font-medium text-red-700 leading-tight uppercase mt-1">
+                      <p className="text-sm font-black text-red-900 uppercase italic">Order Voided</p>
+                      <p className="text-[11px] font-medium text-red-700 leading-relaxed uppercase mt-1">
                         {(selectedOrder as any).cancellationReason || "The kitchen was unable to process your order in time."}
                       </p>
-                      <div className="mt-2 flex items-center gap-1.5 text-blue-600">
-                        <RefreshCcw className="h-3 w-3 animate-spin" />
-                        <span className="text-[9px] font-black uppercase">Refund Initiated to Original Source</span>
+                      <div className="mt-3 flex items-center gap-2 text-blue-600">
+                        <RefreshCcw className="h-3.5 w-3.5 animate-spin" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Full Refund Initialized</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div>
-                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Your Items</h4>
-                  <div className="space-y-3">
+                {/* 2. Order Items */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Manifest</h4>
+                  <div className="space-y-4">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex flex-col border-b border-dashed pb-3 last:border-0 last:pb-0">
-                        <div className="flex justify-between items-start">
-                          <div className="flex gap-2">
-                            <span className="text-xs font-black text-[#14532d]">{item.quantity}x</span>
-                            <div className="flex flex-col gap-1">
-                              <span className="text-xs font-bold text-[#333333] uppercase">{item.name}</span>
-                              {item.variation && (
-                                <span className="text-[9px] font-black text-muted-foreground uppercase">Size: {item.variation}</span>
-                              )}
-                              {item.addons && item.addons.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {item.addons.map((addon, aIdx) => (
-                                    <span key={aIdx} className="text-[8px] font-bold text-[#14532d] uppercase">+{addon}</span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                      <div key={idx} className="flex justify-between items-start bg-gray-50/30 p-4 rounded-2xl border border-gray-100/50">
+                        <div className="flex gap-4">
+                          <span className="font-black text-[#14532d] bg-green-50 h-8 w-8 rounded-lg flex items-center justify-center text-xs shadow-sm">{item.quantity}x</span>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs font-black text-[#333] uppercase italic">{item.name}</span>
+                            {item.variation && (
+                              <Badge className="w-fit text-[8px] font-black uppercase px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded-sm border-none">{item.variation}</Badge>
+                            )}
+                            {item.addons && item.addons.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {item.addons.map((addon, aIdx) => (
+                                  <span key={aIdx} className="text-[9px] font-bold text-[#14532d] uppercase">+{addon}</span>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          <span className="text-xs font-black text-[#333333]">₹{item.price * item.quantity}</span>
                         </div>
+                        <span className="text-xs font-black text-[#333]">₹{item.price * item.quantity}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <Separator />
+                <Separator className="opacity-50" />
 
-                <div>
-                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Bill Breakdown</h4>
-                  <div className="space-y-2 text-xs font-bold">
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Item Total</span>
-                      <span>₹{selectedOrder.subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Delivery Fee</span>
-                      <span className={selectedOrder.deliveryFee === 0 ? "text-green-600" : ""}>{selectedOrder.deliveryFee === 0 ? "FREE" : `₹${selectedOrder.deliveryFee}`}</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>Taxes (GST)</span>
-                      <span>₹{selectedOrder.gst.toFixed(2)}</span>
-                    </div>
-                    {selectedOrder.discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount Applied</span>
-                        <span>-₹{selectedOrder.discount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-lg font-black text-[#14532d] pt-2 border-t border-dashed">
-                      <span>Grand Total</span>
-                      <span>₹{selectedOrder.total.toFixed(2)}</span>
-                    </div>
+                {/* 3. Financial Breakdown */}
+                <div className="space-y-3 bg-gray-50 p-6 rounded-[24px]">
+                  <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <span>Item Total</span>
+                    <span>₹{selectedOrder.subtotal.toFixed(2)}</span>
                   </div>
-                </div>
-
-                <div className="bg-[#f1f2f6] p-4 rounded-xl flex items-center gap-3">
-                  <div className="bg-white p-2 rounded-lg shadow-sm">
-                    {statusIcons[selectedOrder.status]}
+                  <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <span>Delivery Fee</span>
+                    <span className={selectedOrder.deliveryFee === 0 ? "text-green-600" : ""}>{selectedOrder.deliveryFee === 0 ? "FREE" : `₹${selectedOrder.deliveryFee}`}</span>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground">Order Status</p>
-                    <p className="text-sm font-black text-[#333333] uppercase italic">{selectedOrder.status}</p>
+                  <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <span>GST (Taxes)</span>
+                    <span>₹{selectedOrder.gst.toFixed(2)}</span>
+                  </div>
+                  {selectedOrder.discount > 0 && (
+                    <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest animate-pulse">
+                      <span>Promo Applied</span>
+                      <span>-₹{selectedOrder.discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-dashed flex justify-between items-center">
+                    <span className="text-sm font-black text-[#333] uppercase">Grand Total</span>
+                    <span className="text-2xl font-black text-[#14532d] italic">₹{selectedOrder.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="p-6 bg-[#f1f2f6]/50">
+              <div className="p-8 bg-gray-50/80 border-t">
                 <Button 
                   onClick={() => setSelectedOrder(null)}
-                  className="w-full bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl"
+                  className="w-full h-14 bg-[#14532d] text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all"
                 >
-                  Close
+                  Close Tracking
                 </Button>
               </div>
             </div>
