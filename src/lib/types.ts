@@ -104,6 +104,7 @@ export type Order = {
   paymentStatus?: string;
   paymentId?: string;
   cancellationReason?: string;
+  loyaltyPointsEarned?: number;
 };
 
 export type Outlet = {
@@ -154,6 +155,8 @@ export type Banner = {
   imageId: string;
   active: boolean;
   brand: Brand;
+  isHero?: boolean;
+  mediaType?: 'image' | 'video';
 };
 
 export type OutletMenuAvailability = {

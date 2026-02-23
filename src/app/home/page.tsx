@@ -56,9 +56,8 @@ import { ZapizzaLogo } from "@/components/icons";
 import { collection, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
-// Haversine formula to calculate distance in KM
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  const R = 6371; // Radius of the earth in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
@@ -84,12 +83,10 @@ export default function HomePage() {
   const [api, setApi] = useState<CarouselApi>();
   const [isDetecting, setIsDetecting] = useState(false);
 
-  // Customization Dialog State
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
-  // Fetch actual user profile for loyalty coins and display name
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
@@ -100,6 +97,7 @@ export default function HomePage() {
   const categories = useMemo(() => allCategories?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCategories, selectedOutlet]);
   const menuItems = useMemo(() => allMenuItems?.filter(i => i.brand === selectedOutlet?.brand) || [], [allMenuItems, selectedOutlet]);
   const banners = useMemo(() => allBanners?.filter(b => b.brand === selectedOutlet?.brand) || [], [allBanners, selectedOutlet]);
+  const heroBanner = useMemo(() => banners.find(b => b.active && b.isHero), [banners]);
   const coupons = useMemo(() => allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCoupons, selectedOutlet]);
 
   const detectAndSetLocation = useCallback(async () => {
@@ -269,22 +267,48 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      <div style={{ backgroundColor: brandColor }} className="text-white px-6 pt-10 pb-12 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700">
+      <div 
+        style={{ backgroundColor: brandColor }} 
+        className="text-white px-6 pt-10 pb-12 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700"
+      >
+        {/* Dynamic Hero Media Background */}
+        {heroBanner && (
+            <div className="absolute inset-0 z-0">
+                {heroBanner.mediaType === 'video' ? (
+                    <video 
+                        src={heroBanner.imageId} 
+                        className="w-full h-full object-cover opacity-60" 
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline
+                    />
+                ) : (
+                    <Image 
+                        src={getImageUrl(heroBanner.imageId)} 
+                        alt="Hero" 
+                        fill 
+                        className="object-cover opacity-60"
+                    />
+                )}
+                <div className="absolute inset-0 bg-black/20" />
+            </div>
+        )}
+
         <div className="relative z-10 flex justify-between items-start">
           <div className="flex flex-col">
-            <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">Welcome Back,</p>
-            <h1 className="text-2xl font-black italic tracking-tighter leading-none mb-3">
+            <p className="text-white/80 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 drop-shadow-sm">Welcome Back,</p>
+            <h1 className="text-2xl font-black italic tracking-tighter leading-none mb-3 drop-shadow-md">
               {userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Gourmet'}!
             </h1>
             
-            {/* Live Loyalty Point Badge */}
             <motion.div 
               key={userProfile?.loyaltyPoints}
               initial={{ opacity: 0, x: -20, scale: 0.9 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => router.push('/home/rewards')}
-              className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer active:scale-95 transition-all shadow-sm group"
+              className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer active:scale-95 transition-all shadow-sm group"
             >
               <Wallet className="h-3 w-3 text-yellow-400 fill-current group-hover:rotate-12 transition-transform" />
               <span className="text-[10px] font-black uppercase tracking-widest tabular-nums">
@@ -304,9 +328,12 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-        <div className="absolute -top-4 -right-4 opacity-5 rotate-[15deg] pointer-events-none">
-          {selectedOutlet.brand === 'zapizza' ? <Pizza className="w-40 h-48" /> : <Flame className="w-40 h-48" />}
-        </div>
+        
+        {!heroBanner && (
+            <div className="absolute -top-4 -right-4 opacity-5 rotate-[15deg] pointer-events-none">
+                {selectedOutlet.brand === 'zapizza' ? <Pizza className="w-40 h-48" /> : <Flame className="w-40 h-48" />}
+            </div>
+        )}
       </div>
 
       <div className="px-6 -mt-6">
@@ -321,7 +348,7 @@ export default function HomePage() {
           <CarouselContent>
             {bannersLoading ? (
               <CarouselItem><Skeleton className="w-full h-48 rounded-[32px]" /></CarouselItem>
-            ) : banners?.filter(b => b.active).map((banner, index) => (
+            ) : banners?.filter(b => b.active && !b.isHero).map((banner, index) => (
               <CarouselItem key={index}>
                 <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-lg group">
                   <Image src={getImageUrl(banner.imageId)} alt={banner.title || 'Promotion'} fill className="object-cover" />
@@ -442,7 +469,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* LOYALTY PROGRAM INFO SECTION */}
       <div className="mt-4 relative overflow-hidden">
         <div 
           style={{ backgroundColor: brandColor }} 
@@ -501,7 +527,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* FRANCHISE ENQUIRY SECTION */}
       <div className="mt-12 px-6">
         <h2 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-4">
           ENQUIRE ABOUT {selectedOutlet.brand.toUpperCase()} FRANCHISE
@@ -529,7 +554,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* OUTLET INFO SECTION */}
       <div className="mt-8 px-6">
         <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white">
           <CardContent className="p-5 flex items-center gap-4">
@@ -556,7 +580,6 @@ export default function HomePage() {
         </Card>
       </div>
 
-      {/* BEWARE / SAFETY SECTION */}
       <div className="mt-8 px-6">
         <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white relative">
           <CardContent className="p-8 flex items-center justify-between">
@@ -573,7 +596,6 @@ export default function HomePage() {
         </Card>
       </div>
 
-      {/* AWARDS AND MEDIA SECTION */}
       <div className="mt-12">
         <h2 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-6">
           AWARDS AND MEDIA
@@ -600,7 +622,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* QUOTE FOOTER SECTION */}
       <div className="mt-16 px-10 text-center space-y-6 pb-12">
         <p className="text-muted-foreground font-medium italic text-lg leading-relaxed opacity-60">
           "The secret of success in life is to eat what you like and let the food fight it out inside." - Mark Twain
@@ -616,7 +637,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* CUSTOMIZATION DIALOG */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
           {customizingItem && (
