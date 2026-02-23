@@ -267,81 +267,100 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
-      <div 
-        style={{ backgroundColor: brandColor }} 
-        className="text-white px-6 pt-10 pb-12 rounded-b-[40px] shadow-lg relative overflow-hidden transition-all duration-700"
+  
+      {/* 🟢 BRAND HEADER SECTION */}
+      <div
+        style={{ backgroundColor: brandColor }}
+        className="text-white px-6 pt-6 pb-10 relative transition-all duration-700"
       >
-        {/* Dynamic Hero Media Background */}
-        {heroBanner && (
-            <div className="absolute inset-0 z-0">
-                {heroBanner.mediaType === 'video' ? (
-                    <video 
-                        src={heroBanner.imageId} 
-                        className="w-full h-full object-cover opacity-60" 
-                        autoPlay 
-                        muted 
-                        loop 
-                        playsInline
-                    />
-                ) : (
-                    <Image 
-                        src={getImageUrl(heroBanner.imageId)} 
-                        alt="Hero" 
-                        fill 
-                        className="object-cover opacity-60"
-                    />
-                )}
-                <div className="absolute inset-0 bg-black/20" />
-            </div>
-        )}
-
-        <div className="relative z-10 flex justify-between items-start">
+        <div className="flex justify-between items-start">
           <div className="flex flex-col">
-            <p className="text-white/80 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 drop-shadow-sm">Welcome Back,</p>
-            <h1 className="text-2xl font-black italic tracking-tighter leading-none mb-3 drop-shadow-md">
-              {userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Gourmet'}!
+            <p className="text-white/80 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5">
+              Welcome Back,
+            </p>
+  
+            <h1 className="text-2xl font-black italic tracking-tighter leading-none mb-3">
+              {userProfile?.displayName?.split(" ")[0] ||
+                user?.displayName?.split(" ")[0] ||
+                "Gourmet"}
+              !
             </h1>
-            
-            <motion.div 
+  
+            <motion.div
               key={userProfile?.loyaltyPoints}
-              initial={{ opacity: 0, x: -20, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/home/rewards')}
-              className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer active:scale-95 transition-all shadow-sm group"
+              onClick={() => router.push("/home/rewards")}
+              className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer transition-all"
             >
-              <Wallet className="h-3 w-3 text-yellow-400 fill-current group-hover:rotate-12 transition-transform" />
+              <Wallet className="h-3 w-3 text-yellow-400 fill-current" />
               <span className="text-[10px] font-black uppercase tracking-widest tabular-nums">
-                {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP COINS
+                {profileLoading ? "..." : userProfile?.loyaltyPoints || 0} LP
+                COINS
               </span>
               <ChevronRight className="h-2.5 w-2.5 opacity-50" />
             </motion.div>
           </div>
+  
+          {/* DELIVERY / PICKUP TOGGLE */}
           <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
-            <button onClick={() => setOrderType("delivery")} className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${orderType === "delivery" ? 'bg-white text-[#333] shadow-sm' : 'text-white/80'}`}>
-              < Bike className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Delivery</span>
+            <button
+              onClick={() => setOrderType("delivery")}
+              className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${
+                orderType === "delivery"
+                  ? "bg-white text-[#333] shadow-sm"
+                  : "text-white/80"
+              }`}
+            >
+              <Bike className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                Delivery
+              </span>
             </button>
-            <button onClick={() => setOrderType("takeaway")} className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${orderType === "takeaway" ? 'bg-white text-[#333] shadow-sm' : 'text-white/80'}`}>
+  
+            <button
+              onClick={() => setOrderType("takeaway")}
+              className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${
+                orderType === "takeaway"
+                  ? "bg-white text-[#333] shadow-sm"
+                  : "text-white/80"
+              }`}
+            >
               <ShoppingBasket className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Pickup</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                Pickup
+              </span>
             </button>
           </div>
         </div>
-        
-        {!heroBanner && (
-            <div className="absolute -top-4 -right-4 opacity-5 rotate-[15deg] pointer-events-none">
-                {selectedOutlet.brand === 'zapizza' ? <Pizza className="w-40 h-48" /> : <Flame className="w-40 h-48" />}
-            </div>
-        )}
       </div>
-
-      <div className="px-6 -mt-6">
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors" />
-          <Input placeholder={`Search ${selectedOutlet.brand === 'zfry' ? 'Zfry' : 'Zapizza'}...`} className="pl-12 h-14 bg-white border-none rounded-2xl shadow-xl font-bold placeholder:font-normal" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+      {/* 🔥 MOBILE HERO BANNER */}
+      {heroBanner && (
+        <div className="block md:hidden relative w-full h-[300px] overflow-hidden">
+          {heroBanner.mediaType === "video" ? (
+            <video
+              src={heroBanner.imageId}
+              className="w-full h-full object-cover scale-105"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <Image
+              src={getImageUrl(heroBanner.imageId)}
+              alt="Hero Banner"
+              fill
+              priority
+              className="object-cover scale-105"
+            />
+          )}
         </div>
-      </div>
+      )}
+  
+      
+  
 
       <div className="mt-6 px-6">
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
@@ -409,6 +428,54 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+
+      {/* 🎟️ OFFERS FOR YOU SECTION */}
+      {coupons.length > 0 && (
+        <div className="mt-8 mb-4">
+          <div className="px-6 mb-4">
+            <h2 className="text-2xl font-black text-[#333] tracking-tight leading-none">Offers for you</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto px-6 scrollbar-hide pb-4">
+            {coupons.map((coupon, idx) => {
+              const bgColors = [
+                'bg-[#008060]', // Deep Teal
+                'bg-[#1a73e8]', // Royal Blue
+                'bg-[#d93025]', // Google Red
+                'bg-[#f9ab00]'  // Amber
+              ];
+              const bgColor = bgColors[idx % bgColors.length];
+
+              return (
+                <div 
+                  key={coupon.id} 
+                  className={cn(
+                    "flex-shrink-0 w-[260px] h-[100px] p-4 rounded-[16px] text-white flex items-center justify-between shadow-sm border border-black/5 transition-transform active:scale-[0.98]",
+                    bgColor
+                  )}
+                >
+                  <div className="flex-1 pr-4">
+                    <div className="flex items-center gap-1.5 mb-1">
+                       <h3 className="text-[15px] font-black uppercase tracking-tight leading-none truncate max-w-[140px]">
+                        {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                       </h3>
+                    </div>
+                    <p className="text-[10px] font-bold text-white/90 uppercase line-clamp-2 leading-tight opacity-90">
+                      {coupon.description || `Valid on orders above ₹${coupon.minOrderAmount}`}
+                    </p>
+                  </div>
+                  
+                  <button 
+                    onClick={() => router.push('/home/offers')}
+                    className="flex-shrink-0 border-2 border-white/40 h-12 w-16 rounded-xl flex items-center justify-center font-black uppercase text-xs hover:bg-white/10 transition-all shadow-sm"
+                  >
+                    View
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 px-6 pb-12">
         <div className="flex items-center gap-2 mb-6">
