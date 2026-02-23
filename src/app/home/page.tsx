@@ -325,10 +325,10 @@ export default function HomePage() {
               <CarouselItem key={index}>
                 <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-lg group">
                   <Image src={getImageUrl(banner.imageId)} alt={banner.title || 'Promotion'} fill className="object-cover" />
-                  <div style={{ background: `linear-gradient(to right, ${brandColor}E6, ${brandColor}66, transparent)` }} className="absolute inset-0 flex flex-col justify-center p-6">
+                  <div className="absolute inset-0 flex flex-col justify-center p-6">
                     {banner.subtitle && <Badge className="w-fit mb-2 bg-yellow-400 text-black font-black uppercase text-[8px] tracking-widest rounded-sm">{banner.subtitle}</Badge>}
                     {banner.title && <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md">{banner.title}</h2>}
-                    {banner.price && <p className="text-white font-black text-lg">₹{banner.price}</p>}
+                    {banner.price && <p className="text-white font-black text-lg drop-shadow-md">₹{banner.price}</p>}
                   </div>
                 </div>
               </CarouselItem>
