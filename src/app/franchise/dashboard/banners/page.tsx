@@ -21,6 +21,7 @@ import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestor
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 export default function FranchiseBannersPage() {
   const firestore = useFirestore();
