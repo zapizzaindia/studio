@@ -432,8 +432,11 @@ export default function HomePage() {
       {/* 🎟️ OFFERS FOR YOU SECTION */}
       {coupons.length > 0 && (
         <div className="mt-8 mb-4">
-          <div className="px-6 mb-4">
-            <h2 className="text-2xl font-black text-[#333] tracking-tight leading-none">Offers for you</h2>
+          <div className="px-6 mb-4 flex items-center gap-2">
+            <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+              <Ticket className="h-4 w-4 text-white" />
+            </div>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Offers for you</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto px-6 scrollbar-hide pb-4">
             {coupons.map((coupon, idx) => {
