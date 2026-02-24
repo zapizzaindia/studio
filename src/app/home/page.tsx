@@ -24,7 +24,8 @@ import {
   ChevronRightCircle,
   MapPin,
   Loader2,
-  Wallet
+  Wallet,
+  Plus
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -410,20 +411,44 @@ export default function HomePage() {
             <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Trending Now</h2>
           </div>
         </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-4">
-          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-56 w-44 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
-            <motion.div key={item.id} whileTap={{ scale: 0.95 }} className="flex flex-col gap-3 w-44 flex-shrink-0 cursor-pointer group bg-white p-2.5 rounded-[32px] border border-gray-100 shadow-sm" onClick={() => handleAddClick(item)}>
-              <div className="relative h-40 w-full rounded-[24px] overflow-hidden shadow-sm border border-black/5">
-                <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute bottom-3 right-3"><div style={{ backgroundColor: brandColor }} className="p-2.5 rounded-2xl shadow-lg ring-4 ring-white/10"><PlusCircle className="h-5 w-5 text-white" /></div></div>
-                <div className="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-xl shadow-sm flex items-center gap-1 border border-white/20">
-                  <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-[10px] font-black text-[#333]">4.8</span>
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-6">
+          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-64 w-48 rounded-[32px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
+            <motion.div 
+              key={item.id} 
+              whileTap={{ scale: 0.96 }} 
+              className="flex flex-col w-48 flex-shrink-0 cursor-pointer group bg-white p-2.5 rounded-[32px] border border-gray-100 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1" 
+              onClick={() => handleAddClick(item)}
+            >
+              <div className="relative h-44 w-full rounded-[24px] overflow-hidden shadow-sm border border-black/5">
+                <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                
+                {/* 📍 Item Indicators */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                  <div className="bg-white/95 backdrop-blur-md px-2 py-1 rounded-xl shadow-sm flex items-center gap-1 border border-white/20">
+                    <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-[10px] font-black text-[#333]">4.8</span>
+                  </div>
+                  <Badge className="bg-green-100/90 text-green-800 text-[7px] font-black uppercase px-1.5 py-0.5 rounded-lg border-none shadow-sm backdrop-blur-sm">Bestseller</Badge>
+                </div>
+
+                <div className="absolute bottom-3 right-3">
+                  <div style={{ backgroundColor: brandColor }} className="p-3 rounded-2xl shadow-xl ring-4 ring-white/20 group-hover:scale-110 transition-transform">
+                    <Plus className="h-5 w-5 text-white stroke-[3px]" />
+                  </div>
                 </div>
               </div>
-              <div className="px-2 pb-1 space-y-0.5">
-                <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight tracking-tight line-clamp-1">{item.name}</h4>
-                <div className="flex items-center gap-1.5"><span className="text-[14px] font-black" style={{ color: brandColor }}>{getPriceDisplay(item)}</span></div>
+
+              <div className="px-3 pt-3 pb-1 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[13px] font-black text-[#333] uppercase leading-tight tracking-tight line-clamp-1 italic">{item.name}</h4>
+                  <div className={cn("h-3 w-3 border flex items-center justify-center rounded-sm flex-shrink-0", item.isVeg ? 'border-green-600' : 'border-red-600')}>
+                    <div className={cn("h-1.5 w-1.5 rounded-full", item.isVeg ? 'bg-green-600' : 'bg-red-600')} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-auto">
+                  <span className="text-[15px] font-black tracking-tight" style={{ color: brandColor }}>{getPriceDisplay(item)}</span>
+                  <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">Customizable</span>
+                </div>
               </div>
             </motion.div>
           ))}
