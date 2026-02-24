@@ -636,11 +636,18 @@ export default function HomePage() {
               <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
                 <MapPin className="h-2.5 w-2.5" /> {selectedOutlet?.address || 'Location Not Specified'}
               </p>
-              <button className="text-[9px] font-black uppercase mt-1 flex items-center gap-1" style={{ color: brandColor }}>
+              <button 
+                onClick={() => router.push(`/home/reviews/${selectedOutlet?.id}`)}
+                className="text-[9px] font-black uppercase mt-1 flex items-center gap-1" 
+                style={{ color: brandColor }}
+              >
                 View Store Reviews <ChevronRightCircle className="h-2.5 w-2.5" />
               </button>
             </div>
-            <div className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px]">
+            <div 
+              onClick={() => router.push(`/home/reviews/${selectedOutlet?.id}`)}
+              className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px] cursor-pointer active:scale-95 transition-all"
+            >
                <div className="flex items-center gap-1 text-white px-1.5 py-0.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
                   <span className="text-[10px] font-black">{selectedOutlet?.rating?.toFixed(1) || "4.5"}</span>
                   <Star className="h-2 w-2 fill-current" />

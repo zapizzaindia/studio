@@ -124,6 +124,15 @@ export type Outlet = {
     longitude?: number;
 };
 
+export type Review = {
+  id: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: Timestamp;
+};
+
 export type UserProfile = {
     uid: string;
     email?: string;

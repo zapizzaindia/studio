@@ -55,6 +55,19 @@
         },
         "required": ["name", "cityId", "isOpen", "brand"]
     },
+    "review": {
+        "title": "Review",
+        "description": "A customer review for an outlet.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "userName": { "type": "string" },
+            "rating": { "type": "number" },
+            "comment": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "userName", "rating", "comment", "createdAt"]
+    },
     "category": {
         "title": "Menu Category",
         "description": "A category for menu items, e.g., 'Veg Pizzas'.",
@@ -121,6 +134,7 @@
         "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
         "discountValue": { "type": "number" },
         "minOrderAmount": { "type": "number" },
+        "maxDiscountAmount": { "type": "number", "description": "Maximum discount cap in INR." },
         "active": { "type": "boolean" },
         "description": { "type": "string" }
       },
@@ -154,7 +168,8 @@
             "total": { "type": "number", "description": "Final payable amount in INR." },
             "status": { "type": "string", "enum": ["New", "Preparing", "Out for Delivery", "Completed", "Cancelled"] },
             "createdAt": { "type": "string", "format": "date-time" },
-            "outletId": { "type": "string" }
+            "outletId": { "type": "string" },
+            "loyaltyPointsEarned": { "type": "number" }
         },
         "required": ["customerId", "items", "total", "status", "createdAt", "outletId"]
     }
@@ -174,6 +189,10 @@
     "/outlets/{outletId}": {
         "schema": { "$ref": "#/entities/outlet" },
         "description": "List of all Zapizza outlets."
+    },
+    "/outlets/{outletId}/reviews/{reviewId}": {
+        "schema": { "$ref": "#/entities/review" },
+        "description": "Reviews for a specific outlet."
     },
     "/settings/global": {
       "schema": { "$ref": "#/entities/globalSettings" },
