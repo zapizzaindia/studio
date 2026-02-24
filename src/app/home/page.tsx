@@ -76,7 +76,7 @@ export default function HomePage() {
   const { toast } = useToast();
   
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
+  const [selectedOutletState, setSelectedOutletState] = useState<Outlet | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [orderType, setOrderType] = useState<"delivery" | "takeaway">("delivery");
@@ -88,6 +88,10 @@ export default function HomePage() {
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
+
+  // Real-time subscription to the selected outlet's specific details
+  const { data: realTimeOutlet } = useDoc<Outlet>('outlets', selectedOutletState?.id || 'dummy');
+  const selectedOutlet = realTimeOutlet || selectedOutletState;
 
   const { data: allCategories, loading: categoriesLoading } = useCollection<Category>('categories');
   const { data: allMenuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems');
@@ -172,7 +176,7 @@ export default function HomePage() {
     if (savedCity && savedOutlet) {
         try { 
           setSelectedCity(JSON.parse(savedCity)); 
-          setSelectedOutlet(JSON.parse(savedOutlet));
+          setSelectedOutletState(JSON.parse(savedOutlet));
         } catch(e) {
           detectAndSetLocation();
         }
@@ -192,12 +196,12 @@ export default function HomePage() {
   const handleCitySelect = (city: City) => {
     setSelectedCity(city);
     localStorage.setItem("zapizza-city", JSON.stringify(city));
-    setSelectedOutlet(null);
+    setSelectedOutletState(null);
     localStorage.removeItem("zapizza-outlet");
   };
 
   const handleOutletSelect = (outlet: Outlet) => {
-    setSelectedOutlet(outlet);
+    setSelectedOutletState(outlet);
     localStorage.setItem("zapizza-outlet", JSON.stringify(outlet));
   };
 
@@ -359,9 +363,6 @@ export default function HomePage() {
         </div>
       )}
   
-      
-  
-
       <div className="mt-6 px-6">
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
           <CarouselContent>
@@ -598,7 +599,7 @@ export default function HomePage() {
 
       <div className="mt-12 px-6">
         <h2 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-4">
-          ENQUIRE ABOUT {selectedOutlet.brand.toUpperCase()} FRANCHISE
+          ENQUIRE ABOUT {selectedOutlet?.brand?.toUpperCase() || 'ZAPIZZA'} FRANCHISE
         </h2>
         <div 
           style={{ backgroundColor: '#f97316' }} 
@@ -606,7 +607,7 @@ export default function HomePage() {
         >
           <div className="relative z-10">
             <h3 className="text-2xl font-black uppercase leading-tight italic">
-              {selectedOutlet.brand === 'zapizza' ? 'Zapizza' : 'Zfry'} 700+
+              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} 700+
             </h3>
             <p className="text-sm font-bold uppercase tracking-widest opacity-80 mt-1">Outlets across the World</p>
             
@@ -618,11 +619,12 @@ export default function HomePage() {
           </div>
           
           <div className="absolute top-1/2 -right-10 -translate-y-1/2 w-48 h-48 opacity-10 rotate-12 pointer-events-none">
-             {selectedOutlet.brand === 'zapizza' ? <Pizza className="w-full h-full" /> : <Flame className="w-full h-full" />}
+             {selectedOutlet?.brand === 'zfry' ? <Flame className="w-full h-full" /> : <Pizza className="w-full h-full" />}
           </div>
         </div>
       </div>
 
+      {/* 📍 REAL-TIME SELECTED OUTLET CARD */}
       <div className="mt-8 px-6">
         <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white">
           <CardContent className="p-5 flex items-center gap-4">
@@ -630,20 +632,20 @@ export default function HomePage() {
                <ZapizzaLogo className="w-full h-full" />
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-black text-[#333] uppercase">{selectedOutlet.name}</h4>
+              <h4 className="text-sm font-black text-[#333] uppercase">{selectedOutlet?.name || 'Zapizza Outlet'}</h4>
               <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1 mt-0.5">
-                <MapPin className="h-2.5 w-2.5" /> {selectedOutlet.address || 'Location Not Specified'}
+                <MapPin className="h-2.5 w-2.5" /> {selectedOutlet?.address || 'Location Not Specified'}
               </p>
-              <button className="text-[9px] font-black text-red-500 uppercase mt-1 flex items-center gap-1">
+              <button className="text-[9px] font-black uppercase mt-1 flex items-center gap-1" style={{ color: brandColor }}>
                 View Store Reviews <ChevronRightCircle className="h-2.5 w-2.5" />
               </button>
             </div>
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px]">
-               <div className="flex items-center gap-1 bg-[#14532d] text-white px-1.5 py-0.5 rounded-lg">
-                  <span className="text-[10px] font-black">{selectedOutlet.rating || "4.5"}</span>
+               <div className="flex items-center gap-1 text-white px-1.5 py-0.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+                  <span className="text-[10px] font-black">{selectedOutlet?.rating?.toFixed(1) || "4.5"}</span>
                   <Star className="h-2 w-2 fill-current" />
                </div>
-               <span className="text-[8px] font-black text-muted-foreground uppercase">{selectedOutlet.reviewCount || "0"} Reviews</span>
+               <span className="text-[8px] font-black text-muted-foreground uppercase">{selectedOutlet?.reviewCount || "0"} Reviews</span>
             </div>
           </CardContent>
         </Card>
@@ -655,7 +657,7 @@ export default function HomePage() {
             <div className="space-y-2 max-w-[200px]">
               <h2 className="text-3xl font-black text-[#14532d] uppercase italic tracking-tighter">Beware!</h2>
               <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase">
-                {selectedOutlet.brand === 'zapizza' ? 'Zapizza' : 'Zfry'} or its employees Do not call for any transaction OTP
+                {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} or its employees Do not call for any transaction OTP
               </p>
             </div>
             <div className="h-20 w-20 bg-yellow-400/10 rounded-full flex items-center justify-center">
