@@ -321,7 +321,7 @@ export default function HomePage() {
             <h1 className="text-2xl font-black italic tracking-tighter leading-none mb-3">
               {userProfile?.displayName?.split(" ")[0] ||
                 user?.displayName?.split(" ")[0] ||
-                "Gourmet"}
+                "Valued Customer"}
               !
             </h1>
   
@@ -552,7 +552,7 @@ export default function HomePage() {
             <Skeleton key={i} className="h-48 w-full rounded-[32px]" />
           )) : menuItems?.map((item) => (
             <motion.div 
-              key={item.id}
+              key={item.id} 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -790,7 +790,7 @@ export default function HomePage() {
                 </div>
               </div>
               <DialogDescription className="text-white/70 text-xs font-bold uppercase tracking-widest mt-4">
-                Join the fastest growing gourmet mesh.
+                Join the fastest growing food network.
               </DialogDescription>
             </DialogHeader>
           </div>
