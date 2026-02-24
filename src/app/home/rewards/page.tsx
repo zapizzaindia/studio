@@ -75,14 +75,14 @@ export default function RewardsPage() {
         style={{ backgroundColor: brandColor }} 
         className="text-white px-6 pt-12 pb-16 rounded-b-[40px] relative overflow-hidden shadow-xl"
       >
-        <div className="relative z-10">
+        <div className="relative z-10 font-headline">
           <div className="bg-white/20 backdrop-blur-md border border-white/10 rounded-2xl p-4 w-fit mb-8">
-            <p className="text-[10px] font-medium opacity-80 uppercase tracking-wide font-headline">Welcome {profile?.displayName?.split(' ')[0] || 'Gourmet'}</p>
-            <h2 className="text-xl font-black italic tracking-tighter font-headline">Order now to level up</h2>
+            <p className="text-[10px] font-medium opacity-80 uppercase tracking-wide">Welcome {profile?.displayName?.split(' ')[0] || 'Gourmet'}</p>
+            <h2 className="text-xl font-black italic tracking-tighter">Order now to level up</h2>
           </div>
 
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic leading-none mb-2 font-headline">LP Rewards</h1>
-          <p className="text-xs font-bold text-white/70 uppercase tracking-widest font-headline">Get LP Coins on Every Order</p>
+          <h1 className="text-4xl font-black tracking-tighter uppercase italic leading-none mb-2">LP Rewards</h1>
+          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Get LP Coins on Every Order</p>
         </div>
 
         {/* Decorative Gift Box Icon */}
@@ -93,24 +93,24 @@ export default function RewardsPage() {
 
       <div className="px-4 -mt-10 relative z-20 space-y-4">
         {/* Quick Action Icons */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-3 font-headline">
           <button className="flex flex-col items-center gap-2" onClick={() => router.push('/home/offers')}>
             <div className="w-full aspect-square bg-white rounded-2xl shadow-md flex items-center justify-center border border-gray-100">
-              <span className="text-[10px] font-black text-[#333] uppercase leading-tight text-center px-2 font-headline">How it works</span>
+              <span className="text-[10px] font-black text-[#333] uppercase leading-tight text-center px-2">How it works</span>
             </div>
           </button>
           
           <button className="flex flex-col items-center gap-2">
             <div className="w-full aspect-square bg-[#4ade80]/20 rounded-2xl shadow-md flex flex-col items-center justify-center border border-[#4ade80]/30 text-[#14532d]">
               <Trophy className="h-6 w-6" />
-              <span className="text-[8px] font-black uppercase tracking-widest mt-1 font-headline">Rewards</span>
+              <span className="text-[8px] font-black uppercase tracking-widest mt-1">Rewards</span>
             </div>
           </button>
 
           <button className="flex flex-col items-center gap-2 relative" onClick={() => router.push('/home/offers')}>
             <div className="w-full aspect-square bg-[#4ade80]/20 rounded-2xl shadow-md flex flex-col items-center justify-center border border-[#4ade80]/30 text-[#14532d]">
               <Ticket className="h-6 w-6" />
-              <span className="text-[8px] font-black uppercase tracking-widest mt-1 font-headline">Offers</span>
+              <span className="text-[8px] font-black uppercase tracking-widest mt-1">Offers</span>
             </div>
             {coupons.length > 0 && (
               <Badge className="absolute -top-1 -right-1 bg-[#e31837] text-white border-white text-[8px] h-4 w-4 p-0 flex items-center justify-center font-black font-body tabular-nums">
@@ -122,7 +122,7 @@ export default function RewardsPage() {
           <button className="flex flex-col items-center gap-2 relative" onClick={() => router.push('/home/profile')}>
             <div className="w-full aspect-square bg-[#4ade80]/20 rounded-2xl shadow-md flex flex-col items-center justify-center border border-[#4ade80]/30 text-[#14532d]">
               <User className="h-6 w-6" />
-              <span className="text-[8px] font-black uppercase tracking-widest mt-1 font-headline">Profile</span>
+              <span className="text-[8px] font-black uppercase tracking-widest mt-1">Profile</span>
             </div>
             <Badge className="absolute -top-1 -right-1 bg-[#14532d] text-white border-white text-[8px] h-auto px-1 font-black font-body tabular-nums">{completionPercentage}%</Badge>
           </button>
@@ -206,10 +206,10 @@ export default function RewardsPage() {
         </Card>
 
         {/* How it works Footer */}
-        <div className="pt-8 pb-12">
+        <div className="pt-8 pb-12 font-headline">
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="h-px flex-1 bg-gray-200" />
-            <h3 className="text-xl font-black text-[#333] uppercase italic font-headline">How it works</h3>
+            <h3 className="text-xl font-black text-[#333] uppercase italic">How it works</h3>
             <div className="h-px flex-1 bg-gray-200" />
           </div>
 
@@ -219,8 +219,8 @@ export default function RewardsPage() {
                 <ShoppingBag className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-xs font-black uppercase text-[#333] font-headline">Order and Earn</h4>
-                <p className="text-[10px] font-medium text-muted-foreground uppercase leading-relaxed font-headline">Place an order from any {brandName} outlet and get coins based on your bill value.</p>
+                <h4 className="text-xs font-black uppercase text-[#333]">Order and Earn</h4>
+                <p className="text-[10px] font-medium text-muted-foreground uppercase leading-relaxed">Place an order from any {brandName} outlet and get coins based on your bill value.</p>
               </div>
             </div>
 
@@ -229,8 +229,8 @@ export default function RewardsPage() {
                 <Crown className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-xs font-black uppercase text-[#333] font-headline">Level Up Rewards</h4>
-                <p className="text-[10px] font-medium text-muted-foreground uppercase leading-relaxed font-headline">As you spend more, your account tier upgrades, giving you better conversion rates.</p>
+                <h4 className="text-xs font-black uppercase text-[#333]">Level Up Rewards</h4>
+                <p className="text-[10px] font-medium text-muted-foreground uppercase leading-relaxed">As you spend more, your account tier upgrades, giving you better conversion rates.</p>
               </div>
             </div>
           </div>

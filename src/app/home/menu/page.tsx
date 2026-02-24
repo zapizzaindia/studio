@@ -219,7 +219,7 @@ export default function MenuPage() {
               {selectedOutlet?.rating?.toFixed(2) || "4.50"} <Star className="h-2 w-2 fill-current" />
             </div>
             <span className="text-[8px] font-bold text-muted-foreground uppercase text-center leading-tight font-headline">
-              {selectedOutlet?.reviewCount || "88"}<br/>Reviews
+              <span className="font-body tabular-nums">{selectedOutlet?.reviewCount || "88"}</span><br/>Reviews
             </span>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function MenuPage() {
           </div>
         </div>
         <div className="flex items-center gap-1 text-[9px] font-black text-muted-foreground uppercase font-headline">
-          {coupons?.length || 0} OFFERS <ChevronDown className="h-3 w-3" />
+          <span className="font-body tabular-nums">{coupons?.length || 0}</span> OFFERS <ChevronDown className="h-3 w-3" />
         </div>
       </div>
 
@@ -289,7 +289,7 @@ export default function MenuPage() {
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333] font-headline">Featured Items</h2>
             <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide">
               {menuItems.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer" onClick={() => handleAddClick(item)}>
+                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer font-headline" onClick={() => handleAddClick(item)}>
                   <div className="relative h-44 w-full">
                     <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
                   </div>
@@ -299,15 +299,15 @@ export default function MenuPage() {
                         <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                       </div>
                       <div className="flex gap-1">
-                        <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none font-headline">Bestseller</Badge>
-                        <Badge className="bg-orange-100 text-orange-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none font-headline">New</Badge>
+                        <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">Bestseller</Badge>
+                        <Badge className="bg-orange-100 text-orange-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">New</Badge>
                       </div>
                     </div>
-                    <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight mt-1 font-headline">{item.name}</h4>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-headline">Customisable</p>
+                    <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight mt-1">{item.name}</h4>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Customisable</p>
                     <div className="mt-auto pt-3 flex items-center justify-between">
                       <span className="text-[13px] font-black text-[#333] font-body tabular-nums">{getPriceDisplay(item)}</span>
-                      <Button variant="outline" className="h-8 px-4 rounded-lg border-gray-200 text-[10px] font-black uppercase bg-white hover:bg-gray-50 text-[#333] shadow-sm font-headline">
+                      <Button variant="outline" className="h-8 px-4 rounded-lg border-gray-200 text-[10px] font-black uppercase bg-white hover:bg-gray-50 text-[#333] shadow-sm">
                         Add <Plus className="h-3 w-3 ml-1" style={{ color: brandColor }} />
                       </Button>
                     </div>
@@ -350,7 +350,7 @@ export default function MenuPage() {
                         </div>
                         <h4 className="text-[15px] font-black text-[#333] uppercase leading-tight tracking-tight mb-1 font-headline">{item.name}</h4>
                         <p className="text-[14px] font-black text-[#333] mb-2 font-body tabular-nums">{getPriceDisplay(item)}</p>
-                        <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-relaxed">
+                        <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-relaxed font-body">
                           {item.description} <span className="text-gray-400 font-bold font-headline">Read More</span>
                         </p>
                       </div>
@@ -427,11 +427,11 @@ export default function MenuPage() {
             style={{ backgroundColor: brandColor }}
             className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 font-headline"
           >
-            <div className="flex flex-col items-start">
-              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest font-body tabular-nums">{totalItems} ITEMS</span>
-              <span className="text-xl font-black font-body tabular-nums">₹{totalPrice}</span>
+            <div className="flex flex-col items-start font-body tabular-nums">
+              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
+              <span className="text-xl font-black">₹{totalPrice}</span>
             </div>
-            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px] font-headline">
+            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">
               VIEW CART <ShoppingBag className="h-5 w-5" />
             </div>
           </Button>
@@ -497,12 +497,12 @@ export default function MenuPage() {
                   </div>
                 )}
               </div>
-              <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4">
+              <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4 font-headline">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest font-headline">Total Price</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
                   <span className="text-2xl font-black font-body tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
                 </div>
-                <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all font-headline">ADD TO CART</Button>
+                <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all">ADD TO CART</Button>
               </div>
             </>
           )}

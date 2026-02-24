@@ -267,10 +267,10 @@ export default function CheckoutPage() {
           <CardContent className="p-4 bg-white">
             {selectedAddress ? (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="text-[8px] font-black uppercase font-headline" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
+                <div className="flex items-center gap-2 mb-2 font-headline">
+                  <Badge variant="secondary" className="text-[8px] font-black uppercase" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
                   {selectedAddress.latitude && (
-                    <Badge variant="outline" className="text-blue-600 border-blue-200 text-[8px] font-black uppercase font-headline">GPS PINNED</Badge>
+                    <Badge variant="outline" className="text-blue-600 border-blue-200 text-[8px] font-black uppercase">GPS PINNED</Badge>
                   )}
                 </div>
                 <p className="text-xs font-bold text-[#333333] leading-snug font-body">{selectedAddress.flatNo}, {selectedAddress.area}</p>
@@ -297,12 +297,12 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight font-headline">{item.name}</h4>
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1 mt-1 font-headline">
                       {item.selectedVariation && (
-                        <span className="text-[9px] font-bold bg-[#f1f2f6] text-[#666666] px-1.5 py-0.5 rounded uppercase font-headline">{item.selectedVariation.name}</span>
+                        <span className="text-[9px] font-bold bg-[#f1f2f6] text-[#666666] px-1.5 py-0.5 rounded uppercase">{item.selectedVariation.name}</span>
                       )}
                       {item.selectedAddons?.map(addon => (
-                        <span key={addon.name} className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-headline" style={{ backgroundColor: brandColor + '05', color: brandColor }}>+{addon.name}</span>
+                        <span key={addon.name} className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase" style={{ backgroundColor: brandColor + '05', color: brandColor }}>+{addon.name}</span>
                       ))}
                     </div>
                     <span className="text-[11px] font-black mt-1.5 block font-body tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
@@ -328,7 +328,6 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Special Cooking Note Section */}
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 font-headline" style={{ color: brandColor }}>
@@ -346,11 +345,10 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Available Coupons Horizontal Scroll */}
         {brandCoupons.length > 0 && !appliedCoupon && (
           <div className="space-y-2">
             <p className="text-[10px] font-black uppercase tracking-widest px-1 font-headline" style={{ color: brandColor }}>Available Coupons</p>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-1">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-1 font-headline">
               {brandCoupons.map((coupon) => (
                 <div 
                   key={coupon.id}
@@ -359,16 +357,16 @@ export default function CheckoutPage() {
                   style={{ borderColor: brandColor + '40' }}
                 >
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[11px] font-black uppercase tracking-wider font-headline" style={{ color: brandColor }}>{coupon.code}</span>
+                    <span className="text-[11px] font-black uppercase tracking-wider">{coupon.code}</span>
                     <Badge variant="outline" className="text-[8px] font-bold h-4 px-1 font-body tabular-nums" style={{ borderColor: brandColor + '20', color: brandColor }}>
                       {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
                     </Badge>
                   </div>
-                  <p className="text-[9px] text-muted-foreground font-bold leading-tight line-clamp-1 font-headline">
+                  <p className="text-[9px] text-muted-foreground font-bold leading-tight line-clamp-1">
                     {coupon.maxDiscountAmount ? `Up to ₹${coupon.maxDiscountAmount}` : coupon.description}
                   </p>
                   {totalPrice < coupon.minOrderAmount && (
-                    <p className="text-[8px] text-red-500 font-black mt-1 uppercase italic tracking-tight font-headline">Add ₹{coupon.minOrderAmount - totalPrice} more</p>
+                    <p className="text-[8px] text-red-500 font-black mt-1 uppercase italic tracking-tight">Add ₹<span className="font-body tabular-nums">{coupon.minOrderAmount - totalPrice}</span> more</p>
                   )}
                 </div>
               ))}
@@ -377,15 +375,15 @@ export default function CheckoutPage() {
         )}
 
         <Card className="border-none shadow-sm">
-          <CardContent className="p-4 bg-white">
+          <CardContent className="p-4 bg-white font-headline">
             <div className="flex items-center gap-2 mb-3">
                <Ticket className="h-4 w-4" style={{ color: brandColor }} />
-               <span className="text-[10px] font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Offers & Coupons</span>
+               <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Offers & Coupons</span>
             </div>
             {appliedCoupon ? (
               <div className="flex items-center justify-between p-3 rounded-lg border border-dashed" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '30' }}>
-                <span className="text-xs font-black uppercase font-headline" style={{ color: brandColor }}>{appliedCoupon.code} applied!</span>
-                <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600 font-headline">REMOVE</Button>
+                <span className="text-xs font-black uppercase" style={{ color: brandColor }}>{appliedCoupon.code} applied!</span>
+                <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600">REMOVE</Button>
               </div>
             ) : (
               <div className="flex gap-2">
@@ -393,18 +391,17 @@ export default function CheckoutPage() {
                   placeholder="ENTER PROMO CODE" 
                   value={couponInput}
                   onChange={e => setCouponInput(e.target.value)}
-                  className="h-10 text-xs font-black font-headline"
+                  className="h-10 text-xs font-black"
                 />
-                <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px] font-headline" style={{ backgroundColor: brandColor }}>APPLY</Button>
+                <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Payment Method Selection */}
-        <Card className="border-none shadow-sm overflow-hidden">
+        <Card className="border-none shadow-sm overflow-hidden font-headline">
           <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 font-headline" style={{ color: brandColor }}>
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
               <Wallet className="h-4 w-4" /> Payment Method
             </CardTitle>
           </CardHeader>
@@ -415,12 +412,12 @@ export default function CheckoutPage() {
                 paymentMethod === 'Online' ? "border-current bg-opacity-5" : "border-gray-100 bg-gray-50/50"
               )} style={{ color: paymentMethod === 'Online' ? brandColor : undefined }}>
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-muted-foreground">
                     <CreditCard className="h-5 w-5" />
                   </div>
                   <div>
-                    <Label htmlFor="online" className="text-sm font-black uppercase cursor-pointer font-headline">Online Payment</Label>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-headline">Cards, UPI, Netbanking</p>
+                    <Label htmlFor="online" className="text-sm font-black uppercase cursor-pointer">Online Payment</Label>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Cards, UPI, Netbanking</p>
                   </div>
                 </div>
                 <RadioGroupItem value="Online" id="online" className="border-2" />
@@ -431,12 +428,12 @@ export default function CheckoutPage() {
                 paymentMethod === 'Cash' ? "border-current bg-opacity-5" : "border-gray-100 bg-gray-50/50"
               )} style={{ color: paymentMethod === 'Cash' ? brandColor : undefined }}>
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-muted-foreground">
                     <RupeeIcon className="h-5 w-5" />
                   </div>
                   <div>
-                    <Label htmlFor="cash" className="text-sm font-black uppercase cursor-pointer font-headline">Cash on Delivery</Label>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-headline">Pay at your doorstep</p>
+                    <Label htmlFor="cash" className="text-sm font-black uppercase cursor-pointer">Cash on Delivery</Label>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Pay at your doorstep</p>
                   </div>
                 </div>
                 <RadioGroupItem value="Cash" id="cash" className="border-2" />
@@ -449,63 +446,63 @@ export default function CheckoutPage() {
           <CardHeader className="bg-white border-b py-4">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Bill Details</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 space-y-3 bg-white">
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase font-headline">
+          <CardContent className="p-4 space-y-3 bg-white font-headline">
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
               <span>Item Total</span>
               <span className="font-body tabular-nums">₹{calculations.subtotal}</span>
             </div>
             {calculations.discount > 0 && (
-              <div className="flex justify-between text-xs font-black text-green-600 uppercase font-headline">
+              <div className="flex justify-between text-xs font-black text-green-600 uppercase">
                 <div className="flex flex-col">
                     <span>Coupon Discount</span>
-                    {appliedCoupon?.maxDiscountAmount && <span className="text-[8px] opacity-60 font-headline">Capped at ₹{appliedCoupon.maxDiscountAmount}</span>}
+                    {appliedCoupon?.maxDiscountAmount && <span className="text-[8px] opacity-60">Capped at ₹<span className="font-body tabular-nums">{appliedCoupon.maxDiscountAmount}</span></span>}
                 </div>
                 <span className="font-body tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase font-headline">
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
               <span>Delivery Partner Fee</span>
               <span className={cn("font-body tabular-nums", calculations.deliveryFee === 0 ? "text-green-600 font-headline" : "")}>
                 {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}
               </span>
             </div>
-            <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase font-headline">
-              <span>Taxes (GST @ {settings?.gstPercentage ?? 18}%)</span>
+            <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+              <span>Taxes (GST @ <span className="font-body tabular-nums">{settings?.gstPercentage ?? 18}</span>%)</span>
               <span className="font-body tabular-nums">₹{calculations.gstTotal.toFixed(2)}</span>
             </div>
             <div className="border-t border-dashed pt-3 flex justify-between items-center">
-              <span className="text-lg font-black text-[#333333] font-headline">TO PAY</span>
+              <span className="text-lg font-black text-[#333333]">TO PAY</span>
               <span className="text-2xl font-black font-body tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
             </div>
           </CardContent>
         </Card>
 
-        <div className="p-4 rounded-xl flex items-center gap-3 shadow-lg" style={{ backgroundColor: brandColor }}>
+        <div className="p-4 rounded-xl flex items-center gap-3 shadow-lg font-headline" style={{ backgroundColor: brandColor }}>
            <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
               <Crown className="h-6 w-6 text-white" />
            </div>
            <div>
-              <p className="text-[9px] font-black text-white/70 uppercase tracking-widest font-headline">Loyalty Reward</p>
-              <p className="text-xs font-black text-white uppercase italic font-headline">
+              <p className="text-[9px] font-black text-white/70 uppercase tracking-widest">Loyalty Reward</p>
+              <p className="text-xs font-black text-white uppercase italic">
                 You will earn <span className="font-body tabular-nums">{Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1))}</span> points
               </p>
            </div>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
         {!selectedAddress && (
           <div className="flex items-center gap-2 mb-4 bg-amber-50 p-3 rounded-xl border border-amber-100 animate-pulse">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <p className="text-[10px] font-black text-amber-800 uppercase tracking-tight font-headline">Please select a delivery address first</p>
+            <p className="text-[10px] font-black text-amber-800 uppercase tracking-tight">Please select a delivery address first</p>
           </div>
         )}
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2 text-left">
             <ShieldCheck className="h-5 w-5" style={{ color: brandColor }} />
             <div className="flex items-center flex-col">
-              <span className="text-[11px] font-black uppercase text-[#333333] font-headline">Secure Terminal Entry</span>
-              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest font-headline">
+              <span className="text-[11px] font-black uppercase text-[#333333]">Secure Terminal Entry</span>
+              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
                 {paymentMethod === 'Online' ? '100% Encrypted' : 'Verification Required'}
               </span>
             </div>
@@ -514,7 +511,7 @@ export default function CheckoutPage() {
         <Button 
           onClick={handlePlaceOrder}
           disabled={isPlacing || !selectedAddress}
-          className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline"
+          className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95"
           style={{ backgroundColor: brandColor }}
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (

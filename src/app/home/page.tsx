@@ -300,7 +300,7 @@ export default function HomePage() {
       <div className="flex flex-col justify-center items-center h-screen bg-white">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <ZapizzaLogo className="h-16 w-16 text-primary" />
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground font-headline">
             <Loader2 className="h-3 w-3 animate-spin" /> Identifying Nearest Outlet
           </div>
         </div>
@@ -429,13 +429,13 @@ export default function HomePage() {
           <h2 className="text-lg font-black uppercase tracking-tighter font-headline" style={{ color: brandColor }}>Explore Menu</h2>
           <Button variant="ghost" size="sm" className="text-xs font-black uppercase gap-1 pr-0 font-headline" style={{ color: brandColor }} onClick={() => router.push('/home/menu')}>See All <ChevronRight className="h-3 w-3" /></Button>
         </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2">
+        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2 font-headline">
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
             <div key={cat.id} className="flex flex-col items-center gap-2 group cursor-pointer flex-shrink-0" onClick={() => router.push(`/home/menu?category=${cat.id}`)}>
               <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
                 <Image src={getImageUrl(cat.imageId || 'cat_veg')} alt={cat.name} fill className="object-cover" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1 font-headline" style={{ color: brandColor }}>{cat.name}</span>
+              <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1" style={{ color: brandColor }}>{cat.name}</span>
             </div>
           ))}
         </div>
@@ -579,8 +579,8 @@ export default function HomePage() {
                       <Star key={i} className={`h-2.5 w-2.5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
                     ))}
                   </div>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-medium">
-                    {item.description} <span className="text-gray-400 font-bold">Read More</span>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-medium font-body">
+                    {item.description} <span className="text-gray-400 font-bold font-headline">Read More</span>
                   </p>
                 </div>
               </div>
@@ -610,7 +610,7 @@ export default function HomePage() {
           
           <div className="relative z-10 space-y-2">
             <h2 className="text-xl font-black uppercase leading-tight px-4 drop-shadow-sm font-headline">
-              Place Orders Worth Rs.1000 to Upgrade Your Account to ACE Level
+              Place Orders Worth Rs.<span className="font-body tabular-nums">1000</span> to Upgrade Your Account to ACE Level
             </h2>
             <p className="text-xs font-bold uppercase tracking-widest opacity-80 font-headline">
               Get LP Coins on Every Order
@@ -627,7 +627,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 mt-3 text-muted-foreground">
                     <Timer className="h-3.5 w-3.5" />
                     <p className="text-[10px] font-black uppercase tracking-tight font-headline">
-                      10% of the Subtotal Value can be paid using the LP ...
+                      <span className="font-body tabular-nums">10</span>% of the Subtotal Value can be paid using the LP ...
                     </p>
                   </div>
                 </div>
@@ -669,7 +669,7 @@ export default function HomePage() {
         >
           <div className="relative z-10">
             <h3 className="text-2xl font-black uppercase leading-tight italic font-headline">
-              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} 700+
+              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} <span className="font-body tabular-nums">700</span>+
             </h3>
             <p className="text-sm font-bold uppercase tracking-widest opacity-80 mt-1 font-headline">Outlets across the World</p>
             
@@ -958,7 +958,7 @@ export default function HomePage() {
       {totalItems > 0 && (
         <div className="fixed bottom-20 left-4 right-4 z-40">
           <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none transition-all duration-500">
-            <div className="flex flex-col items-start"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest font-body tabular-nums">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight font-body tabular-nums">₹{totalPrice}</span></div>
+            <div className="flex flex-col items-start font-body tabular-nums"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
             <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px] font-headline">VIEW CART <ShoppingBag className="h-5 w-5" /></div>
           </Button>
         </div>
