@@ -837,18 +837,18 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Investment Band</Label>
-                  <Select value={enquiryInvestment} onValueChange={setEnquiryInvestment}>
-                    <SelectTrigger className="h-12 rounded-xl font-bold bg-gray-50 border-gray-100">
-                      <SelectValue placeholder="Select Range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10-20L">₹10L - ₹20L</SelectItem>
-                      <SelectItem value="20-40L">₹20L - ₹40L</SelectItem>
-                      <SelectItem value="40-60L">₹40L - ₹60L</SelectItem>
-                      <SelectItem value="60L+">₹60L+</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Investment Capacity (in Lakhs)</Label>
+                  <div className="relative">
+                    <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      type="number"
+                      value={enquiryInvestment}
+                      onChange={e => setEnquiryInvestment(e.target.value)}
+                      placeholder="e.g. 25" 
+                      className="pl-12 pr-16 h-12 rounded-xl font-bold bg-gray-50 border-gray-100" 
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase">Lakhs</span>
+                  </div>
                 </div>
               </div>
             </div>
