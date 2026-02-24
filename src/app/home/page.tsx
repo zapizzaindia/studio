@@ -601,7 +601,7 @@ export default function HomePage() {
           ENQUIRE ABOUT {selectedOutlet.brand.toUpperCase()} FRANCHISE
         </h2>
         <div 
-          style={{ backgroundColor: brandColor }} 
+          style={{ backgroundColor: '#f97316' }} 
           className="rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl"
         >
           <div className="relative z-10">
