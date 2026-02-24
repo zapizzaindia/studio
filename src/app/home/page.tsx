@@ -541,8 +541,7 @@ export default function HomePage() {
 
       <div className="mt-4 relative overflow-hidden">
         <div 
-          style={{ backgroundColor: brandColor }} 
-          className="w-full px-6 py-12 text-center text-white relative"
+          className="w-full px-6 py-12 text-center text-white relative bg-[#111827]"
         >
           <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_center,_white_0%,_transparent_70%)]" />
           
