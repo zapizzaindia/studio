@@ -186,12 +186,12 @@ export default function MenuPage() {
         <div className="flex justify-between items-start">
           <div className="space-y-1 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-[#333] uppercase italic flex items-center gap-1.5">
+              <h1 className="text-xl font-black text-[#333] uppercase italic flex items-center gap-1.5 font-headline">
                 {selectedOutlet?.name || "Zapizza"} <Info className="h-4 w-4 text-muted-foreground" />
               </h1>
               <Badge 
                 className={cn(
-                  "border-none font-black text-[8px] uppercase px-1.5 h-4",
+                  "border-none font-black text-[8px] uppercase px-1.5 h-4 font-headline",
                   selectedOutlet?.isOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                 )}
               >
@@ -200,14 +200,14 @@ export default function MenuPage() {
             </div>
             <div className="flex flex-col gap-1.5 text-muted-foreground">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1 text-[11px] font-bold">
+                <div className="flex items-center gap-1 text-[11px] font-bold font-body tabular-nums">
                   <Clock className="h-3 w-3" /> {selectedOutlet?.deliveryTime || "35-45 Mins"}
                 </div>
-                <div className="flex items-center gap-1 text-[11px] font-bold">
+                <div className="flex items-center gap-1 text-[11px] font-bold font-body tabular-nums">
                   <Clock className="h-3 w-3 opacity-50" /> {selectedOutlet?.openingTime} - {selectedOutlet?.closingTime}
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold cursor-pointer hover:text-foreground transition-colors pr-4" onClick={handleLocationChange}>
+              <div className="flex items-center gap-1 text-[11px] font-bold cursor-pointer hover:text-foreground transition-colors pr-4 font-headline" onClick={handleLocationChange}>
                 <MapPin className="h-3 w-3 flex-shrink-0" /> 
                 <span className="truncate">{selectedOutlet?.address || "Selecting Location..."}</span> 
                 <ChevronDown className="h-3 w-3 flex-shrink-0" />
@@ -215,10 +215,10 @@ export default function MenuPage() {
             </div>
           </div>
           <div className="flex flex-col items-center gap-1 border rounded-lg p-1.5 min-w-[65px] bg-gray-50/50">
-            <div className="flex items-center gap-1 bg-green-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm">
+            <div className="flex items-center gap-1 bg-green-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm font-body tabular-nums">
               {selectedOutlet?.rating?.toFixed(2) || "4.50"} <Star className="h-2 w-2 fill-current" />
             </div>
-            <span className="text-[8px] font-bold text-muted-foreground uppercase text-center leading-tight">
+            <span className="text-[8px] font-bold text-muted-foreground uppercase text-center leading-tight font-headline">
               {selectedOutlet?.reviewCount || "88"}<br/>Reviews
             </span>
           </div>
@@ -232,29 +232,29 @@ export default function MenuPage() {
             <Zap className="h-4 w-4 text-white fill-current" />
           </div>
           <div className="flex flex-col">
-            <p className="text-[11px] font-black uppercase text-[#333] tracking-tight">
+            <p className="text-[11px] font-black uppercase text-[#333] tracking-tight font-headline">
               {topCoupon ? `Get Flat Discount of ₹${topCoupon.discountValue}...` : "Exclusive Offers Available"}
             </p>
-            <p className="text-[9px] font-bold text-muted-foreground uppercase">
-              Use Code <span className="text-[#333]">{topCoupon?.code || "WELCOME"}</span>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase font-headline">
+              Use Code <span className="text-[#333] font-headline">{topCoupon?.code || "WELCOME"}</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[9px] font-black text-muted-foreground uppercase">
+        <div className="flex items-center gap-1 text-[9px] font-black text-muted-foreground uppercase font-headline">
           {coupons?.length || 0} OFFERS <ChevronDown className="h-3 w-3" />
         </div>
       </div>
 
       {/* 3. Filters Sticky Row */}
       <div className="sticky top-16 z-30 bg-white border-b overflow-x-auto px-4 py-3 flex items-center gap-3 scrollbar-hide">
-        <Button variant="outline" className="h-9 px-4 rounded-xl border-gray-200 text-[10px] font-black uppercase gap-2 flex-shrink-0">
+        <Button variant="outline" className="h-9 px-4 rounded-xl border-gray-200 text-[10px] font-black uppercase gap-2 flex-shrink-0 font-headline">
           <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
         </Button>
         <Button 
           variant="outline" 
           onClick={() => setShowInStockOnly(!showInStockOnly)}
           className={cn(
-            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all",
+            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all font-headline",
             showInStockOnly ? "border-primary bg-primary/5 text-primary" : "border-gray-200"
           )}
         >
@@ -264,7 +264,7 @@ export default function MenuPage() {
           variant="outline" 
           onClick={() => setActiveFilter(activeFilter === "veg" ? "all" : "veg")}
           className={cn(
-            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all",
+            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all font-headline",
             activeFilter === "veg" ? "border-green-600 bg-green-50 text-green-600" : "border-gray-200"
           )}
         >
@@ -274,7 +274,7 @@ export default function MenuPage() {
           variant="outline" 
           onClick={() => setActiveFilter(activeFilter === "non-veg" ? "all" : "non-veg")}
           className={cn(
-            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all",
+            "h-9 px-4 rounded-xl text-[10px] font-black uppercase gap-2 flex-shrink-0 transition-all font-headline",
             activeFilter === "non-veg" ? "border-red-600 bg-red-50 text-red-600" : "border-gray-200"
           )}
         >
@@ -286,7 +286,7 @@ export default function MenuPage() {
         {/* 4. Featured Items (Horizontal Carousel) */}
         {!searchQuery && menuItems && (
           <div className="py-8 border-b">
-            <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333]">Featured Items</h2>
+            <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333] font-headline">Featured Items</h2>
             <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide">
               {menuItems.slice(0, 5).map((item) => (
                 <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer" onClick={() => handleAddClick(item)}>
@@ -299,15 +299,15 @@ export default function MenuPage() {
                         <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                       </div>
                       <div className="flex gap-1">
-                        <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">Bestseller</Badge>
-                        <Badge className="bg-orange-100 text-orange-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">New</Badge>
+                        <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none font-headline">Bestseller</Badge>
+                        <Badge className="bg-orange-100 text-orange-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none font-headline">New</Badge>
                       </div>
                     </div>
-                    <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight mt-1">{item.name}</h4>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Customisable</p>
+                    <h4 className="text-[12px] font-black text-[#333] uppercase leading-tight mt-1 font-headline">{item.name}</h4>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-headline">Customisable</p>
                     <div className="mt-auto pt-3 flex items-center justify-between">
-                      <span className="text-[13px] font-black text-[#333]">{getPriceDisplay(item)}</span>
-                      <Button variant="outline" className="h-8 px-4 rounded-lg border-gray-200 text-[10px] font-black uppercase bg-white hover:bg-gray-50 text-[#333] shadow-sm">
+                      <span className="text-[13px] font-black text-[#333] font-body tabular-nums">{getPriceDisplay(item)}</span>
+                      <Button variant="outline" className="h-8 px-4 rounded-lg border-gray-200 text-[10px] font-black uppercase bg-white hover:bg-gray-50 text-[#333] shadow-sm font-headline">
                         Add <Plus className="h-3 w-3 ml-1" style={{ color: brandColor }} />
                       </Button>
                     </div>
@@ -334,7 +334,7 @@ export default function MenuPage() {
             return (
               <div key={category.id} id={`cat-${category.id}`} className="scroll-mt-36">
                 <div className="px-6 py-8">
-                  <h3 className="text-lg font-black text-[#333] uppercase italic leading-none text-center">
+                  <h3 className="text-lg font-black text-[#333] uppercase italic leading-none text-center font-headline">
                     {category.name}
                   </h3>
                   <div className="h-0.5 w-12 bg-[#333] mx-auto mt-2" />
@@ -348,10 +348,10 @@ export default function MenuPage() {
                             <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                           </div>
                         </div>
-                        <h4 className="text-[15px] font-black text-[#333] uppercase leading-tight tracking-tight mb-1">{item.name}</h4>
-                        <p className="text-[14px] font-black text-[#333] mb-2">{getPriceDisplay(item)}</p>
+                        <h4 className="text-[15px] font-black text-[#333] uppercase leading-tight tracking-tight mb-1 font-headline">{item.name}</h4>
+                        <p className="text-[14px] font-black text-[#333] mb-2 font-body tabular-nums">{getPriceDisplay(item)}</p>
                         <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-relaxed">
-                          {item.description} <span className="text-gray-400 font-bold">Read More</span>
+                          {item.description} <span className="text-gray-400 font-bold font-headline">Read More</span>
                         </p>
                       </div>
                       <div className="relative flex-shrink-0 flex flex-col items-center">
@@ -359,10 +359,10 @@ export default function MenuPage() {
                           <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
                         </div>
                         <div className="absolute -bottom-2 w-20">
-                          <Button className="w-full bg-white hover:bg-gray-50 text-[#333] border border-gray-200 h-8 rounded-lg font-black text-[10px] uppercase shadow-lg flex items-center justify-center gap-1">
-                            Add <span className="text-lg font-normal" style={{ color: brandColor }}>+</span>
+                          <Button className="w-full bg-white hover:bg-gray-50 text-[#333] border border-gray-200 h-8 rounded-lg font-black text-[10px] uppercase shadow-lg flex items-center justify-center gap-1 font-headline">
+                            Add <span className="text-lg font-normal font-body" style={{ color: brandColor }}>+</span>
                           </Button>
-                          <p className="text-center text-[8px] font-black text-muted-foreground uppercase mt-3">Customisable</p>
+                          <p className="text-center text-[8px] font-black text-muted-foreground uppercase mt-3 font-headline">Customisable</p>
                         </div>
                       </div>
                     </div>
@@ -391,16 +391,16 @@ export default function MenuPage() {
               exit={{ y: "100%", opacity: 0 }}
               className="fixed bottom-36 left-4 right-4 bg-white rounded-2xl z-[52] shadow-2xl p-6 overflow-hidden border border-gray-100"
             >
-              <h3 className="text-sm font-black uppercase tracking-widest mb-4" style={{ color: brandColor }}>Choose Category</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest mb-4 font-headline" style={{ color: brandColor }}>Choose Category</h3>
               <div className="grid grid-cols-1 gap-1">
                 {categories?.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => scrollToCategory(cat.id)}
-                    className="flex items-center justify-between w-full py-3 px-4 rounded-xl hover:bg-[#f1f2f6] transition-colors text-left group"
+                    className="flex items-center justify-between w-full py-3 px-4 rounded-xl hover:bg-[#f1f2f6] transition-colors text-left group font-headline"
                   >
                     <span className="text-sm font-bold text-[#333] group-hover:text-primary">{cat.name}</span>
-                    <span className="text-[10px] font-black text-muted-foreground opacity-50">
+                    <span className="text-[10px] font-black text-muted-foreground opacity-50 font-body tabular-nums">
                       {menuItems?.filter(i => i.category === cat.id).length}
                     </span>
                   </button>
@@ -425,13 +425,13 @@ export default function MenuPage() {
           <Button 
             onClick={() => router.push('/home/checkout')}
             style={{ backgroundColor: brandColor }}
-            className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10"
+            className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 font-headline"
           >
             <div className="flex flex-col items-start">
-              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
-              <span className="text-xl font-black">₹{totalPrice}</span>
+              <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest font-body tabular-nums">{totalItems} ITEMS</span>
+              <span className="text-xl font-black font-body tabular-nums">₹{totalPrice}</span>
             </div>
-            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">
+            <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px] font-headline">
               VIEW CART <ShoppingBag className="h-5 w-5" />
             </div>
           </Button>
@@ -449,13 +449,13 @@ export default function MenuPage() {
                    <div className={`h-4 w-4 border-2 mb-2 flex items-center justify-center bg-white rounded-sm ${customizingItem.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                       <div className={`h-2 w-2 rounded-full ${customizingItem.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                    </div>
-                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">{customizingItem.name}</h2>
+                   <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic font-headline">{customizingItem.name}</h2>
                 </div>
               </div>
               <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide">
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
+                    <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm font-headline">Required</Badge></div>
                     <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
                       const newVar = customizingItem.variations?.find(v => v.name === val) || null;
                       setSelectedVariation(newVar);
@@ -463,8 +463,8 @@ export default function MenuPage() {
                     }} className="space-y-3">
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
-                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase">{v.name}</span></Label>
-                          <div className="flex items-center gap-3"><span className="text-xs font-black" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
+                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase font-headline">{v.name}</span></Label>
+                          <div className="flex items-center gap-3"><span className="text-xs font-black font-body tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
                         </div>
                       ))}
                     </RadioGroup>
@@ -473,15 +473,15 @@ export default function MenuPage() {
                 <Separator />
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Extra Toppings</h3>
+                    <h3 className="text-xs font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Extra Toppings</h3>
                     <div className="space-y-3">
                       {availableAddons.map((addon) => (
                         <div key={addon.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
                           <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
-                            <span className="text-sm font-bold text-[#333] uppercase">{addon.name}</span>
+                            <span className="text-sm font-bold text-[#333] uppercase font-headline">{addon.name}</span>
                           </Label>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-black" style={{ color: brandColor }}>₹{addon.price}</span>
+                            <span className="text-xs font-black font-body tabular-nums" style={{ color: brandColor }}>₹{addon.price}</span>
                             <Checkbox 
                               id={`a-${addon.name}`} 
                               checked={selectedAddons.some(a => a.name === addon.name)}
@@ -499,10 +499,10 @@ export default function MenuPage() {
               </div>
               <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
-                  <span className="text-2xl font-black" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest font-headline">Total Price</span>
+                  <span className="text-2xl font-black font-body tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
                 </div>
-                <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all">ADD TO CART</Button>
+                <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all font-headline">ADD TO CART</Button>
               </div>
             </>
           )}

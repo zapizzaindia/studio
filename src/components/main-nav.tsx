@@ -62,11 +62,11 @@ export function MainNav() {
         <div className="flex items-center gap-1 overflow-hidden cursor-pointer" onClick={handleChangeLocation}>
           <MapPin className="h-5 w-5 text-white flex-shrink-0" />
           <div className="flex flex-col">
-            <div className="flex items-center font-bold text-sm">
+            <div className="flex items-center font-bold text-sm font-headline">
               <span className="truncate max-w-[150px] sm:max-w-[180px]">{locationLabel}</span>
               <ChevronDown className="ml-1 h-4 w-4" />
             </div>
-            <span className="text-[10px] text-white/70 whitespace-nowrap">Tap to change location</span>
+            <span className="text-[10px] text-white/70 whitespace-nowrap font-headline">Tap to change location</span>
           </div>
         </div>
         
@@ -79,7 +79,7 @@ export function MainNav() {
           >
             <ShoppingCart className="h-5 w-5" />
             {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white font-body tabular-nums">
                 {totalItems}
               </span>
             )}
@@ -93,7 +93,7 @@ export function MainNav() {
                 <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 border border-white/20">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.photoURL || undefined} />
-                    <AvatarFallback className="bg-black/20 text-white">{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback className="bg-black/20 text-white font-headline">{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -101,32 +101,32 @@ export function MainNav() {
                 <div className="flex items-center gap-3 p-4 bg-[#f1f2f6]/50 border-b">
                    <Avatar className="h-10 w-10">
                     <AvatarImage src={user.photoURL || undefined} />
-                    <AvatarFallback className={cn("text-white", brandBg)}>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback className={cn("text-white font-headline", brandBg)}>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-black text-[#14532d] truncate uppercase">{user.displayName || 'Demo User'}</span>
-                    <span className="text-[10px] text-muted-foreground truncate">{user.email}</span>
+                    <span className="text-sm font-black text-[#14532d] truncate uppercase font-headline">{user.displayName || 'Demo User'}</span>
+                    <span className="text-[10px] text-muted-foreground truncate font-body">{user.email}</span>
                   </div>
                 </div>
                 <div className="p-1">
                   <DropdownMenuItem onClick={() => router.push('/home/profile')} className="py-2.5">
                     <User className="mr-3 h-4 w-4 text-[#14532d]" />
-                    <span className="font-bold text-xs uppercase tracking-wider">My Profile</span>
+                    <span className="font-bold text-xs uppercase tracking-wider font-headline">My Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/home/addresses')} className="py-2.5">
                     <MapPin className="mr-3 h-4 w-4 text-[#14532d]" />
-                    <span className="font-bold text-xs uppercase tracking-wider">Manage Addresses</span>
+                    <span className="font-bold text-xs uppercase tracking-wider font-headline">Manage Addresses</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/home/orders')} className="py-2.5">
                     <History className="mr-3 h-4 w-4 text-[#14532d]" />
-                    <span className="font-bold text-xs uppercase tracking-wider">My Orders</span>
+                    <span className="font-bold text-xs uppercase tracking-wider font-headline">My Orders</span>
                   </DropdownMenuItem>
                 </div>
                 <DropdownMenuSeparator />
                 <div className="p-1">
                   <DropdownMenuItem onClick={handleLogout} className="py-2.5 text-red-600 focus:text-red-600">
                     <LogOut className="mr-3 h-4 w-4" />
-                    <span className="font-bold text-xs uppercase tracking-wider">Logout</span>
+                    <span className="font-bold text-xs uppercase tracking-wider font-headline">Logout</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
