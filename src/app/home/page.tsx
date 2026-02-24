@@ -783,7 +783,7 @@ export default function HomePage() {
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Partnership Program</p>
-                  <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">Global Network</DialogTitle>
+                  <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">{selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} Network</DialogTitle>
                 </div>
                 <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
                   <Building2 className="h-6 w-6 text-white" />
@@ -843,9 +843,10 @@ export default function HomePage() {
                       <SelectValue placeholder="Select Range" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15-25L">₹15L - ₹25L</SelectItem>
-                      <SelectItem value="25-50L">₹25L - ₹50L</SelectItem>
-                      <SelectItem value="50L+">₹50L+</SelectItem>
+                      <SelectItem value="10-20L">₹10L - ₹20L</SelectItem>
+                      <SelectItem value="20-40L">₹20L - ₹40L</SelectItem>
+                      <SelectItem value="40-60L">₹40L - ₹60L</SelectItem>
+                      <SelectItem value="60L+">₹60L+</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
