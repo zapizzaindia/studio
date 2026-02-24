@@ -173,3 +173,12 @@ export type OutletMenuAvailability = {
   id: string; // matches menuItemId
   isAvailable: boolean;
 };
+
+export type FranchiseEnquiry = {
+  id?: string;
+  name: string;
+  phone: string;
+  city: string;
+  investment: string;
+  createdAt: Timestamp;
+};

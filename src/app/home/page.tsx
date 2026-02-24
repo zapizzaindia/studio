@@ -25,7 +25,13 @@ import {
   MapPin,
   Loader2,
   Wallet,
-  Plus
+  Plus,
+  Send,
+  Building2,
+  Phone,
+  User as UserIcon,
+  IndianRupee,
+  Briefcase
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -45,7 +51,7 @@ import {
   type CarouselApi
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -54,8 +60,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ZapizzaLogo } from "@/components/icons";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const R = 6371;
@@ -87,6 +94,14 @@ export default function HomePage() {
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
+
+  // Franchise Modal State
+  const [isFranchiseModalOpen, setIsFranchiseModalOpen] = useState(false);
+  const [isSubmittingEnquiry, setIsSubmittingEnquiry] = useState(false);
+  const [enquiryName, setEnquiryName] = useState("");
+  const [enquiryPhone, setEnquiryPhone] = useState("");
+  const [enquiryCity, setEnquiryCity] = useState("");
+  const [enquiryInvestment, setEnquiryInvestment] = useState("");
 
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
@@ -225,6 +240,33 @@ export default function HomePage() {
     }
   };
 
+  const handleFranchiseEnquiry = async () => {
+    if (!db) return;
+    if (!enquiryName || !enquiryPhone || !enquiryCity || !enquiryInvestment) {
+      toast({ variant: 'destructive', title: 'Missing Information', description: 'Please fill all fields to proceed.' });
+      return;
+    }
+
+    setIsSubmittingEnquiry(true);
+    try {
+      await addDoc(collection(db, 'franchiseEnquiries'), {
+        name: enquiryName,
+        phone: enquiryPhone,
+        city: enquiryCity,
+        investment: enquiryInvestment,
+        createdAt: serverTimestamp()
+      });
+      toast({ title: 'Application Submitted!', description: 'Our franchise team will contact you shortly.' });
+      setIsFranchiseModalOpen(false);
+      // Reset form
+      setEnquiryName(""); setEnquiryPhone(""); setEnquiryCity(""); setEnquiryInvestment("");
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Submission Error', description: e.message });
+    } finally {
+      setIsSubmittingEnquiry(false);
+    }
+  };
+
   const getPriceDisplay = (item: MenuItem) => {
     const hasVariations = item.variations && item.variations.length > 0;
     const prices = hasVariations ? item.variations!.map(v => v.price) : [item.price];
@@ -236,14 +278,6 @@ export default function HomePage() {
     }
     return `₹${minPrice}`;
   };
-
-  const availableAddons = useMemo(() => {
-    if (!customizingItem) return [];
-    if (customizingItem.variations && customizingItem.variations.length > 0) {
-      return selectedVariation?.addons || [];
-    }
-    return customizingItem.addons || [];
-  }, [customizingItem, selectedVariation]);
 
   const currentCustomPrice = useMemo(() => {
     if (!customizingItem) return 0;
@@ -637,6 +671,7 @@ export default function HomePage() {
             <p className="text-sm font-bold uppercase tracking-widest opacity-80 mt-1">Outlets across the World</p>
             
             <Button 
+              onClick={() => setIsFranchiseModalOpen(true)}
               className="mt-8 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 text-white rounded-2xl h-14 px-8 font-black uppercase text-xs tracking-widest"
             >
               Enquire about Franchise
@@ -740,6 +775,115 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* 🚀 FRANCHISE ENQUIRY MODAL */}
+      <Dialog open={isFranchiseModalOpen} onOpenChange={setIsFranchiseModalOpen}>
+        <DialogContent className="max-w-[95vw] rounded-[32px] p-0 overflow-hidden border-none shadow-2xl bg-white">
+          <div className="bg-[#f97316] p-8 text-white">
+            <DialogHeader>
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Partnership Program</p>
+                  <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">Global Network</DialogTitle>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <Building2 className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <DialogDescription className="text-white/70 text-xs font-bold uppercase tracking-widest mt-4">
+                Join the fastest growing gourmet mesh.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="p-8 space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Contact Name</Label>
+                <div className="relative">
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    value={enquiryName}
+                    onChange={e => setEnquiryName(e.target.value)}
+                    placeholder="Enter your full name" 
+                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100" 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Phone Line</Label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    value={enquiryPhone}
+                    onChange={e => setEnquiryPhone(e.target.value)}
+                    placeholder="+91 XXXX XXX XXX" 
+                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Proposed City</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      value={enquiryCity}
+                      onChange={e => setEnquiryCity(e.target.value)}
+                      placeholder="e.g. Noida" 
+                      className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100" 
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Investment Band</Label>
+                  <Select value={enquiryInvestment} onValueChange={setEnquiryInvestment}>
+                    <SelectTrigger className="h-12 rounded-xl font-bold bg-gray-50 border-gray-100">
+                      <SelectValue placeholder="Select Range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15-25L">₹15L - ₹25L</SelectItem>
+                      <SelectItem value="25-50L">₹25L - ₹50L</SelectItem>
+                      <SelectItem value="50L+">₹50L+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-start gap-3">
+              <Info className="h-5 w-5 text-[#f97316] mt-0.5" />
+              <p className="text-[9px] font-bold text-orange-800 uppercase leading-relaxed">
+                By submitting, you agree to allow our franchise development team to contact you via phone or email for a detailed consultation.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsFranchiseModalOpen(false)}
+              className="flex-1 h-14 rounded-2xl font-black uppercase text-xs tracking-widest"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleFranchiseEnquiry}
+              disabled={isSubmittingEnquiry}
+              className="flex-[2] h-14 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-orange-200"
+            >
+              {isSubmittingEnquiry ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                <>
+                  Submit Interest <Send className="h-4 w-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
           {customizingItem && (

@@ -172,6 +172,19 @@
             "loyaltyPointsEarned": { "type": "number" }
         },
         "required": ["customerId", "items", "total", "status", "createdAt", "outletId"]
+    },
+    "franchiseEnquiry": {
+      "title": "Franchise Enquiry",
+      "description": "A lead for a potential franchise partner.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "city": { "type": "string" },
+        "investment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone", "city", "investment", "createdAt"]
     }
   },
   "auth": {
@@ -209,6 +222,10 @@
     "/orders/{orderId}": {
         "schema": { "$ref": "#/entities/order" },
         "description": "All customer orders."
+    },
+    "/franchiseEnquiries/{enquiryId}": {
+      "schema": { "$ref": "#/entities/franchiseEnquiry" },
+      "description": "Collected franchise interest leads."
     }
   }
 }
