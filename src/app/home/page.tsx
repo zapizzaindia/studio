@@ -62,7 +62,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ZapizzaLogo } from "@/components/icons";
 import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const R = 6371;
@@ -119,6 +118,14 @@ export default function HomePage() {
   const banners = useMemo(() => allBanners?.filter(b => b.brand === selectedOutlet?.brand) || [], [allBanners, selectedOutlet]);
   const heroBanner = useMemo(() => banners.find(b => b.active && b.isHero), [banners]);
   const coupons = useMemo(() => allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCoupons, selectedOutlet]);
+
+  const availableAddons = useMemo(() => {
+    if (!customizingItem) return [];
+    if (customizingItem.variations && customizingItem.variations.length > 0) {
+      return selectedVariation?.addons || [];
+    }
+    return customizingItem.addons || [];
+  }, [customizingItem, selectedVariation]);
 
   const detectAndSetLocation = useCallback(async () => {
     if (!db || !navigator.geolocation) return;
@@ -307,7 +314,6 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
   
-      {/* 🟢 BRAND HEADER SECTION */}
       <div
         style={{ backgroundColor: brandColor }}
         className="text-white px-6 pt-6 pb-10 relative transition-all duration-700"
@@ -342,7 +348,6 @@ export default function HomePage() {
             </motion.div>
           </div>
   
-          {/* DELIVERY / PICKUP TOGGLE */}
           <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
             <button
               onClick={() => setOrderType("delivery")}
@@ -374,9 +379,9 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-      {/* 🔥 MOBILE HERO BANNER */}
+
       {heroBanner && (
-        <div className="block md:hidden relative w-full h-[300px] overflow-hidden">
+        <div className="relative w-full h-[300px] overflow-hidden">
           {heroBanner.mediaType === "video" ? (
             <video
               src={heroBanner.imageId}
@@ -456,7 +461,6 @@ export default function HomePage() {
               <div className="relative h-44 w-full rounded-[24px] overflow-hidden shadow-sm border border-black/5">
                 <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                 
-                {/* 📍 Item Indicators */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                   <div className="bg-white/95 backdrop-blur-md px-2 py-1 rounded-xl shadow-sm flex items-center gap-1 border border-white/20">
                     <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
@@ -489,22 +493,21 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 🎟️ OFFERS FOR YOU SECTION */}
       {coupons.length > 0 && (
         <div className="mt-8 mb-4">
           <div className="px-6 mb-4 flex items-center gap-2">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <Ticket className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>Offers for you</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Offers for you</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto px-6 scrollbar-hide pb-4">
             {coupons.map((coupon, idx) => {
               const bgColors = [
-                'bg-[#008060]', // Deep Teal
-                'bg-[#1a73e8]', // Royal Blue
-                'bg-[#d93025]', // Google Red
-                'bg-[#f9ab00]'  // Amber
+                'bg-[#008060]', 
+                'bg-[#1a73e8]', 
+                'bg-[#d93025]', 
+                'bg-[#f9ab00]'  
               ];
               const bgColor = bgColors[idx % bgColors.length];
 
@@ -684,7 +687,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 📍 REAL-TIME SELECTED OUTLET CARD */}
       <div className="mt-8 px-6">
         <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white">
           <CardContent className="p-5 flex items-center gap-4">
@@ -775,7 +777,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 🚀 FRANCHISE ENQUIRY MODAL */}
       <Dialog open={isFranchiseModalOpen} onOpenChange={setIsFranchiseModalOpen}>
         <DialogContent className="max-w-[95vw] rounded-[32px] p-0 overflow-hidden border-none shadow-2xl bg-white">
           <div className="bg-[#f97316] p-8 text-white">
@@ -884,7 +885,6 @@ export default function HomePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
           {customizingItem && (
