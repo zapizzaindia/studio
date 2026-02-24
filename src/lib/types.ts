@@ -58,6 +58,7 @@ export type Coupon = {
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   minOrderAmount: number;
+  maxDiscountAmount?: number; // Capping logic
   active: boolean;
   description?: string;
   brand: Brand;

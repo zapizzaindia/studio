@@ -436,7 +436,7 @@ export default function HomePage() {
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <Ticket className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Offers for you</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>Offers for you</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto px-6 scrollbar-hide pb-4">
             {coupons.map((coupon, idx) => {
@@ -463,7 +463,7 @@ export default function HomePage() {
                        </h3>
                     </div>
                     <p className="text-[10px] font-bold text-white/90 uppercase line-clamp-2 leading-tight opacity-90">
-                      {coupon.description || `Valid on orders above ₹${coupon.minOrderAmount}`}
+                      {coupon.maxDiscountAmount ? `Max Saving ₹${coupon.maxDiscountAmount}` : (coupon.description || `On orders above ₹${coupon.minOrderAmount}`)}
                     </p>
                   </div>
                   

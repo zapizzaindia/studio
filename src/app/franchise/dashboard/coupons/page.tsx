@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Pizza, Flame, IndianRupee } from 'lucide-react';
+import { Plus, Trash2, Pizza, Flame, IndianRupee, ShieldAlert } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { doc, addDoc, collection, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +31,7 @@ export default function FranchiseCouponsPage() {
     const [newType, setNewType] = useState<'percentage' | 'fixed'>('percentage');
     const [newValue, setNewValue] = useState("");
     const [newMinOrder, setNewMinOrder] = useState("");
+    const [newMaxDiscount, setNewMaxDiscount] = useState("");
     const [newDescription, setNewDescription] = useState("");
 
     const coupons = useMemo(() => allCoupons?.filter(c => c.brand === activeBrand) || [], [allCoupons, activeBrand]);
@@ -44,6 +45,7 @@ export default function FranchiseCouponsPage() {
             discountType: newType,
             discountValue: Number(newValue),
             minOrderAmount: Number(newMinOrder) || 0,
+            maxDiscountAmount: newMaxDiscount ? Number(newMaxDiscount) : null,
             active: true,
             description: newDescription,
             brand: activeBrand
@@ -53,7 +55,7 @@ export default function FranchiseCouponsPage() {
             await addDoc(collection(firestore, 'coupons'), couponData);
             toast({ title: `${activeBrand.toUpperCase()} Coupon Created`, description: `${newCode} is now active.` });
             setIsAddOpen(false);
-            setNewCode(""); setNewValue(""); setNewMinOrder(""); setNewDescription("");
+            setNewCode(""); setNewValue(""); setNewMinOrder(""); setNewMaxDiscount(""); setNewDescription("");
         } catch (e: any) {
             toast({ variant: 'destructive', title: "Error", description: e.message });
         }
@@ -148,17 +150,32 @@ export default function FranchiseCouponsPage() {
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Min. Cart Value (₹)</Label>
-                                <div className="relative">
-                                    <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input 
-                                        type="number" 
-                                        placeholder="0" 
-                                        value={newMinOrder} 
-                                        onChange={e => setNewMinOrder(e.target.value)}
-                                        className="pl-10 h-12 rounded-xl font-black"
-                                    />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Min. Order (₹)</Label>
+                                    <div className="relative">
+                                        <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input 
+                                            type="number" 
+                                            placeholder="0" 
+                                            value={newMinOrder} 
+                                            onChange={e => setNewMinOrder(e.target.value)}
+                                            className="pl-10 h-12 rounded-xl font-black"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Max Capping (₹)</Label>
+                                    <div className="relative">
+                                        <ShieldAlert className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-orange-500" />
+                                        <Input 
+                                            type="number" 
+                                            placeholder="No Limit" 
+                                            value={newMaxDiscount} 
+                                            onChange={e => setNewMaxDiscount(e.target.value)}
+                                            className="pl-10 h-12 rounded-xl font-black border-orange-100 focus:border-orange-300"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -203,7 +220,10 @@ export default function FranchiseCouponsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="space-y-0.5">
-                                            <p className="font-black uppercase text-sm">{coupon.discountType === 'percentage' ? `${coupon.discountValue}% Off` : `₹${coupon.discountValue} Off`}</p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-black uppercase text-sm">{coupon.discountType === 'percentage' ? `${coupon.discountValue}% Off` : `₹${coupon.discountValue} Off`}</p>
+                                                {coupon.maxDiscountAmount && <Badge className="bg-orange-50 text-orange-700 border-orange-100 text-[8px] font-black uppercase">Max ₹{coupon.maxDiscountAmount}</Badge>}
+                                            </div>
                                             <p className="text-[10px] text-muted-foreground font-bold line-clamp-1 max-w-xs">{coupon.description || 'General Discount'}</p>
                                         </div>
                                     </TableCell>

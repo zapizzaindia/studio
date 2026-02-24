@@ -79,7 +79,11 @@ export default function CheckoutPage() {
     let discount = 0;
     if (appliedCoupon) {
       if (appliedCoupon.discountType === 'percentage') {
-        discount = (subtotal * appliedCoupon.discountValue) / 100;
+        const potentialDiscount = (subtotal * appliedCoupon.discountValue) / 100;
+        // Apply Capping if exists
+        discount = appliedCoupon.maxDiscountAmount 
+            ? Math.min(potentialDiscount, appliedCoupon.maxDiscountAmount) 
+            : potentialDiscount;
       } else {
         discount = appliedCoupon.discountValue;
       }
@@ -122,8 +126,19 @@ export default function CheckoutPage() {
       toast({ variant: 'destructive', title: "Below Min Order", description: `Add ₹${found.minOrderAmount - totalPrice} more to use this coupon.` });
       return;
     }
+    
     setAppliedCoupon(found);
-    toast({ title: "Coupon Applied!", description: `You saved ₹${found.discountType === 'percentage' ? (totalPrice * found.discountValue / 100) : found.discountValue}` });
+    
+    // Calculate display saving for toast
+    let saving = 0;
+    if (found.discountType === 'percentage') {
+        saving = (totalPrice * found.discountValue / 100);
+        if (found.maxDiscountAmount) saving = Math.min(saving, found.maxDiscountAmount);
+    } else {
+        saving = found.discountValue;
+    }
+
+    toast({ title: "Coupon Applied!", description: `You saved ₹${saving.toFixed(0)}` });
   };
 
   const handlePlaceOrder = () => {
@@ -349,7 +364,9 @@ export default function CheckoutPage() {
                       {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
                     </Badge>
                   </div>
-                  <p className="text-[9px] text-muted-foreground font-bold leading-tight line-clamp-1">{coupon.description}</p>
+                  <p className="text-[9px] text-muted-foreground font-bold leading-tight line-clamp-1">
+                    {coupon.maxDiscountAmount ? `Up to ₹${coupon.maxDiscountAmount}` : coupon.description}
+                  </p>
                   {totalPrice < coupon.minOrderAmount && (
                     <p className="text-[8px] text-red-500 font-black mt-1 uppercase italic tracking-tight">Add ₹{coupon.minOrderAmount - totalPrice} more</p>
                   )}
@@ -439,7 +456,10 @@ export default function CheckoutPage() {
             </div>
             {calculations.discount > 0 && (
               <div className="flex justify-between text-xs font-black text-green-600 uppercase">
-                <span>Coupon Discount</span>
+                <div className="flex flex-col">
+                    <span>Coupon Discount</span>
+                    {appliedCoupon?.maxDiscountAmount && <span className="text-[8px] opacity-60">Capped at ₹{appliedCoupon.maxDiscountAmount}</span>}
+                </div>
                 <span>-₹{calculations.discount.toFixed(2)}</span>
               </div>
             )}

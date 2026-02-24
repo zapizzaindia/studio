@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Ticket, Search, Info } from "lucide-react";
+import { ArrowLeft, Ticket, Search, Info, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCollection } from "@/firebase";
@@ -73,7 +73,7 @@ export default function OffersPage() {
           coupons.map((coupon) => (
             <div 
               key={coupon.id} 
-              className="bg-white rounded-2xl shadow-md border border-gray-100 flex overflow-hidden group active:scale-[0.98] transition-transform h-28"
+              className="bg-white rounded-2xl shadow-md border border-gray-100 flex overflow-hidden group active:scale-[0.98] transition-transform h-auto min-h-[112px]"
             >
               {/* Left Part - Value */}
               <div 
@@ -98,13 +98,24 @@ export default function OffersPage() {
                   <Badge variant="outline" className="font-black text-[11px] border-dashed py-1 px-3 uppercase tracking-wider" style={{ color: brandColor, borderColor: brandColor + '40' }}>
                     {coupon.code}
                   </Badge>
+                  {coupon.maxDiscountAmount && (
+                    <div className="flex items-center gap-1 text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-sm border border-orange-100">
+                        <ShieldCheck className="h-2 w-2" />
+                        <span className="text-[7px] font-black uppercase">Max ₹{coupon.maxDiscountAmount}</span>
+                    </div>
+                  )}
                 </div>
                 <h4 className="text-[12px] font-bold text-[#333] line-clamp-2 leading-tight uppercase">
                   {coupon.description || `Save big on your next ${selectedOutlet?.brand} order`}
                 </h4>
-                <div className="flex items-center gap-2 mt-2">
-                  <Info className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-[9px] font-black text-muted-foreground uppercase">Valid on orders above ₹{coupon.minOrderAmount}</span>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                  <div className="flex items-center gap-1">
+                    <Info className="h-3 w-3 text-muted-foreground opacity-50" />
+                    <span className="text-[8px] font-black text-muted-foreground uppercase">Min order ₹{coupon.minOrderAmount}</span>
+                  </div>
+                  {coupon.maxDiscountAmount && (
+                    <span className="text-[8px] font-black text-orange-600 uppercase italic">Up to ₹{coupon.maxDiscountAmount} Savings</span>
+                  )}
                 </div>
               </div>
             </div>
