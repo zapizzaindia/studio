@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { collection, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -53,6 +54,11 @@ export default function FranchiseMenuPage() {
   const [newItemAddons, setNewItemAddons] = useState<MenuItemAddon[]>([]);
   const [newItemSides, setNewItemSides] = useState<string[]>([]);
 
+  // Category Logic
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
+  const [categoryShowInHomepage, setCategoryShowInHomepage] = useState(false);
+
   const menuItems = useMemo(() => allMenuItems?.filter(item => item.brand === activeBrand) || [], [allMenuItems, activeBrand]);
   const categories = useMemo(() => allCategories?.filter(cat => cat.brand === activeBrand) || [], [allCategories, activeBrand]);
 
@@ -80,13 +86,13 @@ export default function FranchiseMenuPage() {
     setEditingCategory(cat);
     setNewCategoryName(cat.name);
     setNewCategoryImageId(cat.imageId || "cat_veg");
+    setCategoryShowInHomepage(!!cat.showInHomepage);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, isCategory = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Allow large files to be picked, then optimize them
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new globalThis.Image();
@@ -94,11 +100,8 @@ export default function FranchiseMenuPage() {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-
-        // HD Optimization for mobile/web app (Max 1200px)
         const MAX_WIDTH = 1200;
         const MAX_HEIGHT = 1200;
-
         if (width > height) {
           if (width > MAX_WIDTH) {
             height *= MAX_WIDTH / width;
@@ -110,15 +113,11 @@ export default function FranchiseMenuPage() {
             height = MAX_HEIGHT;
           }
         }
-
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-
-        // Compress to high quality JPEG to fit Firestore constraints while staying HD
         const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        
         if (isCategory) {
             setNewCategoryImageId(dataUrl);
         } else {
@@ -185,10 +184,6 @@ export default function FranchiseMenuPage() {
     }
   };
 
-  // Category Logic
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
-
   const handleAddCategory = () => {
     if (!firestore || !newCategoryName) return;
     
@@ -197,7 +192,8 @@ export default function FranchiseMenuPage() {
         name: newCategoryName,
         imageId: newCategoryImageId,
         brand: activeBrand,
-        order: sortedCategories.length + 1
+        order: editingCategory ? editingCategory.order : sortedCategories.length + 1,
+        showInHomepage: categoryShowInHomepage
     };
 
     if (editingCategory) {
@@ -206,6 +202,7 @@ export default function FranchiseMenuPage() {
                 toast({ title: 'Category Updated' });
                 setEditingCategory(null);
                 setNewCategoryName("");
+                setCategoryShowInHomepage(false);
             })
             .catch(error => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -220,6 +217,7 @@ export default function FranchiseMenuPage() {
             .then(() => {
                 toast({ title: 'Category Created' });
                 setNewCategoryName("");
+                setCategoryShowInHomepage(false);
             })
             .catch(error => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -289,20 +287,20 @@ export default function FranchiseMenuPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) { setEditingCategory(null); setNewCategoryName(""); } }}>
+        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) { setEditingCategory(null); setNewCategoryName(""); setCategoryShowInHomepage(false); } }}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 shadow-sm">
+                <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 shadow-sm font-headline">
                     <Layers className="mr-2 h-4 w-4" /> Manage {activeBrand === 'zapizza' ? 'Zapizza' : 'Zfry'} Categories
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
-                <DialogHeader className="p-6 bg-muted/30">
+                <DialogHeader className="p-6 bg-muted/30 font-headline">
                     <DialogTitle className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Categories Manager</DialogTitle>
                     <DialogDescription className="text-[10px] font-bold uppercase text-muted-foreground">Organization for {activeBrand}</DialogDescription>
                 </DialogHeader>
                 <div className="p-6 space-y-6">
                     <div className="space-y-3">
-                        <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Existing Categories</Label>
+                        <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] font-headline">Existing Categories</Label>
                         <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
                             {sortedCategories.map(cat => (
                                 <div key={cat.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100 group">
@@ -310,7 +308,10 @@ export default function FranchiseMenuPage() {
                                         <div className="relative h-8 w-8 rounded-full overflow-hidden border bg-white">
                                             <Image src={getImageUrl(cat.imageId || 'cat_veg')} alt={cat.name} fill className="object-cover" />
                                         </div>
-                                        <span className="font-bold text-sm uppercase tracking-tight">{cat.name}</span>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-sm uppercase tracking-tight font-headline">{cat.name}</span>
+                                            {cat.showInHomepage && <Badge className="w-fit text-[7px] bg-green-100 text-green-700 uppercase border-none h-3.5">Featured</Badge>}
+                                        </div>
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCategory(cat)}><Edit className="h-3.5 w-3.5" /></Button>
@@ -330,16 +331,16 @@ export default function FranchiseMenuPage() {
                                 <input type="file" hidden ref={catFileInputRef} accept="image/*" onChange={(e) => handleFileUpload(e, true)} />
                                 <Button 
                                     variant="outline" 
-                                    className="w-full h-10 rounded-xl font-black uppercase text-[9px] tracking-widest border-dashed"
+                                    className="w-full h-10 rounded-xl font-black uppercase text-[9px] tracking-widest border-dashed font-headline"
                                     onClick={() => catFileInputRef.current?.click()}
                                 >
                                     <Upload className="mr-2 h-3 w-3" /> Upload Icon
                                 </Button>
                                 <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId.startsWith('data:') ? 'custom' : newCategoryImageId}>
-                                    <SelectTrigger className="h-10 text-[9px] font-black uppercase">
+                                    <SelectTrigger className="h-10 text-[9px] font-black uppercase font-headline">
                                         <SelectValue placeholder="Or Select Default" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="font-headline">
                                         <SelectItem value="cat_veg">Veg Pizza</SelectItem>
                                         <SelectItem value="cat_nonveg">Non-Veg</SelectItem>
                                         <SelectItem value="cat_beverages">Drinks</SelectItem>
@@ -349,8 +350,18 @@ export default function FranchiseMenuPage() {
                                 </Select>
                             </div>
                         </div>
-                        <Input placeholder="e.g. Gourmet Specials" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="font-bold h-12 rounded-xl" />
-                        <Button onClick={handleAddCategory} disabled={isSaving} style={{ backgroundColor: brandColor }} className="w-full h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg">
+                        <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest font-headline">Category Title</Label>
+                            <Input placeholder="e.g. Gourmet Specials" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="font-bold h-12 rounded-xl font-headline" />
+                        </div>
+                        <div className="flex items-center justify-between bg-muted/20 p-4 rounded-xl border border-dashed border-muted-foreground/20">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black uppercase tracking-tight font-headline">Show in Homepage</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase font-headline">Adds a dedicated section on home screen</span>
+                            </div>
+                            <Switch checked={categoryShowInHomepage} onCheckedChange={setCategoryShowInHomepage} className="scale-75" />
+                        </div>
+                        <Button onClick={handleAddCategory} disabled={isSaving} style={{ backgroundColor: brandColor }} className="w-full h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg font-headline">
                             {isSaving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : (editingCategory ? 'Update Category' : 'Create Category')}
                         </Button>
                     </div>
@@ -360,11 +371,11 @@ export default function FranchiseMenuPage() {
 
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => { setIsAddDialogOpen(open); if (!open) setEditingItem(null); }}>
             <DialogTrigger asChild>
-                <Button style={{ backgroundColor: brandColor }} className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg px-8">
+                <Button style={{ backgroundColor: brandColor }} className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg px-8 font-headline">
                     <PlusCircle className="mr-2 h-4 w-4" /> ADD NEW ITEM
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none rounded-[32px] shadow-2xl flex flex-col">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-none rounded-[32px] shadow-2xl flex flex-col font-headline">
                 <DialogHeader className="p-8 pb-0">
                     <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>
                       {editingItem ? 'Modify' : 'Create'} {activeBrand} Product
@@ -389,14 +400,14 @@ export default function FranchiseMenuPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Menu Description</Label>
-                                <Textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Write something tempting..." className="font-medium rounded-xl min-h-[100px]" />
+                                <Textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Write something tempting..." className="font-medium rounded-xl min-h-[100px] font-body" />
                             </div>
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Base Price (₹)</Label>
                                     <div className="relative">
                                         <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="pl-10 font-black h-12 rounded-xl" style={{ color: brandColor }} />
+                                        <Input type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="pl-10 font-black h-12 rounded-xl font-body tabular-nums" style={{ color: brandColor }} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -405,7 +416,7 @@ export default function FranchiseMenuPage() {
                                         <SelectTrigger className="font-bold h-12 rounded-xl uppercase text-xs">
                                             <SelectValue placeholder="Select Category" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="font-headline">
                                             {categories.map(cat => (
                                                 <SelectItem key={cat.id} value={cat.id} className="uppercase text-[10px] font-bold">{cat.name}</SelectItem>
                                             ))}
@@ -473,7 +484,7 @@ export default function FranchiseMenuPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Brand Photography Library</Label>
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest font-headline">Brand Photography Library</Label>
                                     <div className="grid grid-cols-4 gap-2">
                                         {Array.from(placeholderImageMap.keys()).map(id => (
                                             <button 
@@ -516,7 +527,7 @@ export default function FranchiseMenuPage() {
                                                 const updated = [...newItemVariations];
                                                 updated[i].price = Number(e.target.value);
                                                 setNewItemVariations(updated);
-                                            }} className="h-10 font-black text-xs" style={{ color: brandColor }} />
+                                            }} className="h-10 font-black text-xs font-body tabular-nums" style={{ color: brandColor }} />
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                     </div>
@@ -541,7 +552,7 @@ export default function FranchiseMenuPage() {
                                                         const updated = [...newItemVariations];
                                                         updated[i].addons![aIdx].price = Number(e.target.value);
                                                         setNewItemVariations(updated);
-                                                    }} className="h-8 w-20 font-black text-[10px]" />
+                                                    }} className="h-8 w-20 font-black text-[10px] font-body tabular-nums" />
                                                     <Button variant="ghost" size="icon" onClick={() => {
                                                         const updated = [...newItemVariations];
                                                         updated[i].addons = updated[i].addons?.filter((_, idx) => idx !== aIdx);
@@ -581,7 +592,7 @@ export default function FranchiseMenuPage() {
                                             const updated = [...newItemAddons];
                                             updated[i].price = Number(e.target.value);
                                             setNewItemAddons(updated);
-                                        }} className="h-10 font-black text-xs" style={{ color: brandColor }} />
+                                        }} className="h-10 font-black text-xs font-body tabular-nums" style={{ color: brandColor }} />
                                     </div>
                                     <Button variant="ghost" size="icon" onClick={() => setNewItemAddons(newItemAddons.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                 </div>
@@ -591,7 +602,7 @@ export default function FranchiseMenuPage() {
                   </Tabs>
                 </div>
 
-                <DialogFooter className="p-8 bg-muted/30 border-t flex gap-4">
+                <DialogFooter className="p-8 bg-muted/30 border-t flex gap-4 font-headline">
                     <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase text-xs tracking-widest">Discard</Button>
                     <Button onClick={handleAddItem} disabled={isSaving} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
                       {isSaving ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : (editingItem ? 'Confirm Changes' : `Save ${activeBrand.toUpperCase()} Product`)}
@@ -621,11 +632,14 @@ export default function FranchiseMenuPage() {
                         <Image src={getImageUrl(category.imageId || 'cat_veg')} alt={category.name} fill className="object-cover" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>{category.name}</h2>
-                        <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">{catItems.length} Products Available</span>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-xl font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>{category.name}</h2>
+                            {category.showInHomepage && <Badge className="bg-[#14532d] text-white text-[7px] font-black uppercase h-4">Live on Home</Badge>}
+                        </div>
+                        <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest font-headline">{catItems.length} Products Available</span>
                     </div>
                 </div>
-                <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white font-headline">
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader className="bg-gray-50/50">
@@ -659,11 +673,11 @@ export default function FranchiseMenuPage() {
                                                       <span className={cn("h-2.5 w-2.5 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
                                                       <p className="font-black uppercase text-[13px] tracking-tight italic text-[#333]">{item.name}</p>
                                                   </div>
-                                                  <p className="text-[11px] text-muted-foreground font-medium line-clamp-1 max-w-xs">{item.description}</p>
+                                                  <p className="text-[11px] text-muted-foreground font-medium line-clamp-1 max-w-xs font-body">{item.description}</p>
                                                   {item.variations && item.variations.length > 0 && (
                                                       <div className="flex gap-1.5 pt-1">
                                                           {item.variations.map((v, idx) => (
-                                                              <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                                                              <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200 font-body tabular-nums">
                                                                   {v.name}: ₹{v.price} {v.addons && v.addons.length > 0 && `(+${v.addons.length} opts)`}
                                                               </span>
                                                           ))}
@@ -672,7 +686,7 @@ export default function FranchiseMenuPage() {
                                               </div>
                                           </TableCell>
                                           <TableCell>
-                                              <div className="flex items-center gap-1.5 font-black text-sm whitespace-nowrap" style={{ color: brandColor }}>
+                                              <div className="flex items-center gap-1.5 font-black text-sm whitespace-nowrap font-body tabular-nums" style={{ color: brandColor }}>
                                                   <IndianRupee className="h-3.5 w-3.5" />
                                                   <span>{priceDisplay.replace('₹', '')}</span>
                                               </div>

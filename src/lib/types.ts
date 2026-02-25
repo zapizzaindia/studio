@@ -16,6 +16,7 @@ export type Category = {
   imageId?: string;
   order?: number;
   brand: Brand;
+  showInHomepage?: boolean;
 };
 
 export type MenuItemVariation = {
