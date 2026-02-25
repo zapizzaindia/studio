@@ -31,7 +31,8 @@ import {
   Phone,
   User as UserIcon,
   IndianRupee,
-  Briefcase
+  Briefcase,
+  Layers
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -75,55 +76,52 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   return R * c;
 };
 
-// Boxed Item Component based on reference image
+// Boxed Item Component based on reference image - Optimized size
 const BoxedItemCard = ({ item, brandColor, onAdd }: { item: MenuItem, brandColor: string, onAdd: (item: MenuItem) => void }) => {
   const prices = item.variations?.length ? item.variations.map(v => v.price) : [item.price];
   const displayPrice = Math.min(...prices);
-  const originalPrice = Math.max(...prices) * 1.5; // Dummy original price for visual effect
+  const originalPrice = Math.max(...prices) * 1.5;
 
   return (
     <motion.div 
       whileTap={{ scale: 0.98 }}
-      className="flex-shrink-0 w-[280px] h-[380px] bg-white rounded-[32px] overflow-hidden shadow-2xl relative group border border-gray-100"
+      className="flex-shrink-0 w-[220px] h-[300px] bg-white rounded-[24px] overflow-hidden shadow-xl relative group border border-gray-100"
       onClick={() => onAdd(item)}
     >
       <div className="relative w-full h-full">
         <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
         
-        {/* Badge Tag */}
         {item.badgeTag && (
-          <div className="absolute top-4 left-0 bg-green-700 text-white px-4 py-1 rounded-r-lg shadow-md z-10">
-            <span className="text-[10px] font-black uppercase tracking-widest font-headline">{item.badgeTag}</span>
+          <div className="absolute top-3 left-0 bg-green-700 text-white px-3 py-0.5 rounded-r-md shadow-md z-10">
+            <span className="text-[8px] font-black uppercase tracking-widest font-headline">{item.badgeTag}</span>
           </div>
         )}
 
-        {/* Bottom Info Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className={cn("h-3 w-3 border flex items-center justify-center rounded-sm bg-white", item.isVeg ? 'border-green-600' : 'border-red-600')}>
-              <div className={cn("h-1.5 w-1.5 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent flex flex-col justify-end p-4">
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className={cn("h-2.5 w-2.5 border flex items-center justify-center rounded-sm bg-white", item.isVeg ? 'border-green-600' : 'border-red-600')}>
+              <div className={cn("h-1 w-1 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
             </div>
-            <h3 className="text-white text-lg font-black uppercase italic leading-tight font-headline line-clamp-2">{item.name}</h3>
+            <h3 className="text-white text-sm font-black uppercase italic leading-tight font-headline line-clamp-1">{item.name}</h3>
           </div>
           
-          <p className="text-white/70 text-[10px] font-medium leading-snug line-clamp-2 mb-4 font-body">
+          <p className="text-white/70 text-[8px] font-medium leading-tight line-clamp-2 mb-3 font-body">
             {item.description}
           </p>
 
-          <div className="bg-black/60 backdrop-blur-md -mx-6 -mb-6 p-6 flex items-center justify-between border-t border-white/10">
+          <div className="bg-black/60 backdrop-blur-md -mx-4 -mb-4 p-4 flex items-center justify-between border-t border-white/10">
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="text-white text-xl font-black font-roboto tabular-nums">₹{displayPrice}</span>
-                <span className="text-white/40 text-xs line-through font-roboto tabular-nums">₹{Math.round(originalPrice)}</span>
-                <Badge className="bg-green-600 text-white text-[8px] font-black h-4 px-1.5 border-none font-headline">Save ₹{Math.round(originalPrice - displayPrice)}</Badge>
+              <div className="flex items-center gap-1.5">
+                <span className="text-white text-sm font-black font-roboto tabular-nums">₹{displayPrice}</span>
+                <span className="text-white/40 text-[10px] line-through font-roboto tabular-nums">₹{Math.round(originalPrice)}</span>
               </div>
-              <p className="text-white/60 text-[9px] font-black uppercase tracking-widest mt-1 flex items-center gap-1 font-headline">
-                Portion Details <ChevronRight className="h-2 w-2" />
+              <p className="text-white/60 text-[7px] font-black uppercase tracking-widest mt-0.5 font-headline">
+                Customizable
               </p>
             </div>
 
             <Button 
-              className="bg-[#e31837] hover:bg-[#c4152e] text-white rounded-xl h-12 px-6 font-black uppercase text-sm shadow-xl active:scale-90 transition-all font-headline"
+              className="bg-[#e31837] hover:bg-[#c4152e] text-white rounded-lg h-8 px-3 font-black uppercase text-[10px] shadow-xl active:scale-90 transition-all font-headline"
               onClick={(e) => { e.stopPropagation(); onAdd(item); }}
             >
               Add +
@@ -154,7 +152,6 @@ export default function HomePage() {
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
-  // Franchise Modal State
   const [isFranchiseModalOpen, setIsFranchiseModalOpen] = useState(false);
   const [isSubmittingEnquiry, setIsSubmittingEnquiry] = useState(false);
   const [enquiryName, setEnquiryName] = useState("");
@@ -164,7 +161,6 @@ export default function HomePage() {
 
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
-  // Real-time subscription to the selected outlet's specific details
   const { data: realTimeOutlet } = useDoc<Outlet>('outlets', selectedOutletState?.id || 'dummy');
   const selectedOutlet = realTimeOutlet || selectedOutletState;
 
@@ -327,7 +323,6 @@ export default function HomePage() {
       });
       toast({ title: 'Application Submitted!', description: 'Our franchise team will contact you shortly.' });
       setIsFranchiseModalOpen(false);
-      // Reset form
       setEnquiryName(""); setEnquiryPhone(""); setEnquiryCity(""); setEnquiryInvestment("");
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Submission Error', description: e.message });
@@ -486,10 +481,12 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      <div className="mt-4">
-        <div className="px-6 flex justify-between items-center mb-3 font-headline">
+      <div className="mt-8">
+        <div className="px-6 flex items-center gap-2 mb-4 font-headline">
+          <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+            <Layers className="h-4 w-4 text-white" />
+          </div>
           <h2 className="text-lg font-black uppercase tracking-tighter" style={{ color: brandColor }}>Explore Menu</h2>
-          <Button variant="ghost" size="sm" className="text-xs font-black uppercase gap-1 pr-0" style={{ color: brandColor }} onClick={() => router.push('/home/menu')}>See All <ChevronRight className="h-3 w-3" /></Button>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2 font-headline">
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
@@ -504,42 +501,42 @@ export default function HomePage() {
       </div>
 
       <div className="mt-8">
-        <div className="px-6 flex justify-between items-center mb-6">
-          <div className="flex flex-col text-center w-full">
-            <h2 className="text-2xl font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>Trending Now</h2>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Our most loved picks this week</p>
+        <div className="px-6 flex items-center gap-2 mb-4 font-headline">
+          <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+            <TrendingUp className="h-4 w-4 text-white" />
+          </div>
+          <div className="flex flex-col">
+            <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none" style={{ color: brandColor }}>Trending Now</h2>
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">Customer Favorites</p>
           </div>
         </div>
-        <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-8">
-          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-[380px] w-[280px] rounded-[32px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
+        <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-8">
+          {menuItemsLoading ? Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-[300px] w-[220px] rounded-[24px] flex-shrink-0" />) : menuItems?.slice(0, 5).map((item) => (
             <BoxedItemCard key={item.id} item={item} brandColor={brandColor} onAdd={handleAddClick} />
           ))}
         </div>
       </div>
 
-      {/* Dynamic Homepage Categories with Reference Design */}
       {homepageCategories.map((cat) => {
         const catItems = menuItems.filter(i => i.category === cat.id);
         if (catItems.length === 0) return null;
 
         return (
-          <div key={cat.id} className="mt-12">
-            <div className="px-6 flex flex-col items-center text-center mb-8 font-headline">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="h-[1px] w-8 bg-muted-foreground/30" />
-                <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={40} height={40} className="object-contain" />
-                <div className="h-[1px] w-8 bg-muted-foreground/30" />
+          <div key={cat.id} className="mt-8">
+            <div className="px-6 flex items-center gap-2 mb-4 font-headline">
+              <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || brandColor }}>
+                <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
               </div>
-              <h2 className="text-3xl font-black uppercase tracking-tighter italic" style={{ color: cat.accentColor || brandColor }}>{cat.name}</h2>
-              {cat.homepageTagline && (
-                <div className="mt-2 bg-gradient-to-r from-transparent via-red-50 to-transparent py-1 w-full">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{cat.homepageTagline}</p>
-                </div>
-              )}
+              <div className="flex flex-col">
+                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none" style={{ color: cat.accentColor || brandColor }}>{cat.name}</h2>
+                {cat.homepageTagline && (
+                  <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">{cat.homepageTagline}</p>
+                )}
+              </div>
             </div>
-            <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-10">
+            <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-8">
               {catItems.map((item) => (
-                <BoxedItemCard key={item.id} item={item} brandColor={brandColor} onAdd={handleAddClick} />
+                <BoxedItemCard key={item.id} item={item} brandColor={cat.accentColor || brandColor} onAdd={handleAddClick} />
               ))}
             </div>
           </div>
@@ -548,20 +545,15 @@ export default function HomePage() {
 
       {coupons.length > 0 && (
         <div className="mt-8 mb-4">
-          <div className="px-6 mb-4 flex items-center gap-2">
+          <div className="px-6 mb-4 flex items-center gap-2 font-headline">
             <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
               <Ticket className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>Offers for you</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Offers for you</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto px-6 scrollbar-hide pb-4">
             {coupons.map((coupon, idx) => {
-              const bgColors = [
-                'bg-[#008060]', 
-                'bg-[#1a73e8]', 
-                'bg-[#d93025]', 
-                'bg-[#f9ab00]'  
-              ];
+              const bgColors = ['bg-[#008060]', 'bg-[#1a73e8]', 'bg-[#d93025]', 'bg-[#f9ab00]'];
               const bgColor = bgColors[idx % bgColors.length];
 
               return (
@@ -573,12 +565,10 @@ export default function HomePage() {
                   )}
                 >
                   <div className="flex-1 pr-4 font-headline">
-                    <div className="flex items-center gap-1.5 mb-1">
-                       <h3 className="text-[15px] font-black uppercase tracking-tight leading-none truncate max-w-[140px]">
-                        {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
-                       </h3>
-                    </div>
-                    <p className="text-[10px] font-bold text-white/90 uppercase line-clamp-2 leading-tight opacity-90">
+                    <h3 className="text-[15px] font-black uppercase tracking-tight leading-none truncate max-w-[140px]">
+                      {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                    </h3>
+                    <p className="text-[10px] font-bold text-white/90 uppercase line-clamp-2 leading-tight opacity-90 mt-1">
                       {coupon.maxDiscountAmount ? `Max Saving ₹${coupon.maxDiscountAmount}` : (coupon.description || `On orders above ₹${coupon.minOrderAmount}`)}
                     </p>
                   </div>
@@ -596,12 +586,12 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="mt-4 px-6 pb-12">
-        <div className="flex items-center gap-2 mb-6">
+      <div className="mt-8 px-6 pb-12">
+        <div className="flex items-center gap-2 mb-6 font-headline">
           <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
             <Pizza className="h-4 w-4 text-white" />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>Explore Items</h2>
+          <h2 className="text-xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Explore Items</h2>
         </div>
         <div className="grid grid-cols-1 gap-6">
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
@@ -857,11 +847,11 @@ export default function HomePage() {
                 <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Contact Name</Label>
                 <div className="relative">
                   <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
+                  <input 
                     value={enquiryName}
                     onChange={e => setEnquiryName(e.target.value)}
                     placeholder="Enter your full name" 
-                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100" 
+                    className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 rounded-xl font-bold" 
                   />
                 </div>
               </div>
@@ -870,11 +860,11 @@ export default function HomePage() {
                 <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Phone Line</Label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
+                  <input 
                     value={enquiryPhone}
                     onChange={e => setEnquiryPhone(e.target.value)}
                     placeholder="+91 XXXX XXX XXX" 
-                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-roboto tabular-nums" 
+                    className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 rounded-xl font-bold font-roboto tabular-nums" 
                   />
                 </div>
               </div>
@@ -884,11 +874,11 @@ export default function HomePage() {
                   <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Proposed City</Label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
+                    <input 
                       value={enquiryCity}
                       onChange={e => setEnquiryCity(e.target.value)}
                       placeholder="e.g. Noida" 
-                      className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100" 
+                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 rounded-xl font-bold" 
                     />
                   </div>
                 </div>
@@ -896,12 +886,12 @@ export default function HomePage() {
                   <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Proposed Investment (Lakhs)</Label>
                   <div className="relative">
                     <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
+                    <input 
                       type="number"
                       value={enquiryInvestment}
                       onChange={e => setEnquiryInvestment(e.target.value)}
                       placeholder="e.g. 25" 
-                      className="pl-12 pr-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-roboto tabular-nums" 
+                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 pr-12 rounded-xl font-bold font-roboto tabular-nums" 
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase">Lakhs</span>
                   </div>
@@ -998,7 +988,7 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-              <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4">
+              <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4 font-headline">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
                   <span className="text-2xl font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
