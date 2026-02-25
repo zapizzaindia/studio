@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "@/firebase/config";
+import { useUser } from '@/firebase';
 
 
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,17 @@ type Step = 'phone' | 'otp';
 export default function LoginPage() {
   const [step, setStep] = useState<Step>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // If user is already logged in and navigates to /login, send them home
+    if (!userLoading && user) {
+      router.replace('/home');
+    }
+  }, [user, userLoading, router]);
+
   useEffect(() => {
     if (typeof window !== "undefined" && !window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
@@ -54,10 +66,6 @@ export default function LoginPage() {
     }
   }, []);
     
-  
-  const router = useRouter();
-  const { toast } = useToast();
-
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
     defaultValues: { phone: '' },
@@ -103,20 +111,12 @@ export default function LoginPage() {
       const result = await window.confirmationResult.confirm(values.otp);
       const user = result.user;
   
-      localStorage.setItem(
-        "zapizza-user",
-        JSON.stringify({
-          uid: user.uid,
-          phone: user.phoneNumber,
-        })
-      );
-  
       toast({
         title: "Login Successful",
-        description: "Welcome to Zapizza!",
+        description: "Welcome back to Zapizza!",
       });
   
-      // Redirect to onboarding to capture user name and birthday
+      // Redirect to onboarding to check for profile details
       router.push("/home/onboarding");
     } catch (error: any) {
       toast({
@@ -132,6 +132,8 @@ export default function LoginPage() {
     visible: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: 50 },
   };
+
+  if (userLoading) return null;
 
   return (
     <div className="w-full max-w-sm p-4">
@@ -154,15 +156,15 @@ export default function LoginPage() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Number</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-muted-foreground text-sm font-bold">+91</span>
-                          <Input placeholder="98765 43210" {...field} className="pl-12 h-12 rounded-xl border-gray-200 font-bold focus:ring-primary" />
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-muted-foreground text-sm font-bold font-body tabular-nums">+91</span>
+                          <Input placeholder="98765 43210" {...field} className="pl-12 h-12 rounded-xl border-gray-200 font-bold focus:ring-primary font-body tabular-nums" />
                         </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-12 bg-[#14532d] text-white hover:bg-[#0f4023] font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95">
+                <Button type="submit" className="w-full h-12 bg-[#14532d] text-white hover:bg-[#0f4023] font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
                   Send OTP
                 </Button>
                 
@@ -171,14 +173,14 @@ export default function LoginPage() {
                     <span className="w-full border-t border-gray-100" />
                   </div>
                   <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
-                    <span className="bg-background px-4 text-muted-foreground">Or</span>
+                    <span className="bg-background px-4 text-muted-foreground font-headline">Or</span>
                   </div>
                 </div>
 
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="w-full h-12 text-[10px] font-black uppercase tracking-widest border-gray-200 rounded-xl" 
+                  className="w-full h-12 text-[10px] font-black uppercase tracking-widest border-gray-200 rounded-xl font-headline" 
                   onClick={() => router.push('/home')}
                 >
                   Skip for now
@@ -199,19 +201,16 @@ export default function LoginPage() {
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Enter OTP</FormLabel>
                       <FormControl>
-                        <Input placeholder="123456" {...field} className="h-12 rounded-xl border-gray-200 font-black text-center text-xl tracking-[0.5em] focus:ring-primary" />
+                        <Input placeholder="123456" {...field} className="h-12 rounded-xl border-gray-200 font-black text-center text-xl tracking-[0.5em] focus:ring-primary font-body tabular-nums" />
                       </FormControl>
-                      <FormDescription className="text-[10px] font-medium text-center italic opacity-60">
-                        
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95">
+                <Button type="submit" className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
                   Verify & Login
                 </Button>
-                <Button variant="link" size="sm" onClick={() => setStep('phone')} className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <Button variant="link" size="sm" onClick={() => setStep('phone')} className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground font-headline">
                   Change number
                 </Button>
               </form>
@@ -219,7 +218,7 @@ export default function LoginPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="mt-10 text-center text-[10px] font-bold uppercase tracking-widest border-t border-gray-50 pt-6">
+      <div className="mt-10 text-center text-[10px] font-bold uppercase tracking-widest border-t border-gray-50 pt-6 font-headline">
         <p className="text-muted-foreground/60">
           Admin or Franchise Partner?
         </p>

@@ -1,11 +1,14 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ZapizzaLogo } from '@/components/icons';
+import { useUser } from '@/firebase';
 
 export default function SplashPage() {
   const router = useRouter();
+  const { user, loading } = useUser();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -13,14 +16,21 @@ export default function SplashPage() {
   }, []);
 
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted || loading) return;
 
     const timer = setTimeout(() => {
-      router.replace('/login');
+      // Intelligent redirection:
+      // If user is already logged in, go to home.
+      // Otherwise, go to login.
+      if (user) {
+        router.replace('/home');
+      } else {
+        router.replace('/login');
+      }
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [isMounted, router]);
+  }, [isMounted, loading, user, router]);
 
   return (
     <main className="flex h-screen w-full flex-col items-center justify-center bg-background p-6">
