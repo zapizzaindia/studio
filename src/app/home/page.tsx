@@ -76,7 +76,6 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   return R * c;
 };
 
-// Boxed Item Component based on reference image - Optimized size
 const BoxedItemCard = ({ item, brandColor, onAdd }: { item: MenuItem, brandColor: string, onAdd: (item: MenuItem) => void }) => {
   const prices = item.variations?.length ? item.variations.map(v => v.price) : [item.price];
   const displayPrice = Math.min(...prices);
@@ -97,7 +96,7 @@ const BoxedItemCard = ({ item, brandColor, onAdd }: { item: MenuItem, brandColor
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent flex flex-col justify-end p-4">
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent flex flex-col justify-end p-4 text-left">
           <div className="flex items-center gap-1.5 mb-1">
             <div className={cn("h-2.5 w-2.5 border flex items-center justify-center rounded-sm bg-white", item.isVeg ? 'border-green-600' : 'border-red-600')}>
               <div className={cn("h-1 w-1 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
@@ -398,7 +397,7 @@ export default function HomePage() {
             >
               <Wallet className="h-3 w-3 text-yellow-400 fill-current" />
               <span className="text-[10px] font-black uppercase tracking-widest tabular-nums font-roboto">
-                {profileLoading ? "..." : userProfile?.loyaltyPoints || 0} LP
+                {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP
                 COINS
               </span>
               <ChevronRight className="h-2.5 w-2.5 opacity-50" />
@@ -438,7 +437,7 @@ export default function HomePage() {
       </div>
 
       {heroBanner && (
-        <div className="relative w-full h-[300px] overflow-hidden md:hidden">
+        <div className="relative w-full h-[300px] overflow-hidden">
           {heroBanner.mediaType === "video" ? (
             <video
               src={heroBanner.imageId}
@@ -482,11 +481,11 @@ export default function HomePage() {
       </div>
 
       <div className="mt-8">
-        <div className="px-6 flex items-center gap-2 mb-4 font-headline">
-          <div className="p-1.5 rounded-lg shadow-sm bg-[#6366f1]">
+        <div className="px-6 flex items-center gap-2 mb-4 font-headline text-black">
+          <div className="p-1.5 rounded-lg shadow-sm bg-indigo-500">
             <Layers className="h-4 w-4 text-white" />
           </div>
-          <h2 className="text-lg font-black uppercase tracking-tighter text-black">Explore Menu</h2>
+          <h2 className="text-lg font-black uppercase tracking-tighter">Explore Menu</h2>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2 font-headline">
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
@@ -501,12 +500,12 @@ export default function HomePage() {
       </div>
 
       <div className="mt-8">
-        <div className="px-6 flex items-center gap-2 mb-4 font-headline">
-          <div className="p-1.5 rounded-lg shadow-sm bg-[#f43f5e]">
+        <div className="px-6 flex items-center gap-2 mb-4 font-headline text-black">
+          <div className="p-1.5 rounded-lg shadow-sm bg-rose-500">
             <TrendingUp className="h-4 w-4 text-white" />
           </div>
-          <div className="flex flex-col">
-            <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none text-black">Trending Now</h2>
+          <div className="flex flex-col text-left">
+            <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none">Trending Now</h2>
             <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">Customer Favorites</p>
           </div>
         </div>
@@ -518,12 +517,12 @@ export default function HomePage() {
       </div>
 
       {coupons.length > 0 && (
-        <div className="mt-8 mb-4">
-          <div className="px-6 mb-4 flex items-center gap-2 font-headline">
-            <div className="p-1.5 rounded-lg shadow-sm bg-[#f59e0b]">
+        <div className="mt-2 mb-4">
+          <div className="px-6 mb-4 flex items-center gap-2 font-headline text-black">
+            <div className="p-1.5 rounded-lg shadow-sm bg-amber-500">
               <Ticket className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic text-black">Offers for you</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic">Offers for you</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto px-6 scrollbar-hide pb-4">
             {coupons.map((coupon, idx) => {
@@ -538,7 +537,7 @@ export default function HomePage() {
                     bgColor
                   )}
                 >
-                  <div className="flex-1 pr-4 font-headline">
+                  <div className="flex-1 pr-4 font-headline text-left">
                     <h3 className="text-[15px] font-black uppercase tracking-tight leading-none truncate max-w-[140px]">
                       {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
                     </h3>
@@ -566,12 +565,12 @@ export default function HomePage() {
 
         return (
           <div key={cat.id} className="mt-8">
-            <div className="px-6 flex items-center gap-2 mb-4 font-headline">
+            <div className="px-6 flex items-center gap-2 mb-4 font-headline text-black">
               <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
                 <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
               </div>
-              <div className="flex flex-col">
-                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none text-black">{cat.name}</h2>
+              <div className="flex flex-col text-left">
+                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none">{cat.name}</h2>
                 {cat.homepageTagline && (
                   <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">{cat.homepageTagline}</p>
                 )}
@@ -587,11 +586,11 @@ export default function HomePage() {
       })}
 
       <div className="mt-8 px-6 pb-12">
-        <div className="flex items-center gap-2 mb-6 font-headline">
-          <div className="p-1.5 rounded-lg shadow-sm bg-[#10b981]">
+        <div className="flex items-center gap-2 mb-6 font-headline text-black">
+          <div className="p-1.5 rounded-lg shadow-sm bg-emerald-500">
             <Pizza className="h-4 w-4 text-white" />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tighter italic text-black">Explore Items</h2>
+          <h2 className="text-xl font-black uppercase tracking-tighter italic">Explore Items</h2>
         </div>
         <div className="grid grid-cols-1 gap-6">
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
@@ -602,7 +601,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-white rounded-[24px] p-4 shadow-md border border-gray-50 flex gap-4"
+              className="bg-white rounded-[24px] p-4 shadow-md border border-gray-50 flex gap-4 text-left"
             >
               <div className="flex-1 flex flex-col justify-between">
                 <div className="space-y-1.5">
@@ -661,8 +660,8 @@ export default function HomePage() {
           </div>
 
           <div className="mt-8 px-2 relative z-10 font-headline">
-            <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden">
-              <CardContent className="p-6 text-left">
+            <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden text-left">
+              <CardContent className="p-6">
                 <div className="flex flex-col gap-1">
                   <h3 className="text-2xl font-black text-[#333] leading-none tabular-nums font-roboto">
                     {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP Coins
@@ -708,7 +707,7 @@ export default function HomePage() {
         </h2>
         <div 
           style={{ backgroundColor: '#f97316' }} 
-          className="rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl"
+          className="rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl text-left"
         >
           <div className="relative z-10 font-headline">
             <h3 className="text-2xl font-black uppercase leading-tight italic">
@@ -731,7 +730,7 @@ export default function HomePage() {
       </div>
 
       <div className="mt-8 px-6">
-        <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white">
+        <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white text-left">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="h-14 w-14 rounded-full border-2 border-gray-100 flex items-center justify-center p-2 bg-[#f8f9fa]">
                <ZapizzaLogo className="w-full h-full" />
@@ -766,10 +765,10 @@ export default function HomePage() {
       </div>
 
       <div className="mt-8 px-6">
-        <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white relative font-headline">
+        <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white relative font-headline text-left">
           <CardContent className="p-8 flex items-center justify-between">
             <div className="space-y-2 max-w-[200px]">
-              <h2 className="text-3xl font-black text-[#14532d] uppercase italic tracking-tighter">Beware!</h2>
+              <h2 className="text-3xl font-black text-[#14532d] uppercase italic tracking-tighter text-left">Beware!</h2>
               <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase">
                 {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} or its employees Do not call for any transaction OTP
               </p>
@@ -793,7 +792,7 @@ export default function HomePage() {
             <div 
               key={i} 
               style={{ backgroundColor: award.bg }}
-              className="flex-shrink-0 w-[300px] rounded-[32px] p-8 flex items-center justify-between shadow-sm border border-black/5"
+              className="flex-shrink-0 w-[300px] rounded-[32px] p-8 flex items-center justify-between shadow-sm border border-black/5 text-left"
             >
               <div className="space-y-3 font-headline">
                 <h3 className="text-xl font-black uppercase italic leading-tight text-[#333]">{award.title}</h3>
@@ -823,25 +822,25 @@ export default function HomePage() {
       </div>
 
       <Dialog open={isFranchiseModalOpen} onOpenChange={setIsFranchiseModalOpen}>
-        <DialogContent className="max-w-[95vw] rounded-[32px] p-0 overflow-hidden border-none shadow-2xl bg-white font-headline">
-          <div className="bg-[#f97316] p-8 text-white">
+        <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl bg-white font-headline flex flex-col max-h-[95vh]">
+          <div className="bg-[#f97316] p-6 text-white shrink-0">
             <DialogHeader>
               <div className="flex justify-between items-start">
-                <div className="space-y-1">
+                <div className="space-y-1 text-left">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Partnership Program</p>
-                  <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">{selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} Network</DialogTitle>
+                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic leading-none">{selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} Network</DialogTitle>
                 </div>
-                <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-white" />
+                <div className="h-10 w-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-white" />
                 </div>
               </div>
-              <DialogDescription className="text-white/70 text-xs font-bold uppercase tracking-widest mt-4">
+              <DialogDescription className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-3 text-left">
                 Join the fastest growing food network.
               </DialogDescription>
             </DialogHeader>
           </div>
 
-          <div className="p-8 space-y-6">
+          <div className="p-6 space-y-6 overflow-y-auto flex-1 scrollbar-hide text-left">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Contact Name</Label>
@@ -869,7 +868,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Proposed City</Label>
                   <div className="relative">
@@ -907,22 +906,22 @@ export default function HomePage() {
             </div>
           </div>
 
-          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-4">
+          <DialogFooter className="p-6 bg-gray-50 border-t flex gap-3 shrink-0">
             <Button 
               variant="ghost" 
               onClick={() => setIsFranchiseModalOpen(false)}
-              className="flex-1 h-14 rounded-2xl font-black uppercase text-xs tracking-widest"
+              className="flex-1 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleFranchiseEnquiry}
               disabled={isSubmittingEnquiry}
-              className="flex-[2] h-14 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-orange-200"
+              className="flex-[2] h-12 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl"
             >
-              {isSubmittingEnquiry ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+              {isSubmittingEnquiry ? <Loader2 className="h-4 w-4 animate-spin" /> : (
                 <>
-                  Submit Interest <Send className="h-4 w-4 ml-2" />
+                  Submit Interest <Send className="h-3.5 w-3.5 ml-2" />
                 </>
               )}
             </Button>
@@ -931,7 +930,7 @@ export default function HomePage() {
       </Dialog>
 
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
-        <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl font-headline">
+        <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl font-headline text-left">
           {customizingItem && (
             <>
               <div className="relative h-48 w-full flex-shrink-0">
@@ -943,7 +942,7 @@ export default function HomePage() {
                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">{customizingItem.name}</h2>
                 </div>
               </div>
-              <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide">
+              <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide text-left">
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm">Required</Badge></div>
