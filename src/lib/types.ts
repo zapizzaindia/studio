@@ -17,6 +17,8 @@ export type Category = {
   order?: number;
   brand: Brand;
   showInHomepage?: boolean;
+  homepageTagline?: string; // e.g. "Six epic flavours, one massive feast"
+  accentColor?: string; // For colorful sections
 };
 
 export type MenuItemVariation = {
@@ -44,6 +46,7 @@ export type MenuItem = {
   addons?: MenuItemAddon[];
   recommendedSides?: string[];
   brand: Brand;
+  badgeTag?: string; // e.g. "6 CHEESE IN 1"
 };
 
 export type GlobalSettings = {

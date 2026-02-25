@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef } from "react";
@@ -50,6 +51,7 @@ export default function FranchiseMenuPage() {
   const [newItemIsVeg, setNewItemIsVeg] = useState(true);
   const [newItemImageId, setNewItemImageId] = useState("margherita");
   const [newItemGlobal, setNewItemGlobal] = useState(true);
+  const [newItemBadgeTag, setNewItemBadgeTag] = useState("");
   const [newItemVariations, setNewItemVariations] = useState<MenuItemVariation[]>([]);
   const [newItemAddons, setNewItemAddons] = useState<MenuItemAddon[]>([]);
   const [newItemSides, setNewItemSides] = useState<string[]>([]);
@@ -58,6 +60,8 @@ export default function FranchiseMenuPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryImageId, setNewCategoryImageId] = useState("cat_veg");
   const [categoryShowInHomepage, setCategoryShowInHomepage] = useState(false);
+  const [categoryTagline, setCategoryTagline] = useState("");
+  const [categoryAccentColor, setCategoryAccentColor] = useState("#14532d");
 
   const menuItems = useMemo(() => allMenuItems?.filter(item => item.brand === activeBrand) || [], [allMenuItems, activeBrand]);
   const categories = useMemo(() => allCategories?.filter(cat => cat.brand === activeBrand) || [], [allCategories, activeBrand]);
@@ -76,6 +80,7 @@ export default function FranchiseMenuPage() {
     setNewItemIsVeg(item.isVeg);
     setNewItemImageId(item.imageId);
     setNewItemGlobal(item.isAvailableGlobally);
+    setNewItemBadgeTag(item.badgeTag || "");
     setNewItemVariations(item.variations || []);
     setNewItemAddons(item.addons || []);
     setNewItemSides(item.recommendedSides || []);
@@ -87,6 +92,8 @@ export default function FranchiseMenuPage() {
     setNewCategoryName(cat.name);
     setNewCategoryImageId(cat.imageId || "cat_veg");
     setCategoryShowInHomepage(!!cat.showInHomepage);
+    setCategoryTagline(cat.homepageTagline || "");
+    setCategoryAccentColor(cat.accentColor || "#14532d");
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, isCategory = false) => {
@@ -146,6 +153,7 @@ export default function FranchiseMenuPage() {
         imageId: newItemImageId,
         isAvailableGlobally: newItemGlobal,
         brand: activeBrand,
+        badgeTag: newItemBadgeTag,
         variations: newItemVariations,
         addons: newItemAddons,
         recommendedSides: newItemSides,
@@ -193,7 +201,9 @@ export default function FranchiseMenuPage() {
         imageId: newCategoryImageId,
         brand: activeBrand,
         order: editingCategory ? editingCategory.order : sortedCategories.length + 1,
-        showInHomepage: categoryShowInHomepage
+        showInHomepage: categoryShowInHomepage,
+        homepageTagline: categoryTagline,
+        accentColor: categoryAccentColor
     };
 
     if (editingCategory) {
@@ -203,6 +213,7 @@ export default function FranchiseMenuPage() {
                 setEditingCategory(null);
                 setNewCategoryName("");
                 setCategoryShowInHomepage(false);
+                setCategoryTagline("");
             })
             .catch(error => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -218,6 +229,7 @@ export default function FranchiseMenuPage() {
                 toast({ title: 'Category Created' });
                 setNewCategoryName("");
                 setCategoryShowInHomepage(false);
+                setCategoryTagline("");
             })
             .catch(error => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -287,7 +299,7 @@ export default function FranchiseMenuPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) { setEditingCategory(null); setNewCategoryName(""); setCategoryShowInHomepage(false); } }}>
+        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) { setEditingCategory(null); setNewCategoryName(""); setCategoryShowInHomepage(false); setCategoryTagline(""); } }}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 shadow-sm font-headline">
                     <Layers className="mr-2 h-4 w-4" /> Manage {activeBrand === 'zapizza' ? 'Zapizza' : 'Zfry'} Categories
@@ -298,7 +310,7 @@ export default function FranchiseMenuPage() {
                     <DialogTitle className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Categories Manager</DialogTitle>
                     <DialogDescription className="text-[10px] font-bold uppercase text-muted-foreground">Organization for {activeBrand}</DialogDescription>
                 </DialogHeader>
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
                     <div className="space-y-3">
                         <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] font-headline">Existing Categories</Label>
                         <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
@@ -361,6 +373,10 @@ export default function FranchiseMenuPage() {
                             <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest font-headline">Category Title</Label>
                             <Input placeholder="e.g. Gourmet Specials" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} className="font-bold h-12 rounded-xl font-headline" />
                         </div>
+                        <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest font-headline">Homepage Tagline</Label>
+                            <Input placeholder="e.g. Six epic flavours, one massive feast" value={categoryTagline} onChange={e => setCategoryTagline(e.target.value)} className="font-medium h-12 rounded-xl font-body" />
+                        </div>
                         <div className="flex items-center justify-between bg-muted/20 p-4 rounded-xl border border-dashed border-muted-foreground/20">
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-black uppercase tracking-tight font-headline">Show in Homepage</span>
@@ -406,6 +422,10 @@ export default function FranchiseMenuPage() {
                                 <Input value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder="e.g. Smoky BBQ Chicken" className="font-bold h-12 rounded-xl" />
                             </div>
                             <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Homepage Tag (Badge)</Label>
+                                <Input value={newItemBadgeTag} onChange={e => setNewItemBadgeTag(e.target.value)} placeholder="e.g. 6 CHEESE IN 1" className="font-black h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2">
                                 <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Menu Description</Label>
                                 <Textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Write something tempting..." className="font-medium rounded-xl min-h-[100px] font-body" />
                             </div>
@@ -414,7 +434,7 @@ export default function FranchiseMenuPage() {
                                     <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Base Price (₹)</Label>
                                     <div className="relative">
                                         <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="pl-10 font-black h-12 rounded-xl font-body tabular-nums" style={{ color: brandColor }} />
+                                        <Input type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="pl-10 font-black h-12 rounded-xl font-roboto tabular-nums" style={{ color: brandColor }} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -534,7 +554,7 @@ export default function FranchiseMenuPage() {
                                                 const updated = [...newItemVariations];
                                                 updated[i].price = Number(e.target.value);
                                                 setNewItemVariations(updated);
-                                            }} className="h-10 font-black text-xs font-body tabular-nums" style={{ color: brandColor }} />
+                                            }} className="h-10 font-black text-xs font-roboto tabular-nums" style={{ color: brandColor }} />
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                     </div>
@@ -559,7 +579,7 @@ export default function FranchiseMenuPage() {
                                                         const updated = [...newItemVariations];
                                                         updated[i].addons![aIdx].price = Number(e.target.value);
                                                         setNewItemVariations(updated);
-                                                    }} className="h-8 w-20 font-black text-[10px] font-body tabular-nums" />
+                                                    }} className="h-8 w-20 font-black text-[10px] font-roboto tabular-nums" />
                                                     <Button variant="ghost" size="icon" onClick={() => {
                                                         const updated = [...newItemVariations];
                                                         updated[i].addons = updated[i].addons?.filter((_, idx) => idx !== aIdx);
@@ -599,7 +619,7 @@ export default function FranchiseMenuPage() {
                                             const updated = [...newItemAddons];
                                             updated[i].price = Number(e.target.value);
                                             setNewItemAddons(updated);
-                                        }} className="h-10 font-black text-xs font-body tabular-nums" style={{ color: brandColor }} />
+                                        }} className="h-10 font-black text-xs font-roboto tabular-nums" style={{ color: brandColor }} />
                                     </div>
                                     <Button variant="ghost" size="icon" onClick={() => setNewItemAddons(newItemAddons.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                 </div>
@@ -634,17 +654,22 @@ export default function FranchiseMenuPage() {
 
         return (
             <div key={category.id} className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <div className="relative h-12 w-12 rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-black/5">
-                        <Image src={getImageUrl(category.imageId || 'cat_veg')} alt={category.name} fill className="object-cover" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-xl font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>{category.name}</h2>
-                            {category.showInHomepage && <Badge className="bg-[#14532d] text-white text-[7px] font-black uppercase h-4">Live on Home</Badge>}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="relative h-12 w-12 rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-black/5">
+                            <Image src={getImageUrl(category.imageId || 'cat_veg')} alt={category.name} fill className="object-cover" />
                         </div>
-                        <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest font-headline">{catItems.length} Products Available</span>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xl font-black uppercase tracking-tighter italic font-headline" style={{ color: brandColor }}>{category.name}</h2>
+                                {category.showInHomepage && <Badge className="bg-[#14532d] text-white text-[7px] font-black uppercase h-4">Live on Home</Badge>}
+                            </div>
+                            <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest font-headline">{catItems.length} Products Available</span>
+                        </div>
                     </div>
+                    {category.homepageTagline && (
+                        <p className="text-[10px] font-bold text-muted-foreground italic truncate max-w-xs">{category.homepageTagline}</p>
+                    )}
                 </div>
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white font-headline">
                     <CardContent className="p-0">
@@ -679,12 +704,13 @@ export default function FranchiseMenuPage() {
                                                   <div className="flex items-center gap-2">
                                                       <span className={cn("h-2.5 w-2.5 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
                                                       <p className="font-black uppercase text-[13px] tracking-tight italic text-[#333]">{item.name}</p>
+                                                      {item.badgeTag && <Badge className="text-[7px] bg-accent text-accent-foreground font-black uppercase h-3.5 border-none">{item.badgeTag}</Badge>}
                                                   </div>
                                                   <p className="text-[11px] text-muted-foreground font-medium line-clamp-1 max-w-xs font-body">{item.description}</p>
                                                   {item.variations && item.variations.length > 0 && (
                                                       <div className="flex gap-1.5 pt-1">
                                                           {item.variations.map((v, idx) => (
-                                                              <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200 font-body tabular-nums">
+                                                              <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200 font-roboto tabular-nums">
                                                                   {v.name}: ₹{v.price} {v.addons && v.addons.length > 0 && `(+${v.addons.length} opts)`}
                                                               </span>
                                                           ))}
@@ -693,7 +719,7 @@ export default function FranchiseMenuPage() {
                                               </div>
                                           </TableCell>
                                           <TableCell>
-                                              <div className="flex items-center gap-1.5 font-black text-sm whitespace-nowrap font-body tabular-nums" style={{ color: brandColor }}>
+                                              <div className="flex items-center gap-1.5 font-black text-sm whitespace-nowrap font-roboto tabular-nums" style={{ color: brandColor }}>
                                                   <IndianRupee className="h-3.5 w-3.5" />
                                                   <span>{priceDisplay.replace('₹', '')}</span>
                                               </div>
