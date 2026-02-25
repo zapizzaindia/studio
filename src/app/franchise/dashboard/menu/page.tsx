@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useRef } from "react";
@@ -21,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { collection, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
