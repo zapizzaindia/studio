@@ -40,7 +40,7 @@ export function MobileNav() {
   const activeColor = brand === 'zfry' ? '#e31837' : '#14532d';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.05)] md:hidden">
       <nav className="container mx-auto flex max-w-full items-center justify-around px-4 h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
