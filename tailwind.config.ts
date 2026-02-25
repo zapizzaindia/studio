@@ -19,6 +19,7 @@ export default {
       fontFamily: {
         body: ['PT Sans', 'sans-serif'],
         headline: ['Space Grotesk', 'sans-serif'],
+        roboto: ['Roboto', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {

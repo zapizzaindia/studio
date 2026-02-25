@@ -340,7 +340,7 @@ export default function HomePage() {
               className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer transition-all"
             >
               <Wallet className="h-3 w-3 text-yellow-400 fill-current" />
-              <span className="text-[10px] font-black uppercase tracking-widest tabular-nums font-body">
+              <span className="text-[10px] font-black uppercase tracking-widest tabular-nums font-roboto">
                 {profileLoading ? "..." : userProfile?.loyaltyPoints || 0} LP
                 COINS
               </span>
@@ -415,7 +415,7 @@ export default function HomePage() {
                   <div className="absolute inset-0 flex flex-col justify-center p-6">
                     {banner.subtitle && <Badge className="w-fit mb-2 bg-yellow-400 text-black font-black uppercase text-[8px] tracking-widest rounded-sm font-headline">{banner.subtitle}</Badge>}
                     {banner.title && <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md font-headline">{banner.title}</h2>}
-                    {banner.price && <p className="text-white font-black text-lg drop-shadow-md font-body tabular-nums">₹{banner.price}</p>}
+                    {banner.price && <p className="text-white font-black text-lg drop-shadow-md font-roboto tabular-nums">₹{banner.price}</p>}
                   </div>
                 </div>
               </CarouselItem>
@@ -464,7 +464,7 @@ export default function HomePage() {
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                   <div className="bg-white/95 backdrop-blur-md px-2 py-1 rounded-xl shadow-sm flex items-center gap-1 border border-white/20">
                     <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-                    <span className="text-[10px] font-black text-[#333] font-body tabular-nums">4.8</span>
+                    <span className="text-[10px] font-black text-[#333] font-roboto tabular-nums">4.8</span>
                   </div>
                   <Badge className="bg-green-100/90 text-green-800 text-[7px] font-black uppercase px-1.5 py-0.5 rounded-lg border-none shadow-sm backdrop-blur-sm font-headline">Bestseller</Badge>
                 </div>
@@ -484,7 +484,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-auto">
-                  <span className="text-[15px] font-black tracking-tight font-body tabular-nums" style={{ color: brandColor }}>{getPriceDisplay(item)}</span>
+                  <span className="text-[15px] font-black tracking-tight font-roboto tabular-nums" style={{ color: brandColor }}>{getPriceDisplay(item)}</span>
                   <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 font-headline">Customizable</span>
                 </div>
               </div>
@@ -573,13 +573,13 @@ export default function HomePage() {
                     </div>
                   </div>
                   <h3 className="text-sm font-black text-[#333] uppercase leading-tight tracking-tight font-headline">{item.name}</h3>
-                  <p className="text-sm font-black font-body tabular-nums" style={{ color: brandColor }}>{getPriceDisplay(item)}</p>
+                  <p className="text-sm font-black font-roboto tabular-nums" style={{ color: brandColor }}>{getPriceDisplay(item)}</p>
                   <div className="flex items-center gap-0.5">
                     {Array.from({length: 5}).map((_, i) => (
                       <Star key={i} className={`h-2.5 w-2.5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
                     ))}
                   </div>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-medium font-body">
+                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-medium font-roboto">
                     {item.description} <span className="text-gray-400 font-bold font-headline">Read More</span>
                   </p>
                 </div>
@@ -610,7 +610,7 @@ export default function HomePage() {
           
           <div className="relative z-10 space-y-2">
             <h2 className="text-xl font-black uppercase leading-tight px-4 drop-shadow-sm font-headline">
-              Place Orders Worth Rs.<span className="font-body tabular-nums">1000</span> to Upgrade Your Account to ACE Level
+              Place Orders Worth Rs.<span className="font-roboto tabular-nums">1000</span> to Upgrade Your Account to ACE Level
             </h2>
             <p className="text-xs font-bold uppercase tracking-widest opacity-80 font-headline">
               Get LP Coins on Every Order
@@ -621,33 +621,33 @@ export default function HomePage() {
             <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden">
               <CardContent className="p-6 text-left">
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-2xl font-black text-[#333] leading-none tabular-nums font-body">
+                  <h3 className="text-2xl font-black text-[#333] leading-none tabular-nums font-roboto">
                     {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP Coins
                   </h3>
                   <div className="flex items-center gap-2 mt-3 text-muted-foreground">
                     <Timer className="h-3.5 w-3.5" />
                     <p className="text-[10px] font-black uppercase tracking-tight font-headline">
-                      <span className="font-body tabular-nums">10</span>% of the Subtotal Value can be paid using the LP ...
+                      <span className="font-roboto tabular-nums">10</span>% of the Subtotal Value can be paid using the LP ...
                     </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-px bg-gray-100 rounded-2xl border border-gray-100 mt-6 overflow-hidden">
                   <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-lg font-black text-[#333] tabular-nums font-body">
+                    <span className="text-lg font-black text-[#333] tabular-nums font-roboto">
                       {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)}
                     </span>
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground font-headline">Total Coins</span>
                   </div>
                   <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-lg font-black text-[#333] tabular-nums font-body">0</span>
+                    <span className="text-lg font-black text-[#333] tabular-nums font-roboto">0</span>
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground font-headline">Coins Used</span>
                   </div>
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-black text-[#333] uppercase font-body tabular-nums">1 LP Coin = ₹1</span>
+                    <span className="text-[11px] font-black text-[#333] uppercase font-roboto tabular-nums">1 LP Coin = ₹1</span>
                   </div>
                   <Button variant="link" onClick={() => router.push('/home/rewards')} className="p-0 h-auto font-black text-xs uppercase tracking-widest underline decoration-2 underline-offset-4 font-headline" style={{ color: brandColor }}>
                     Rewards Details
@@ -669,7 +669,7 @@ export default function HomePage() {
         >
           <div className="relative z-10">
             <h3 className="text-2xl font-black uppercase leading-tight italic font-headline">
-              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} <span className="font-body tabular-nums">700</span>+
+              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} <span className="font-roboto tabular-nums">700</span>+
             </h3>
             <p className="text-sm font-bold uppercase tracking-widest opacity-80 mt-1 font-headline">Outlets across the World</p>
             
@@ -711,10 +711,10 @@ export default function HomePage() {
               className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px] cursor-pointer active:scale-95 transition-all"
             >
                <div className="flex items-center gap-1 text-white px-1.5 py-0.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
-                  <span className="text-[10px] font-black font-body tabular-nums">{selectedOutlet?.rating?.toFixed(1) || "4.5"}</span>
+                  <span className="text-[10px] font-black font-roboto tabular-nums">{selectedOutlet?.rating?.toFixed(1) || "4.5"}</span>
                   <Star className="h-2 w-2 fill-current" />
                </div>
-               <span className="text-[8px] font-black text-muted-foreground uppercase font-body tabular-nums">{selectedOutlet?.reviewCount || "0"} Reviews</span>
+               <span className="text-[8px] font-black text-muted-foreground uppercase font-roboto tabular-nums">{selectedOutlet?.reviewCount || "0"} Reviews</span>
             </div>
           </CardContent>
         </Card>
@@ -763,7 +763,7 @@ export default function HomePage() {
       </div>
 
       <div className="mt-16 px-10 text-center space-y-6 pb-12">
-        <p className="text-muted-foreground font-medium italic text-lg leading-relaxed opacity-60 font-body">
+        <p className="text-muted-foreground font-medium italic text-lg leading-relaxed opacity-60 font-roboto">
           "The secret of success in life is to eat what you like and let the food fight it out inside." - Mark Twain
         </p>
         <div className="flex items-center justify-center gap-4">
@@ -806,7 +806,7 @@ export default function HomePage() {
                     value={enquiryName}
                     onChange={e => setEnquiryName(e.target.value)}
                     placeholder="Enter your full name" 
-                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-body" 
+                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-roboto" 
                   />
                 </div>
               </div>
@@ -819,7 +819,7 @@ export default function HomePage() {
                     value={enquiryPhone}
                     onChange={e => setEnquiryPhone(e.target.value)}
                     placeholder="+91 XXXX XXX XXX" 
-                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-body tabular-nums" 
+                    className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-roboto tabular-nums" 
                   />
                 </div>
               </div>
@@ -833,7 +833,7 @@ export default function HomePage() {
                       value={enquiryCity}
                       onChange={e => setEnquiryCity(e.target.value)}
                       placeholder="e.g. Noida" 
-                      className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-body" 
+                      className="pl-12 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-roboto" 
                     />
                   </div>
                 </div>
@@ -846,7 +846,7 @@ export default function HomePage() {
                       value={enquiryInvestment}
                       onChange={e => setEnquiryInvestment(e.target.value)}
                       placeholder="e.g. 25" 
-                      className="pl-12 pr-16 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-body tabular-nums" 
+                      className="pl-12 pr-16 h-12 rounded-xl font-bold bg-gray-50 border-gray-100 font-roboto tabular-nums" 
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase font-headline">Lakhs</span>
                   </div>
@@ -910,7 +910,7 @@ export default function HomePage() {
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
                           <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase font-headline">{v.name}</span></Label>
-                          <div className="flex items-center gap-3"><span className="text-xs font-black font-body tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
+                          <div className="flex items-center gap-3"><span className="text-xs font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
                         </div>
                       ))}
                     </RadioGroup>
@@ -927,7 +927,7 @@ export default function HomePage() {
                             <span className="text-sm font-bold text-[#333] uppercase font-headline">{addon.name}</span>
                           </Label>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-black font-body tabular-nums" style={{ color: brandColor }}>₹{addon.price}</span>
+                            <span className="text-xs font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{addon.price}</span>
                             <Checkbox 
                               id={`a-${addon.name}`} 
                               checked={selectedAddons.some(a => a.name === addon.name)}
@@ -946,7 +946,7 @@ export default function HomePage() {
               <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest font-headline">Total Price</span>
-                  <span className="text-2xl font-black font-body tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
+                  <span className="text-2xl font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
                 </div>
                 <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all font-headline">ADD TO CART</Button>
               </div>
@@ -958,7 +958,7 @@ export default function HomePage() {
       {totalItems > 0 && (
         <div className="fixed bottom-20 left-4 right-4 z-40">
           <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none transition-all duration-500">
-            <div className="flex flex-col items-start font-body tabular-nums"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
+            <div className="flex flex-col items-start font-roboto tabular-nums"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
             <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px] font-headline">VIEW CART <ShoppingBag className="h-5 w-5" /></div>
           </Button>
         </div>
