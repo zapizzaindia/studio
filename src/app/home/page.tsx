@@ -517,32 +517,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {homepageCategories.map((cat) => {
-        const catItems = menuItems.filter(i => i.category === cat.id);
-        if (catItems.length === 0) return null;
-
-        return (
-          <div key={cat.id} className="mt-8">
-            <div className="px-6 flex items-center gap-2 mb-4 font-headline">
-              <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
-                <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
-              </div>
-              <div className="flex flex-col">
-                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none text-black">{cat.name}</h2>
-                {cat.homepageTagline && (
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">{cat.homepageTagline}</p>
-                )}
-              </div>
-            </div>
-            <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-8">
-              {catItems.map((item) => (
-                <BoxedItemCard key={item.id} item={item} brandColor={cat.accentColor || brandColor} onAdd={handleAddClick} />
-              ))}
-            </div>
-          </div>
-        );
-      })}
-
       {coupons.length > 0 && (
         <div className="mt-8 mb-4">
           <div className="px-6 mb-4 flex items-center gap-2 font-headline">
@@ -585,6 +559,32 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {homepageCategories.map((cat) => {
+        const catItems = menuItems.filter(i => i.category === cat.id);
+        if (catItems.length === 0) return null;
+
+        return (
+          <div key={cat.id} className="mt-8">
+            <div className="px-6 flex items-center gap-2 mb-4 font-headline">
+              <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
+                <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
+              </div>
+              <div className="flex flex-col">
+                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none text-black">{cat.name}</h2>
+                {cat.homepageTagline && (
+                  <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">{cat.homepageTagline}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-8">
+              {catItems.map((item) => (
+                <BoxedItemCard key={item.id} item={item} brandColor={cat.accentColor || brandColor} onAdd={handleAddClick} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
       <div className="mt-8 px-6 pb-12">
         <div className="flex items-center gap-2 mb-6 font-headline">
