@@ -40,7 +40,7 @@ export function MobileNav() {
   const activeColor = brand === 'zfry' ? '#e31837' : '#14532d';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.05)] md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
       <nav className="container mx-auto flex max-w-full items-center justify-around px-4 h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -55,12 +55,12 @@ export function MobileNav() {
               <div className="relative">
                 <item.icon className={cn("h-5 w-5", isActive ? 'scale-110' : '')} strokeWidth={isActive ? 3 : 2} />
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#e31837] text-[8px] font-bold text-white border-2 border-white">
+                  <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#e31837] text-[8px] font-bold text-white border-2 border-white font-body tabular-nums">
                     {item.badge}
                   </span>
                 )}
               </div>
-              <span className={cn("text-[9px] font-black uppercase tracking-tight", isActive ? 'opacity-100' : 'opacity-60')}>
+              <span className={cn("text-[9px] font-black uppercase tracking-tight font-headline", isActive ? 'opacity-100' : 'opacity-60')}>
                 {item.label}
               </span>
               {isActive && (
