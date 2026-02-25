@@ -334,20 +334,27 @@ export default function FranchiseMenuPage() {
                                     className="w-full h-10 rounded-xl font-black uppercase text-[9px] tracking-widest border-dashed font-headline"
                                     onClick={() => catFileInputRef.current?.click()}
                                 >
-                                    <Upload className="mr-2 h-3 w-3" /> Upload Icon
+                                    <Upload className="mr-2 h-3 w-3" /> Upload Custom Photo
                                 </Button>
-                                <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId.startsWith('data:') ? 'custom' : newCategoryImageId}>
-                                    <SelectTrigger className="h-10 text-[9px] font-black uppercase font-headline">
-                                        <SelectValue placeholder="Or Select Default" />
-                                    </SelectTrigger>
-                                    <SelectContent className="font-headline">
-                                        <SelectItem value="cat_veg">Veg Pizza</SelectItem>
-                                        <SelectItem value="cat_nonveg">Non-Veg</SelectItem>
-                                        <SelectItem value="cat_beverages">Drinks</SelectItem>
-                                        <SelectItem value="cat_desserts">Sweets</SelectItem>
-                                        {newCategoryImageId.startsWith('data:') && <SelectItem value="custom">Custom Image</SelectItem>}
-                                    </SelectContent>
-                                </Select>
+                                
+                                <div className="space-y-1">
+                                    <Label className="text-[7px] font-black uppercase text-muted-foreground ml-1">Or Quick Select Library</Label>
+                                    <Select onValueChange={setNewCategoryImageId} value={newCategoryImageId.startsWith('data:') ? 'custom' : newCategoryImageId}>
+                                        <SelectTrigger className="h-10 text-[9px] font-black uppercase font-headline">
+                                            <SelectValue placeholder="Pick a brand icon" />
+                                        </SelectTrigger>
+                                        <SelectContent className="font-headline">
+                                            <SelectItem value="cat_veg">Veg Pizza</SelectItem>
+                                            <SelectItem value="cat_nonveg">Non-Veg</SelectItem>
+                                            <SelectItem value="cat_beverages">Drinks</SelectItem>
+                                            <SelectItem value="cat_desserts">Sweets</SelectItem>
+                                            <SelectItem value="sides">Sides & Extras</SelectItem>
+                                            <SelectItem value="combos">Value Combos</SelectItem>
+                                            <SelectItem value="new">New Arrivals</SelectItem>
+                                            {newCategoryImageId.startsWith('data:') && <SelectItem value="custom">Custom Photo Ready</SelectItem>}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                         <div className="space-y-2">
