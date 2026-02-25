@@ -438,7 +438,7 @@ export default function HomePage() {
       </div>
 
       {heroBanner && (
-        <div className="relative w-full h-[300px] overflow-hidden">
+        <div className="relative w-full h-[300px] overflow-hidden md:hidden">
           {heroBanner.mediaType === "video" ? (
             <video
               src={heroBanner.imageId}
@@ -483,10 +483,10 @@ export default function HomePage() {
 
       <div className="mt-8">
         <div className="px-6 flex items-center gap-2 mb-4 font-headline">
-          <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+          <div className="p-1.5 rounded-lg shadow-sm bg-[#6366f1]">
             <Layers className="h-4 w-4 text-white" />
           </div>
-          <h2 className="text-lg font-black uppercase tracking-tighter" style={{ color: brandColor }}>Explore Menu</h2>
+          <h2 className="text-lg font-black uppercase tracking-tighter text-black">Explore Menu</h2>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2 font-headline">
           {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
@@ -494,7 +494,7 @@ export default function HomePage() {
               <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
                 <Image src={getImageUrl(cat.imageId || 'cat_veg')} alt={cat.name} fill className="object-cover" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1" style={{ color: brandColor }}>{cat.name}</span>
+              <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1 text-black">{cat.name}</span>
             </div>
           ))}
         </div>
@@ -502,11 +502,11 @@ export default function HomePage() {
 
       <div className="mt-8">
         <div className="px-6 flex items-center gap-2 mb-4 font-headline">
-          <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+          <div className="p-1.5 rounded-lg shadow-sm bg-[#f43f5e]">
             <TrendingUp className="h-4 w-4 text-white" />
           </div>
           <div className="flex flex-col">
-            <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none" style={{ color: brandColor }}>Trending Now</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none text-black">Trending Now</h2>
             <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">Customer Favorites</p>
           </div>
         </div>
@@ -524,11 +524,11 @@ export default function HomePage() {
         return (
           <div key={cat.id} className="mt-8">
             <div className="px-6 flex items-center gap-2 mb-4 font-headline">
-              <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || brandColor }}>
+              <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
                 <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
               </div>
               <div className="flex flex-col">
-                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none" style={{ color: cat.accentColor || brandColor }}>{cat.name}</h2>
+                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none text-black">{cat.name}</h2>
                 {cat.homepageTagline && (
                   <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">{cat.homepageTagline}</p>
                 )}
@@ -546,10 +546,10 @@ export default function HomePage() {
       {coupons.length > 0 && (
         <div className="mt-8 mb-4">
           <div className="px-6 mb-4 flex items-center gap-2 font-headline">
-            <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+            <div className="p-1.5 rounded-lg shadow-sm bg-[#f59e0b]">
               <Ticket className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Offers for you</h2>
+            <h2 className="text-lg font-black uppercase tracking-tighter italic text-black">Offers for you</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto px-6 scrollbar-hide pb-4">
             {coupons.map((coupon, idx) => {
@@ -588,10 +588,10 @@ export default function HomePage() {
 
       <div className="mt-8 px-6 pb-12">
         <div className="flex items-center gap-2 mb-6 font-headline">
-          <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
+          <div className="p-1.5 rounded-lg shadow-sm bg-[#10b981]">
             <Pizza className="h-4 w-4 text-white" />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Explore Items</h2>
+          <h2 className="text-xl font-black uppercase tracking-tighter italic text-black">Explore Items</h2>
         </div>
         <div className="grid grid-cols-1 gap-6">
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
