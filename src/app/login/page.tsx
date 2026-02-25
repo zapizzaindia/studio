@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -10,8 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "@/firebase/config";
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 
 
 import { Button } from '@/components/ui/button';
@@ -42,6 +40,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<Step>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const { user, loading: userLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -53,18 +52,25 @@ export default function LoginPage() {
   }, [user, userLoading, router]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-          size: "invisible",
+    if (typeof window !== "undefined" && auth && !window.recaptchaVerifier) {
+      const container = document.getElementById("recaptcha-container");
+      if (container) {
+        try {
+          window.recaptchaVerifier = new RecaptchaVerifier(
+            auth,
+            "recaptcha-container",
+            {
+              size: "invisible",
+            }
+          );
+      
+          window.recaptchaVerifier.render().catch(console.error);
+        } catch (error) {
+          console.error("Recaptcha error:", error);
         }
-      );
-  
-      window.recaptchaVerifier.render().catch(console.error);
+      }
     }
-  }, []);
+  }, [auth]);
     
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
@@ -77,11 +83,23 @@ export default function LoginPage() {
   });
 
   async function onPhoneSubmit(values: z.infer<typeof phoneSchema>) {
+    if (!auth) {
+      toast({
+        title: "Auth Error",
+        description: "Authentication service not ready.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const phone = `+91${values.phone}`;
       setPhoneNumber(phone);
   
       const appVerifier = window.recaptchaVerifier;
+      if (!appVerifier) {
+        throw new Error("Recaptcha not initialized. Please refresh the page.");
+      }
   
       const confirmationResult = await signInWithPhoneNumber(
         auth,
@@ -108,9 +126,11 @@ export default function LoginPage() {
 
   async function onOtpSubmit(values: z.infer<typeof otpSchema>) {
     try {
+      if (!window.confirmationResult) {
+        throw new Error("Confirmation result not found. Please try sending OTP again.");
+      }
       const result = await window.confirmationResult.confirm(values.otp);
-      const user = result.user;
-  
+      
       toast({
         title: "Login Successful",
         description: "Welcome back to Zapizza!",
