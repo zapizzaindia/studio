@@ -437,27 +437,27 @@ export default function HomePage() {
       </div>
 
       {heroBanner && (
-        <div className="relative w-full h-[300px] overflow-hidden">
-          {heroBanner.mediaType === "video" ? (
-            <video
-              src={heroBanner.imageId}
-              className="w-full h-full object-cover scale-105"
-              autoPlay
-              muted
-              loop
-              playsInline
-            />
-          ) : (
-            <Image
-              src={getImageUrl(heroBanner.imageId)}
-              alt="Hero Banner"
-              fill
-              priority
-              className="object-cover scale-105"
-            />
-          )}
-        </div>
-      )}
+  <div className="relative w-full h-[300px] overflow-hidden md:hidden">
+    {heroBanner.mediaType === "video" ? (
+      <video
+        src={heroBanner.imageId}
+        className="w-full h-full object-cover scale-105"
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+    ) : (
+      <Image
+        src={getImageUrl(heroBanner.imageId)}
+        alt="Hero Banner"
+        fill
+        priority
+        className="object-cover scale-105"
+      />
+    )}
+  </div>
+)}
   
       <div className="mt-6 px-6">
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">

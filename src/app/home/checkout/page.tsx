@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, ChevronRight, Plus, Minus, Trash2, Ticket, Check, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText, Wallet, IndianRupee as RupeeIcon } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText, Wallet, IndianRupee as RupeeIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { createRazorpayOrder } from "./actions";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -28,7 +35,6 @@ export default function CheckoutPage() {
   const { user } = useUser();
   const db = useFirestore();
   
-  // Fetch user profile to get the actual name provided during onboarding
   const { data: userProfile } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   const { data: settings } = useDoc<GlobalSettings>('settings', 'global');
   const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
@@ -62,11 +68,6 @@ export default function CheckoutPage() {
     fetchAddresses();
   }, [user, db]);
 
-  const brandCoupons = useMemo(() => {
-    if (!selectedOutlet || !allCoupons) return [];
-    return allCoupons.filter(c => c.brand === selectedOutlet.brand);
-  }, [allCoupons, selectedOutlet]);
-
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
     const gstRate = settings?.gstPercentage ?? 18;
@@ -80,7 +81,6 @@ export default function CheckoutPage() {
     if (appliedCoupon) {
       if (appliedCoupon.discountType === 'percentage') {
         const potentialDiscount = (subtotal * appliedCoupon.discountValue) / 100;
-        // Apply Capping if exists
         discount = appliedCoupon.maxDiscountAmount 
             ? Math.min(potentialDiscount, appliedCoupon.maxDiscountAmount) 
             : potentialDiscount;
@@ -93,17 +93,6 @@ export default function CheckoutPage() {
 
     return { subtotal, deliveryFee, gstTotal, discount, finalTotal };
   }, [totalPrice, settings, appliedCoupon]);
-
-  useEffect(() => {
-    if (appliedCoupon && totalPrice < appliedCoupon.minOrderAmount) {
-      setAppliedCoupon(null);
-      toast({ 
-        variant: 'destructive', 
-        title: "Coupon Removed", 
-        description: `Minimum order of ₹${appliedCoupon.minOrderAmount} required for ${appliedCoupon.code}` 
-      });
-    }
-  }, [totalPrice, appliedCoupon, toast]);
 
   const handleApplyCoupon = (couponOrCode: Coupon | string) => {
     if (!selectedOutlet) return;
@@ -119,44 +108,23 @@ export default function CheckoutPage() {
     }
 
     if (!found) {
-      toast({ variant: 'destructive', title: "Invalid Code", description: `This coupon does not exist or is not valid for ${selectedOutlet.brand.toUpperCase()}.` });
+      toast({ variant: 'destructive', title: "Invalid Code", description: `This coupon is not valid for ${selectedOutlet.brand.toUpperCase()}.` });
       return;
     }
     if (totalPrice < found.minOrderAmount) {
-      toast({ variant: 'destructive', title: "Below Min Order", description: `Add ₹${found.minOrderAmount - totalPrice} more to use this coupon.` });
+      toast({ variant: 'destructive', title: "Below Min Order", description: `Add ₹${found.minOrderAmount - totalPrice} more to use this.` });
       return;
     }
     
     setAppliedCoupon(found);
-    
-    // Calculate display saving for toast
-    let saving = 0;
-    if (found.discountType === 'percentage') {
-        saving = (totalPrice * found.discountValue / 100);
-        if (found.maxDiscountAmount) saving = Math.min(saving, found.maxDiscountAmount);
-    } else {
-        saving = found.discountValue;
-    }
-
-    toast({ title: "Coupon Applied!", description: `You saved ₹${saving.toFixed(0)}` });
+    toast({ title: "Coupon Applied!" });
   };
 
-  const handlePlaceOrder = () => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+  const saveOrderToFirestore = async (paymentId: string, status: string = "Success") => {
+    if (!db || !user) return;
 
-    if (!selectedAddress) {
-      toast({ variant: 'destructive', title: "Address Required", description: "Please add a delivery address to continue." });
-      return;
-    }
-
-    if (!db) return;
-    setIsPlacing(true);
-    
-    const outlet = selectedOutlet || { id: 'default' };
     const pointsEarned = Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1));
+    const outlet = selectedOutlet || { id: 'default' };
 
     const orderData: any = {
       customerId: user.uid,
@@ -179,56 +147,95 @@ export default function CheckoutPage() {
       createdAt: serverTimestamp(),
       outletId: outlet.id,
       deliveryAddress: {
-        label: selectedAddress.label,
-        flatNo: selectedAddress.flatNo,
-        area: selectedAddress.area,
-        landmark: selectedAddress.landmark || null,
-        city: selectedAddress.city,
-        latitude: selectedAddress.latitude || null,
-        longitude: selectedAddress.longitude || null
+        label: selectedAddress?.label || "Home",
+        flatNo: selectedAddress?.flatNo || "N/A",
+        area: selectedAddress?.area || "N/A",
+        landmark: selectedAddress?.landmark || null,
+        city: selectedAddress?.city || "N/A",
+        latitude: selectedAddress?.latitude || null,
+        longitude: selectedAddress?.longitude || null
       },
       paymentMethod: paymentMethod,
-      paymentStatus: paymentMethod === 'Online' ? "Success" : "Pending",
-      paymentId: paymentMethod === 'Online' ? `pay_${Math.random().toString(36).substring(7)}` : null,
-      loyaltyPointsEarned: pointsEarned
+      paymentStatus: status,
+      paymentId: paymentId,
+      loyaltyPointsEarned: pointsEarned,
+      specialNote: specialNote.trim() || null
     };
 
-    if (specialNote.trim()) {
-      orderData.specialNote = specialNote.trim();
-    }
-
-    if (paymentMethod === 'Online') {
-        toast({ title: "Connecting to Secure Gateway...", description: "Processing your transaction..." });
-    } else {
-        toast({ title: "Submitting Order...", description: "Confirming your COD request..." });
-    }
-
-    addDoc(collection(db, 'orders'), orderData)
-    .then(() => {
-      // ATOMIC UPDATE: Ensure points are added correctly without race conditions
-      if (user && pointsEarned > 0) {
-        updateDoc(doc(db, 'users', user.uid), {
-          loyaltyPoints: increment(pointsEarned)
-        }).catch(err => {
-          console.error("Failed to update loyalty points", err);
-        });
+    try {
+      await addDoc(collection(db, 'orders'), orderData);
+      if (pointsEarned > 0) {
+        await updateDoc(doc(db, 'users', user.uid), { loyaltyPoints: increment(pointsEarned) });
       }
-      
       clearCart();
       router.push('/home/checkout/success');
-    })
-    .catch(async (error) => {
-      console.error("Order error:", error);
-      const permissionError = new FirestorePermissionError({
+    } catch (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'orders',
         operation: 'create',
         requestResourceData: orderData,
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    })
-    .finally(() => {
+      }));
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!user) { router.push('/login'); return; }
+    if (!selectedAddress) {
+      toast({ variant: 'destructive', title: "Address Required", description: "Where should we deliver?" });
+      return;
+    }
+
+    setIsPlacing(true);
+
+    if (paymentMethod === 'Cash') {
+      toast({ title: "Submitting Order...", description: "Confirming your COD request..." });
+      await saveOrderToFirestore(`cod_${Math.random().toString(36).substring(7)}`, "Pending");
       setIsPlacing(false);
-    });
+      return;
+    }
+
+    // ONLINE PAYMENT FLOW
+    try {
+      toast({ title: "Initiating Gateway", description: "Connecting to secure servers..." });
+      const order = await createRazorpayOrder(calculations.finalTotal);
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_mock_key",
+        amount: order.amount,
+        currency: order.currency,
+        name: selectedOutlet?.brand === 'zfry' ? "Zfry India" : "Zapizza",
+        description: `Order Payment #${order.id.slice(-6)}`,
+        order_id: order.id,
+        handler: async function (response: any) {
+          toast({ title: "Payment Verified", description: "Finalizing your feast..." });
+          await saveOrderToFirestore(response.razorpay_payment_id, "Success");
+        },
+        prefill: {
+          name: userProfile?.displayName || user.displayName,
+          email: userProfile?.email || user.email,
+          contact: userProfile?.phoneNumber || user.phoneNumber,
+        },
+        theme: {
+          color: selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d',
+        },
+        modal: {
+          ondismiss: function() {
+            setIsPlacing(false);
+            toast({ variant: 'destructive', title: "Payment Cancelled", description: "Transaction was not completed." });
+          }
+        }
+      };
+
+      if (typeof window.Razorpay === 'undefined') {
+        throw new Error("Razorpay SDK failed to load. Please check your connection.");
+      }
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: "Gateway Error", description: e.message });
+      setIsPlacing(false);
+    }
   };
 
   if (items.length === 0) {
@@ -236,9 +243,7 @@ export default function CheckoutPage() {
       <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6 text-center">
         <Trash2 className="h-16 w-16 text-muted-foreground/30 mb-6" />
         <h2 className="text-2xl font-black text-[#14532d] uppercase italic mb-2 font-headline">Your cart is empty</h2>
-        <Button onClick={() => router.push('/home/menu')} className="bg-[#14532d] text-white px-8 h-12 font-black uppercase tracking-widest rounded-xl font-headline">
-          GO TO MENU
-        </Button>
+        <Button onClick={() => router.push('/home/menu')} className="bg-[#14532d] text-white px-8 h-12 font-black uppercase tracking-widest rounded-xl font-headline">GO TO MENU</Button>
       </div>
     );
   }
@@ -247,7 +252,11 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-48">
-      <Script id="razorpay-checkout" src="https://checkout.razorpay.com/v1/checkout.js" />
+      <Script 
+        id="razorpay-checkout" 
+        src="https://checkout.razorpay.com/v1/checkout.js" 
+        onLoad={() => console.log("Razorpay SDK Loaded")}
+      />
 
       <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -269,12 +278,9 @@ export default function CheckoutPage() {
               <div>
                 <div className="flex items-center gap-2 mb-2 font-headline">
                   <Badge variant="secondary" className="text-[8px] font-black uppercase" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
-                  {selectedAddress.latitude && (
-                    <Badge variant="outline" className="text-blue-600 border-blue-200 text-[8px] font-black uppercase">GPS PINNED</Badge>
-                  )}
                 </div>
                 <p className="text-xs font-bold text-[#333333] leading-snug font-body">{selectedAddress.flatNo}, {selectedAddress.area}</p>
-                {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1 font-headline">Landmark: {selectedAddress.landmark}</p>}
+                {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1 font-headline">Near: {selectedAddress.landmark}</p>}
               </div>
             ) : (
               <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12 font-headline" style={{ borderColor: brandColor, color: brandColor }}>
@@ -297,31 +303,15 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight font-headline">{item.name}</h4>
-                    <div className="flex flex-wrap gap-1 mt-1 font-headline">
-                      {item.selectedVariation && (
-                        <span className="text-[9px] font-bold bg-[#f1f2f6] text-[#666666] px-1.5 py-0.5 rounded uppercase">{item.selectedVariation.name}</span>
-                      )}
-                      {item.selectedAddons?.map(addon => (
-                        <span key={addon.name} className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase" style={{ backgroundColor: brandColor + '05', color: brandColor }}>+{addon.name}</span>
-                      ))}
-                    </div>
-                    <span className="text-[11px] font-black mt-1.5 block font-body tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
+                    <span className="text-[11px] font-black mt-1.5 block font-roboto tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
                     <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
-                    <span className="text-sm font-black min-w-[20px] text-center font-body tabular-nums">{item.quantity}</span>
+                    <span className="text-sm font-black min-w-[20px] text-center font-roboto tabular-nums">{item.quantity}</span>
                     <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => removeItem(item.cartId)}
-                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             ))}
@@ -329,50 +319,19 @@ export default function CheckoutPage() {
         </Card>
 
         <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 font-headline" style={{ color: brandColor }}>
-              <MessageSquareText className="h-4 w-4" /> Cooking Instructions
-            </CardTitle>
-          </CardHeader>
           <CardContent className="p-4 bg-white">
+            <div className="flex items-center gap-2 mb-3 font-headline">
+               <MessageSquareText className="h-4 w-4" style={{ color: brandColor }} />
+               <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Cooking Instructions</span>
+            </div>
             <Textarea 
-              placeholder="e.g. Please make it extra spicy, or don't ring the doorbell..." 
+              placeholder="e.g. Please make it extra spicy..." 
               value={specialNote}
               onChange={(e) => setSpecialNote(e.target.value)}
               className="min-h-[80px] rounded-xl font-medium text-xs border-gray-100 bg-gray-50/50 font-body"
             />
-            <p className="text-[9px] font-bold text-muted-foreground mt-2 uppercase tracking-tight font-headline">Your note will be visible to the chef & rider.</p>
           </CardContent>
         </Card>
-
-        {brandCoupons.length > 0 && !appliedCoupon && (
-          <div className="space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-widest px-1 font-headline" style={{ color: brandColor }}>Available Coupons</p>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-1 font-headline">
-              {brandCoupons.map((coupon) => (
-                <div 
-                  key={coupon.id}
-                  onClick={() => handleApplyCoupon(coupon)}
-                  className="flex-shrink-0 w-48 bg-white rounded-xl border border-dashed p-3 relative cursor-pointer active:scale-95 transition-all shadow-sm"
-                  style={{ borderColor: brandColor + '40' }}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[11px] font-black uppercase tracking-wider">{coupon.code}</span>
-                    <Badge variant="outline" className="text-[8px] font-bold h-4 px-1 font-body tabular-nums" style={{ borderColor: brandColor + '20', color: brandColor }}>
-                      {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
-                    </Badge>
-                  </div>
-                  <p className="text-[9px] text-muted-foreground font-bold leading-tight line-clamp-1">
-                    {coupon.maxDiscountAmount ? `Up to ₹${coupon.maxDiscountAmount}` : coupon.description}
-                  </p>
-                  {totalPrice < coupon.minOrderAmount && (
-                    <p className="text-[8px] text-red-500 font-black mt-1 uppercase italic tracking-tight">Add ₹<span className="font-body tabular-nums">{coupon.minOrderAmount - totalPrice}</span> more</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         <Card className="border-none shadow-sm">
           <CardContent className="p-4 bg-white font-headline">
@@ -391,7 +350,7 @@ export default function CheckoutPage() {
                   placeholder="ENTER PROMO CODE" 
                   value={couponInput}
                   onChange={e => setCouponInput(e.target.value)}
-                  className="h-10 text-xs font-black"
+                  className="h-10 text-xs font-black uppercase"
                 />
                 <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
               </div>
@@ -416,8 +375,8 @@ export default function CheckoutPage() {
                     <CreditCard className="h-5 w-5" />
                   </div>
                   <div>
-                    <Label htmlFor="online" className="text-sm font-black uppercase cursor-pointer">Online Payment</Label>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Cards, UPI, Netbanking</p>
+                    <Label htmlFor="online" className="text-sm font-black uppercase cursor-pointer">Pay Online</Label>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Cards, UPI, Wallets</p>
                   </div>
                 </div>
                 <RadioGroupItem value="Online" id="online" className="border-2" />
@@ -449,30 +408,27 @@ export default function CheckoutPage() {
           <CardContent className="p-4 space-y-3 bg-white font-headline">
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
               <span>Item Total</span>
-              <span className="font-body tabular-nums">₹{calculations.subtotal}</span>
+              <span className="font-roboto tabular-nums">₹{calculations.subtotal}</span>
             </div>
             {calculations.discount > 0 && (
               <div className="flex justify-between text-xs font-black text-green-600 uppercase">
-                <div className="flex flex-col">
-                    <span>Coupon Discount</span>
-                    {appliedCoupon?.maxDiscountAmount && <span className="text-[8px] opacity-60">Capped at ₹<span className="font-body tabular-nums">{appliedCoupon.maxDiscountAmount}</span></span>}
-                </div>
-                <span className="font-body tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
+                <span>Coupon Discount</span>
+                <span className="font-roboto tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
-              <span>Delivery Partner Fee</span>
-              <span className={cn("font-body tabular-nums", calculations.deliveryFee === 0 ? "text-green-600 font-headline" : "")}>
+              <span>Delivery Fee</span>
+              <span className={cn("font-roboto tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>
                 {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}
               </span>
             </div>
             <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
-              <span>Taxes (GST @ <span className="font-body tabular-nums">{settings?.gstPercentage ?? 18}</span>%)</span>
-              <span className="font-body tabular-nums">₹{calculations.gstTotal.toFixed(2)}</span>
+              <span>GST ({settings?.gstPercentage ?? 18}%)</span>
+              <span className="font-roboto tabular-nums">₹{calculations.gstTotal.toFixed(2)}</span>
             </div>
             <div className="border-t border-dashed pt-3 flex justify-between items-center">
               <span className="text-lg font-black text-[#333333]">TO PAY</span>
-              <span className="text-2xl font-black font-body tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
+              <span className="text-2xl font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
             </div>
           </CardContent>
         </Card>
@@ -484,26 +440,20 @@ export default function CheckoutPage() {
            <div>
               <p className="text-[9px] font-black text-white/70 uppercase tracking-widest">Loyalty Reward</p>
               <p className="text-xs font-black text-white uppercase italic">
-                You will earn <span className="font-body tabular-nums">{Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1))}</span> points
+                Earn <span className="font-roboto tabular-nums">{Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1))}</span> LP Coins
               </p>
            </div>
         </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
-        {!selectedAddress && (
-          <div className="flex items-center gap-2 mb-4 bg-amber-50 p-3 rounded-xl border border-amber-100 animate-pulse">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <p className="text-[10px] font-black text-amber-800 uppercase tracking-tight">Please select a delivery address first</p>
-          </div>
-        )}
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2 text-left">
             <ShieldCheck className="h-5 w-5" style={{ color: brandColor }} />
-            <div className="flex items-center flex-col">
-              <span className="text-[11px] font-black uppercase text-[#333333]">Secure Terminal Entry</span>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-black uppercase text-[#333333]">Secure Transaction</span>
               <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
-                {paymentMethod === 'Online' ? '100% Encrypted' : 'Verification Required'}
+                Verified Gateway
               </span>
             </div>
           </div>
@@ -516,8 +466,8 @@ export default function CheckoutPage() {
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (
             paymentMethod === 'Online' 
-              ? `PROCEED TO PAY ₹${Math.round(calculations.finalTotal)}`
-              : `CONFIRM CASH ORDER ₹${Math.round(calculations.finalTotal)}`
+              ? `PAY ₹${Math.round(calculations.finalTotal)}`
+              : `CONFIRM ORDER ₹${Math.round(calculations.finalTotal)}`
           )}
         </Button>
       </div>
