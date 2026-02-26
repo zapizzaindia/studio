@@ -56,19 +56,23 @@ export function CitySelector({ onCitySelect }: CitySelectorProps) {
           let nearest: City | null = null;
           let minDist = Infinity;
 
-          allCities.forEach(city => {
-            if (city.latitude && city.longitude) {
+          for (const city of allCities) {
+            if (city.latitude != null && city.longitude != null) {
               const dist = getDistance(latitude, longitude, city.latitude, city.longitude);
               if (dist < minDist) {
                 minDist = dist;
                 nearest = city;
               }
             }
-          });
+          }
 
-          if (nearest) {
-            onCitySelect(nearest);
-            toast({ title: "Found you!", description: `Identifying outlets in ${nearest.name}.` });
+          if (nearest !== null) {
+            const city = nearest;
+            onCitySelect(city);
+            toast({
+              title: "Found you!",
+              description: `Identifying outlets in ${city.name}.`
+            });
           } else {
             toast({ variant: "destructive", title: "Location mismatch", description: "We haven't launched in your current region yet." });
           }

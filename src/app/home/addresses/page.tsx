@@ -115,8 +115,8 @@ export default function AddressesPage() {
       landmark,
       city,
       isDefault: addresses.length === 0,
-      latitude: coords.lat || null,
-      longitude: coords.lng || null,
+      latitude: coords.lat,
+longitude: coords.lng,
     };
 
     try {
@@ -189,7 +189,7 @@ export default function AddressesPage() {
                       <span className="text-[10px] font-black uppercase text-[#14532d] tracking-widest bg-[#14532d]/10 px-2 py-0.5 rounded-full">
                         {addr.label}
                       </span>
-                      {addr.latitude && (
+                      {addr.latitude !== undefined && (
                         <span className="text-[8px] font-black uppercase text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1">
                           <Navigation className="h-2 w-2 fill-current" /> GPS PINNED
                         </span>

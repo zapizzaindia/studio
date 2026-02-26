@@ -122,7 +122,12 @@ export default function OrdersPage() {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Order ID: <span className="font-body tabular-nums">{order.id.slice(-6).toUpperCase()}</span></p>
                     <p className="text-sm font-black text-[#333333] mt-1 font-headline">
-                      {order.items.map(i => <span key={i.menuItemId}><span className="font-body tabular-nums">{i.quantity}</span>x {i.name}</span>).reduce((prev, curr) => [prev, ', ', curr])}
+                    {order.items.map((i, index) => (
+  <span key={i.menuItemId}>
+    <span className="font-body tabular-nums">{i.quantity}</span>x {i.name}
+    {index < order.items.length - 1 && ", "}
+  </span>
+))}
                     </p>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground mt-2 font-headline">
                       <Clock className="h-3 w-3" />

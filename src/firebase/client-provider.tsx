@@ -7,9 +7,9 @@ import type { Auth } from 'firebase/auth';
 import { FirebaseProvider } from './provider';
 
 interface FirebaseContextType {
-  firebase: FirebaseApp | null;
-  firestore: Firestore | null;
-  auth: Auth | null;
+  firebase?: FirebaseApp;
+  firestore?: Firestore;
+  auth?: Auth;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | null>(null);
@@ -18,11 +18,11 @@ export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const [firebaseInstances, setFirebaseInstances] =
-    useState<FirebaseContextType>({
-      firebase: null,
-      firestore: null,
-      auth: null,
-    });
+  useState<FirebaseContextType>({
+    firebase: undefined as any,
+    firestore: undefined as any,
+    auth: undefined as any,
+  });
 
   useEffect(() => {
     const init = async () => {
