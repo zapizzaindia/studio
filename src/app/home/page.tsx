@@ -217,7 +217,7 @@ export default function HomePage() {
               .map(d => ({ id: d.id, ...d.data() } as Outlet))
               .filter(o => o.cityId === (nearestCity as City).id);
 
-            let nearestOutlet: Outlet | null = null;
+            let nearestOutlet: Outlet | undefined;
             let minOutletDist = Infinity;
 
             outletsList.forEach(outlet => {
