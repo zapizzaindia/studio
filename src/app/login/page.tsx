@@ -54,18 +54,16 @@ export default function LoginPage() {
   useEffect(() => {
     if (!auth) return;
   
-    if (typeof window !== "undefined") {
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(
-          "recaptcha-container",
-          {
-            size: "invisible",
-          },
-          auth
-        );
+    if (typeof window !== "undefined" && !window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible",
+        }
+      );
   
-        window.recaptchaVerifier.render().catch(console.error);
-      }
+      window.recaptchaVerifier.render().catch(console.error);
     }
   }, [auth]);
     
