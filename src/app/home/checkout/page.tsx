@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText, Wallet, IndianRupee as RupeeIcon, Navigation } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText, Wallet, IndianRupee as RupeeIcon, Navigation, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 import { createRazorpayOrder } from "./actions";
 
 declare global {
@@ -60,6 +61,7 @@ export default function CheckoutPage() {
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [specialNote, setSpecialNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"Online" | "Cash">("Online");
+  const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false);
 
   useEffect(() => {
     const savedOutlet = localStorage.getItem("zapizza-outlet");
@@ -103,13 +105,11 @@ export default function CheckoutPage() {
             isOutOfRange = true;
         }
 
-        // Apply distance slabs if configured
         if (settings?.distanceSlabs && settings.distanceSlabs.length > 0) {
             const matchedSlab = settings.distanceSlabs.find(s => distanceKm <= s.upToKm);
             if (matchedSlab) {
                 computedDeliveryFee = matchedSlab.fee;
             } else if (!isOutOfRange) {
-                // If no slab matches but it's within max radius, use the highest slab or base fee
                 computedDeliveryFee = settings.distanceSlabs[settings.distanceSlabs.length - 1].fee;
             }
         }
@@ -130,10 +130,17 @@ export default function CheckoutPage() {
       }
     }
 
-    const finalTotal = subtotal + gstTotal + deliveryFee - discount;
+    // Loyalty Redemption Logic: Max 10% of subtotal
+    let loyaltyDiscount = 0;
+    if (useLoyaltyPoints && userProfile?.loyaltyPoints) {
+        const maxRedeemable = subtotal * 0.1;
+        loyaltyDiscount = Math.min(userProfile.loyaltyPoints, maxRedeemable);
+    }
 
-    return { subtotal, deliveryFee, gstTotal, discount, finalTotal, distanceKm, isOutOfRange };
-  }, [totalPrice, settings, appliedCoupon, selectedAddress, selectedOutlet]);
+    const finalTotal = subtotal + gstTotal + deliveryFee - discount - loyaltyDiscount;
+
+    return { subtotal, deliveryFee, gstTotal, discount, loyaltyDiscount, finalTotal, distanceKm, isOutOfRange };
+  }, [totalPrice, settings, appliedCoupon, selectedAddress, selectedOutlet, useLoyaltyPoints, userProfile]);
 
   const handleApplyCoupon = (couponOrCode: Coupon | string) => {
     if (!selectedOutlet) return;
@@ -183,6 +190,7 @@ export default function CheckoutPage() {
       gst: calculations.gstTotal,
       deliveryFee: calculations.deliveryFee,
       discount: calculations.discount,
+      loyaltyPointsRedeemed: calculations.loyaltyDiscount,
       total: Math.round(calculations.finalTotal),
       distanceKm: calculations.distanceKm,
       status: "New",
@@ -206,9 +214,15 @@ export default function CheckoutPage() {
 
     try {
       await addDoc(collection(db, 'orders'), orderData);
-      if (pointsEarned > 0) {
-        await updateDoc(doc(db, 'users', user.uid), { loyaltyPoints: increment(pointsEarned) });
+      
+      // Atomic Loyalty Update: Increment earned, Decrement redeemed
+      const netPointsUpdate = pointsEarned - (calculations.loyaltyDiscount || 0);
+      if (netPointsUpdate !== 0) {
+        await updateDoc(doc(db, 'users', user.uid), { 
+            loyaltyPoints: increment(netPointsUpdate) 
+        });
       }
+
       clearCart();
       router.push('/home/checkout/success');
     } catch (error) {
@@ -240,7 +254,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // ONLINE PAYMENT FLOW
     try {
       toast({ title: "Initiating Gateway", description: "Connecting to secure servers..." });
       const order = await createRazorpayOrder(calculations.finalTotal);
@@ -386,6 +399,38 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
+        {/* Loyalty Redemption Section */}
+        {userProfile && (userProfile.loyaltyPoints || 0) > 0 && (
+            <Card className="border-none shadow-sm overflow-hidden bg-white">
+                <CardContent className="p-4 font-headline">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-yellow-400/10 flex items-center justify-center text-yellow-600">
+                                <Crown className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-[#333]">Redeem LP Coins</p>
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase">Balance: <span className="font-roboto tabular-nums">{userProfile.loyaltyPoints}</span> Coins</p>
+                            </div>
+                        </div>
+                        <Switch 
+                            checked={useLoyaltyPoints} 
+                            onCheckedChange={setUseLoyaltyPoints}
+                            className="data-[state=checked]:bg-yellow-500"
+                        />
+                    </div>
+                    {useLoyaltyPoints && (
+                        <div className="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-100 flex items-center gap-2">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-yellow-600" />
+                            <p className="text-[9px] font-black text-yellow-800 uppercase">
+                                Applying ₹<span className="font-roboto tabular-nums">{calculations.loyaltyDiscount.toFixed(0)}</span> discount from your vault.
+                            </p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        )}
+
         <Card className="border-none shadow-sm overflow-hidden">
           <CardContent className="p-4 bg-white font-headline">
             <div className="flex items-center gap-2 mb-3">
@@ -467,6 +512,12 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-xs font-black text-green-600 uppercase">
                 <span>Coupon Discount</span>
                 <span className="font-roboto tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
+              </div>
+            )}
+            {calculations.loyaltyDiscount > 0 && (
+              <div className="flex justify-between text-xs font-black text-yellow-600 uppercase">
+                <span>Loyalty Points</span>
+                <span className="font-roboto tabular-nums">-₹{calculations.loyaltyDiscount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
