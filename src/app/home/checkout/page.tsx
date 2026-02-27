@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText, Wallet, IndianRupee as RupeeIcon } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText, Wallet, IndianRupee as RupeeIcon, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,19 @@ declare global {
     Razorpay: any;
   }
 }
+
+// Haversine formula to calculate distance in KM
+const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -71,10 +84,38 @@ export default function CheckoutPage() {
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
     const gstRate = settings?.gstPercentage ?? 18;
-    const baseDelivery = settings?.deliveryFee ?? 40;
     const freeThreshold = settings?.minOrderForFreeDelivery ?? 500;
+    const maxRadius = settings?.maxDeliveryRadius ?? 10;
     
-    const deliveryFee = subtotal >= freeThreshold ? 0 : baseDelivery;
+    let distanceKm = 0;
+    let computedDeliveryFee = settings?.deliveryFee ?? 40;
+    let isOutOfRange = false;
+
+    if (selectedAddress?.latitude && selectedOutlet?.latitude) {
+        distanceKm = getDistance(
+            selectedOutlet.latitude, 
+            selectedOutlet.longitude!, 
+            selectedAddress.latitude, 
+            selectedAddress.longitude!
+        );
+
+        if (distanceKm > maxRadius) {
+            isOutOfRange = true;
+        }
+
+        // Apply distance slabs if configured
+        if (settings?.distanceSlabs && settings.distanceSlabs.length > 0) {
+            const matchedSlab = settings.distanceSlabs.find(s => distanceKm <= s.upToKm);
+            if (matchedSlab) {
+                computedDeliveryFee = matchedSlab.fee;
+            } else if (!isOutOfRange) {
+                // If no slab matches but it's within max radius, use the highest slab or base fee
+                computedDeliveryFee = settings.distanceSlabs[settings.distanceSlabs.length - 1].fee;
+            }
+        }
+    }
+
+    const deliveryFee = subtotal >= freeThreshold ? 0 : computedDeliveryFee;
     const gstTotal = (subtotal * gstRate) / 100;
     
     let discount = 0;
@@ -91,8 +132,8 @@ export default function CheckoutPage() {
 
     const finalTotal = subtotal + gstTotal + deliveryFee - discount;
 
-    return { subtotal, deliveryFee, gstTotal, discount, finalTotal };
-  }, [totalPrice, settings, appliedCoupon]);
+    return { subtotal, deliveryFee, gstTotal, discount, finalTotal, distanceKm, isOutOfRange };
+  }, [totalPrice, settings, appliedCoupon, selectedAddress, selectedOutlet]);
 
   const handleApplyCoupon = (couponOrCode: Coupon | string) => {
     if (!selectedOutlet) return;
@@ -143,6 +184,7 @@ export default function CheckoutPage() {
       deliveryFee: calculations.deliveryFee,
       discount: calculations.discount,
       total: Math.round(calculations.finalTotal),
+      distanceKm: calculations.distanceKm,
       status: "New",
       createdAt: serverTimestamp(),
       outletId: outlet.id,
@@ -183,6 +225,10 @@ export default function CheckoutPage() {
     if (!selectedAddress) {
       toast({ variant: 'destructive', title: "Address Required", description: "Where should we deliver?" });
       return;
+    }
+    if (calculations.isOutOfRange) {
+        toast({ variant: 'destructive', title: "Out of Range", description: "This address is beyond our delivery zone." });
+        return;
     }
 
     setIsPlacing(true);
@@ -266,6 +312,18 @@ export default function CheckoutPage() {
       </div>
 
       <div className="container mx-auto p-4 space-y-4 max-w-lg text-left">
+        {calculations.isOutOfRange && (
+            <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+                <div>
+                    <p className="text-[10px] font-black text-red-900 uppercase">Out of Delivery Range</p>
+                    <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1">
+                        We currently only deliver up to {settings?.maxDeliveryRadius || 10}km. This address is {calculations.distanceKm.toFixed(1)}km away.
+                    </p>
+                </div>
+            </div>
+        )}
+
         <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 font-headline" style={{ color: brandColor }}>
@@ -275,12 +333,22 @@ export default function CheckoutPage() {
           </CardHeader>
           <CardContent className="p-4 bg-white">
             {selectedAddress ? (
-              <div>
-                <div className="flex items-center gap-2 mb-2 font-headline">
-                  <Badge variant="secondary" className="text-[8px] font-black uppercase" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
+              <div className="flex justify-between items-start">
+                <div>
+                    <div className="flex items-center gap-2 mb-2 font-headline">
+                    <Badge variant="secondary" className="text-[8px] font-black uppercase" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
+                    </div>
+                    <p className="text-xs font-bold text-[#333333] leading-snug font-body">{selectedAddress.flatNo}, {selectedAddress.area}</p>
+                    {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1 font-headline">Near: {selectedAddress.landmark}</p>}
                 </div>
-                <p className="text-xs font-bold text-[#333333] leading-snug font-body">{selectedAddress.flatNo}, {selectedAddress.area}</p>
-                {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1 font-headline">Near: {selectedAddress.landmark}</p>}
+                {selectedAddress.latitude && (
+                    <div className="flex flex-col items-end">
+                        <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1 mb-1">
+                            <Navigation className="h-2 w-2 fill-current" /> GPS PINNED
+                        </span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase font-roboto tabular-nums">{calculations.distanceKm.toFixed(1)} KM</span>
+                    </div>
+                )}
               </div>
             ) : (
               <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12 font-headline" style={{ borderColor: brandColor, color: brandColor }}>
@@ -319,21 +387,6 @@ export default function CheckoutPage() {
         </Card>
 
         <Card className="border-none shadow-sm overflow-hidden">
-          <CardContent className="p-4 bg-white">
-            <div className="flex items-center gap-2 mb-3 font-headline">
-               <MessageSquareText className="h-4 w-4" style={{ color: brandColor }} />
-               <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Cooking Instructions</span>
-            </div>
-            <Textarea 
-              placeholder="e.g. Please make it extra spicy..." 
-              value={specialNote}
-              onChange={(e) => setSpecialNote(e.target.value)}
-              className="min-h-[80px] rounded-xl font-medium text-xs border-gray-100 bg-gray-50/50 font-body"
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm">
           <CardContent className="p-4 bg-white font-headline">
             <div className="flex items-center gap-2 mb-3">
                <Ticket className="h-4 w-4" style={{ color: brandColor }} />
@@ -417,7 +470,12 @@ export default function CheckoutPage() {
               </div>
             )}
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
-              <span>Delivery Fee</span>
+              <div className="flex flex-col">
+                <span>Delivery Fee</span>
+                {selectedAddress?.latitude && (
+                    <span className="text-[7px] text-muted-foreground/60 leading-none mt-0.5">Based on {calculations.distanceKm.toFixed(1)}km distance</span>
+                )}
+              </div>
               <span className={cn("font-roboto tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>
                 {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}
               </span>
@@ -432,42 +490,21 @@ export default function CheckoutPage() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="p-4 rounded-xl flex items-center gap-3 shadow-lg font-headline" style={{ backgroundColor: brandColor }}>
-           <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-              <Crown className="h-6 w-6 text-white" />
-           </div>
-           <div>
-              <p className="text-[9px] font-black text-white/70 uppercase tracking-widest">Loyalty Reward</p>
-              <p className="text-xs font-black text-white uppercase italic">
-                Earn <span className="font-roboto tabular-nums">{Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1))}</span> LP Coins
-              </p>
-           </div>
-        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
-        <div className="flex items-center justify-between mb-4 px-2">
-          <div className="flex items-center gap-2 text-left">
-            <ShieldCheck className="h-5 w-5" style={{ color: brandColor }} />
-            <div className="flex flex-col">
-              <span className="text-[11px] font-black uppercase text-[#333333]">Secure Transaction</span>
-              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
-                Verified Gateway
-              </span>
-            </div>
-          </div>
-        </div>
         <Button 
           onClick={handlePlaceOrder}
-          disabled={isPlacing || !selectedAddress}
+          disabled={isPlacing || !selectedAddress || calculations.isOutOfRange}
           className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95"
           style={{ backgroundColor: brandColor }}
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (
-            paymentMethod === 'Online' 
-              ? `PAY ₹${Math.round(calculations.finalTotal)}`
-              : `CONFIRM ORDER ₹${Math.round(calculations.finalTotal)}`
+            calculations.isOutOfRange ? "UNAVAILABLE IN YOUR AREA" : (
+                paymentMethod === 'Online' 
+                ? `PAY ₹${Math.round(calculations.finalTotal)}`
+                : `CONFIRM ORDER ₹${Math.round(calculations.finalTotal)}`
+            )
           )}
         </Button>
       </div>

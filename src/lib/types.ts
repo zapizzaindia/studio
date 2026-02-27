@@ -49,11 +49,18 @@ export type MenuItem = {
   badgeTag?: string; // e.g. "6 CHEESE IN 1"
 };
 
+export type DistanceSlab = {
+  upToKm: number;
+  fee: number;
+};
+
 export type GlobalSettings = {
   gstPercentage: number;
-  deliveryFee: number;
+  deliveryFee: number; // Base fee if no slabs match
   minOrderForFreeDelivery: number;
   loyaltyRatio: number; // points per 100 INR spent
+  maxDeliveryRadius?: number; // Maximum operational range in KM
+  distanceSlabs?: DistanceSlab[]; // Configurable pricing tiers
 };
 
 export type Coupon = {
@@ -110,6 +117,7 @@ export type Order = {
   paymentId?: string;
   cancellationReason?: string;
   loyaltyPointsEarned?: number;
+  distanceKm?: number; // Calculated distance for auditing
 };
 
 export type Outlet = {

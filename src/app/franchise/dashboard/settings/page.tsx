@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDoc, useFirestore } from '@/firebase';
-import type { GlobalSettings } from '@/lib/types';
+import type { GlobalSettings, DistanceSlab } from '@/lib/types';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Percent, Truck, Crown, Save, Loader2 } from 'lucide-react';
+import { Percent, Truck, Crown, Save, Loader2, Plus, Trash2, MapPin } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -23,6 +23,9 @@ export default function GlobalSettingsPage() {
     const [deliveryFee, setDeliveryFee] = useState(40);
     const [freeThreshold, setFreeThreshold] = useState(500);
     const [loyaltyRatio, setLoyaltyRatio] = useState(1);
+    const [maxRadius, setMaxRadius] = useState(10);
+    const [slabs, setSlabs] = useState<DistanceSlab[]>([]);
+    
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -31,25 +34,46 @@ export default function GlobalSettingsPage() {
             setDeliveryFee(settings.deliveryFee);
             setFreeThreshold(settings.minOrderForFreeDelivery);
             setLoyaltyRatio(settings.loyaltyRatio);
+            setMaxRadius(settings.maxDeliveryRadius || 10);
+            setSlabs(settings.distanceSlabs || []);
         }
     }, [settings]);
+
+    const handleAddSlab = () => {
+        setSlabs([...slabs, { upToKm: 0, fee: 0 }]);
+    };
+
+    const handleRemoveSlab = (index: number) => {
+        setSlabs(slabs.filter((_, i) => i !== index));
+    };
+
+    const handleSlabChange = (index: number, field: keyof DistanceSlab, value: number) => {
+        const updated = [...slabs];
+        updated[index] = { ...updated[index], [field]: value };
+        setSlabs(updated);
+    };
 
     const handleSave = () => {
         if (!firestore) return;
         setIsSaving(true);
+
+        // Sort slabs by distance before saving for easier processing on checkout
+        const sortedSlabs = [...slabs].sort((a, b) => a.upToKm - b.upToKm);
 
         const updatedData: GlobalSettings = {
             gstPercentage: Number(gst),
             deliveryFee: Number(deliveryFee),
             minOrderForFreeDelivery: Number(freeThreshold),
             loyaltyRatio: Number(loyaltyRatio),
+            maxDeliveryRadius: Number(maxRadius),
+            distanceSlabs: sortedSlabs,
         };
 
         const settingsRef = doc(firestore, 'settings', 'global');
 
         setDoc(settingsRef, updatedData)
             .then(() => {
-                toast({ title: "Settings Updated", description: "Global business rules have been synced to the cloud." });
+                toast({ title: "Settings Updated", description: "Global business rules and logistics have been synced." });
             })
             .catch(async (error) => {
                 const permissionError = new FirestorePermissionError({
@@ -86,7 +110,7 @@ export default function GlobalSettingsPage() {
             <div className="grid gap-6">
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardHeader className="bg-gray-50/50 p-8">
-                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333]">
                             <Percent className="h-5 w-5 text-primary" /> Tax Configuration
                         </CardTitle>
                         <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Set applicable GST for all menu orders</CardDescription>
@@ -98,47 +122,105 @@ export default function GlobalSettingsPage() {
                                 type="number" 
                                 value={gst} 
                                 onChange={e => setGst(Number(e.target.value))} 
-                                className="h-12 rounded-xl font-black text-lg"
+                                className="h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
                             />
-                            <p className="text-[10px] text-muted-foreground font-medium italic">
-                                Note: This value is used to calculate tax on the Checkout page in real-time.
-                            </p>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardHeader className="bg-gray-50/50 p-8">
-                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic">
-                            <Truck className="h-5 w-5 text-primary" /> Delivery Logistics
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333]">
+                            <Truck className="h-5 w-5 text-primary" /> Smart Logistics & Geofencing
                         </CardTitle>
-                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Charges and free shipping thresholds</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Distance-based pricing and operational radius</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 grid gap-8 sm:grid-cols-2">
+                    <CardContent className="p-8 space-y-8">
+                        <div className="grid gap-8 sm:grid-cols-2">
+                            <div className="space-y-3">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Max Delivery Radius (KM)</Label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                        type="number" 
+                                        value={maxRadius} 
+                                        onChange={e => setMaxRadius(Number(e.target.value))} 
+                                        className="pl-10 h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
+                                    />
+                                </div>
+                                <p className="text-[8px] font-bold text-muted-foreground uppercase">Orders beyond this distance will be blocked at checkout.</p>
+                            </div>
+                            <div className="space-y-3">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Free Delivery Above (₹)</Label>
+                                <Input 
+                                    type="number" 
+                                    value={freeThreshold} 
+                                    onChange={e => setFreeThreshold(Number(e.target.value))} 
+                                    className="h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
+                                />
+                            </div>
+                        </div>
+
+                        <Separator className="opacity-50" />
+
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Distance Slabs (Pricing Tiers)</Label>
+                                <Button variant="outline" size="sm" onClick={handleAddSlab} className="h-8 font-black uppercase text-[10px] tracking-widest border-2">
+                                    <Plus className="h-3 w-3 mr-1" /> Add Slab
+                                </Button>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                {slabs.length === 0 && (
+                                    <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase">No slabs defined. Using flat fallback fee.</p>
+                                    </div>
+                                )}
+                                {slabs.map((slab, idx) => (
+                                    <div key={idx} className="flex items-center gap-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                                        <div className="flex-1 space-y-1">
+                                            <span className="text-[8px] font-black uppercase text-muted-foreground">Up to distance (KM)</span>
+                                            <Input 
+                                                type="number" 
+                                                value={slab.upToKm} 
+                                                onChange={e => handleSlabChange(idx, 'upToKm', Number(e.target.value))} 
+                                                className="h-9 font-bold font-roboto tabular-nums"
+                                            />
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <span className="text-[8px] font-black uppercase text-muted-foreground">Fee (₹)</span>
+                                            <Input 
+                                                type="number" 
+                                                value={slab.fee} 
+                                                onChange={e => handleSlabChange(idx, 'fee', Number(e.target.value))} 
+                                                className="h-9 font-bold font-roboto tabular-nums"
+                                            />
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveSlab(idx)} className="mt-4 text-red-500">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Base Delivery Fee (₹)</Label>
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Base / Fallback Delivery Fee (₹)</Label>
                             <Input 
                                 type="number" 
                                 value={deliveryFee} 
                                 onChange={e => setDeliveryFee(Number(e.target.value))} 
-                                className="h-12 rounded-xl font-black text-lg"
+                                className="h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
                             />
-                        </div>
-                        <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Free Delivery Above (₹)</Label>
-                            <Input 
-                                type="number" 
-                                value={freeThreshold} 
-                                onChange={e => setFreeThreshold(Number(e.target.value))} 
-                                className="h-12 rounded-xl font-black text-lg"
-                            />
+                            <p className="text-[8px] font-bold text-muted-foreground uppercase italic">Used if distance cannot be calculated or doesn't match a slab.</p>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardHeader className="bg-gray-50/50 p-8">
-                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333]">
                             <Crown className="h-5 w-5 text-primary" /> Loyalty Program
                         </CardTitle>
                         <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Customer point accumulation rules</CardDescription>
@@ -150,11 +232,8 @@ export default function GlobalSettingsPage() {
                                 type="number" 
                                 value={loyaltyRatio} 
                                 onChange={e => setLoyaltyRatio(Number(e.target.value))} 
-                                className="h-12 rounded-xl font-black text-lg"
+                                className="h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
                             />
-                            <p className="text-[10px] text-muted-foreground font-bold italic">
-                                Current Rule: A ₹1,000 order earns {Math.floor(10 * loyaltyRatio)} points.
-                            </p>
                         </div>
                     </CardContent>
                 </Card>
@@ -163,10 +242,10 @@ export default function GlobalSettingsPage() {
                     <Button 
                         onClick={handleSave} 
                         disabled={isSaving}
-                        className="font-black uppercase tracking-widest px-12 h-16 rounded-2xl shadow-xl text-lg transition-all active:scale-95"
+                        className="font-black uppercase tracking-widest px-12 h-16 rounded-2xl shadow-xl text-lg transition-all active:scale-95 border-none"
                     >
                         {isSaving ? <Loader2 className="animate-spin h-6 w-6 mr-3" /> : <Save className="h-6 w-6 mr-3" />}
-                        {isSaving ? "Syncing..." : "Apply Global Rules"}
+                        Apply Global Rules
                     </Button>
                 </div>
             </div>

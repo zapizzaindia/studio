@@ -42,6 +42,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { doc, updateDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { useAuth } from "@/firebase";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -77,10 +79,15 @@ export default function ProfilePage() {
     return points;
   }, [profile]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('zapizza-mock-session');
-    window.location.href = '/login';
-  };
+const auth = useAuth();
+
+const handleLogout = async () => {
+  if (!auth) return;
+
+  await signOut(auth);
+  localStorage.removeItem('zapizza-mock-session');
+  router.replace('/login');
+};
 
   const handleUpdateProfile = async () => {
     if (!user || !db) return;

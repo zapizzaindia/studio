@@ -55,64 +55,6 @@
         },
         "required": ["name", "cityId", "isOpen", "brand"]
     },
-    "review": {
-        "title": "Review",
-        "description": "A customer review for an outlet.",
-        "type": "object",
-        "properties": {
-            "userId": { "type": "string" },
-            "userName": { "type": "string" },
-            "rating": { "type": "number" },
-            "comment": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["userId", "userName", "rating", "comment", "createdAt"]
-    },
-    "category": {
-        "title": "Menu Category",
-        "description": "A category for menu items, e.g., 'Veg Pizzas'.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string", "description": "The name of the category." },
-            "order": { "type": "number", "description": "The display order of the category."}
-        },
-        "required": ["name", "order"]
-    },
-    "menuItem": {
-        "title": "Menu Item",
-        "description": "A single item on the Zapizza menu.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string" },
-            "description": { "type": "string" },
-            "price": { "type": "number", "description": "Price in Indian Rupees (INR)." },
-            "isVeg": { "type": "boolean" },
-            "categoryId": { "type": "string" },
-            "imageId": { "type": "string" },
-            "isAvailableGlobally": {"type": "boolean", "description": "If the item is available across all outlets (franchise controlled)."},
-            "variations": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": { "type": "string" },
-                  "price": { "type": "number" }
-                }
-              }
-            },
-            "addons": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": { "type": "string" },
-                  "price": { "type": "number" }
-                }
-              }
-            }
-        },
-        "required": ["name", "price", "isVeg", "categoryId", "isAvailableGlobally"]
-    },
     "globalSettings": {
       "title": "Global Settings",
       "description": "Business rules controlled by the franchise owner.",
@@ -121,24 +63,20 @@
         "gstPercentage": { "type": "number" },
         "deliveryFee": { "type": "number" },
         "minOrderForFreeDelivery": { "type": "number" },
-        "loyaltyRatio": { "type": "number", "description": "Points earned per 100 INR spent." }
+        "loyaltyRatio": { "type": "number", "description": "Points earned per 100 INR spent." },
+        "maxDeliveryRadius": { "type": "number", "description": "Max radius in KM for accepting orders." },
+        "distanceSlabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "upToKm": { "type": "number" },
+              "fee": { "type": "number" }
+            }
+          }
+        }
       },
       "required": ["gstPercentage", "deliveryFee", "minOrderForFreeDelivery"]
-    },
-    "coupon": {
-      "title": "Coupon",
-      "description": "Promotional codes for customers.",
-      "type": "object",
-      "properties": {
-        "code": { "type": "string" },
-        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
-        "discountValue": { "type": "number" },
-        "minOrderAmount": { "type": "number" },
-        "maxDiscountAmount": { "type": "number", "description": "Maximum discount cap in INR." },
-        "active": { "type": "boolean" },
-        "description": { "type": "string" }
-      },
-      "required": ["code", "discountType", "discountValue", "minOrderAmount", "active"]
     },
     "order": {
         "title": "Order",
@@ -147,7 +85,6 @@
         "properties": {
             "customerId": { "type": "string" },
             "customerName": { "type": "string" },
-            "specialNote": { "type": "string", "description": "Instructions for the kitchen." },
             "items": { 
                 "type": "array",
                 "items": {
@@ -165,26 +102,13 @@
             "gst": { "type": "number" },
             "deliveryFee": { "type": "number" },
             "discount": { "type": "number" },
-            "total": { "type": "number", "description": "Final payable amount in INR." },
+            "total": { "type": "number" },
             "status": { "type": "string", "enum": ["New", "Preparing", "Out for Delivery", "Completed", "Cancelled"] },
             "createdAt": { "type": "string", "format": "date-time" },
             "outletId": { "type": "string" },
-            "loyaltyPointsEarned": { "type": "number" }
+            "distanceKm": { "type": "number" }
         },
         "required": ["customerId", "items", "total", "status", "createdAt", "outletId"]
-    },
-    "franchiseEnquiry": {
-      "title": "Franchise Enquiry",
-      "description": "A lead for a potential franchise partner.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "phone": { "type": "string" },
-        "city": { "type": "string" },
-        "investment": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "phone", "city", "investment", "createdAt"]
     }
   },
   "auth": {
@@ -203,29 +127,13 @@
         "schema": { "$ref": "#/entities/outlet" },
         "description": "List of all Zapizza outlets."
     },
-    "/outlets/{outletId}/reviews/{reviewId}": {
-        "schema": { "$ref": "#/entities/review" },
-        "description": "Reviews for a specific outlet."
-    },
     "/settings/global": {
       "schema": { "$ref": "#/entities/globalSettings" },
       "description": "Central business configuration."
     },
-    "/coupons/{couponId}": {
-      "schema": { "$ref": "#/entities/coupon" },
-      "description": "Promotional codes list."
-    },
-    "/menuItems/{menuItemId}": {
-        "schema": { "$ref": "#/entities/menuItem" },
-        "description": "Global menu items."
-    },
     "/orders/{orderId}": {
         "schema": { "$ref": "#/entities/order" },
         "description": "All customer orders."
-    },
-    "/franchiseEnquiries/{enquiryId}": {
-      "schema": { "$ref": "#/entities/franchiseEnquiry" },
-      "description": "Collected franchise interest leads."
     }
   }
 }

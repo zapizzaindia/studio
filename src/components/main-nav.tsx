@@ -17,6 +17,8 @@ import type { City, Outlet } from "@/lib/types";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
+import { signOut } from "firebase/auth";
+import { useAuth } from "@/firebase";
 
 export function MainNav() {
   const { user, loading } = useUser();
