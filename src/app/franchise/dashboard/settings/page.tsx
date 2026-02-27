@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -91,7 +92,7 @@ export default function GlobalSettingsPage() {
     if (loading) return (
         <div className="flex flex-col h-64 items-center justify-center gap-4">
             <Loader2 className="animate-spin text-primary h-10 w-10" />
-            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing with Backend...</p>
+            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground font-headline">Syncing with Backend...</p>
         </div>
     );
 
@@ -100,7 +101,7 @@ export default function GlobalSettingsPage() {
             <div className="mb-8 bg-white p-6 rounded-[32px] border shadow-sm flex items-center justify-between">
                 <div>
                     <h1 className="font-headline text-3xl font-black uppercase tracking-tight italic text-primary">Global Business Rules</h1>
-                    <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Configure tax, delivery, and loyalty for all brands</p>
+                    <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1 font-headline">Configure tax, delivery, and loyalty for all brands</p>
                 </div>
                 <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                     <Save className="h-6 w-6" />
@@ -110,14 +111,14 @@ export default function GlobalSettingsPage() {
             <div className="grid gap-6">
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardHeader className="bg-gray-50/50 p-8">
-                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333]">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333] font-headline">
                             <Percent className="h-5 w-5 text-primary" /> Tax Configuration
                         </CardTitle>
-                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Set applicable GST for all menu orders</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest font-headline">Set applicable GST for all menu orders</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 space-y-4">
                         <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Current GST Rate (%)</Label>
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] font-headline">Current GST Rate (%)</Label>
                             <Input 
                                 type="number" 
                                 value={gst} 
@@ -130,12 +131,12 @@ export default function GlobalSettingsPage() {
 
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardHeader className="bg-gray-50/50 p-8">
-                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333]">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333] font-headline">
                             <Truck className="h-5 w-5 text-primary" /> Smart Logistics & Geofencing
                         </CardTitle>
-                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Distance-based pricing and operational radius</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest font-headline">Distance-based pricing and operational radius</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 space-y-8">
+                    <CardContent className="p-8 space-y-8 font-roboto">
                         <div className="grid gap-8 sm:grid-cols-2">
                             <div className="space-y-3">
                                 <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Max Delivery Radius (KM)</Label>
@@ -145,7 +146,7 @@ export default function GlobalSettingsPage() {
                                         type="number" 
                                         value={maxRadius} 
                                         onChange={e => setMaxRadius(Number(e.target.value))} 
-                                        className="pl-10 h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
+                                        className="pl-10 h-12 rounded-xl font-black text-lg tabular-nums"
                                     />
                                 </div>
                                 <p className="text-[8px] font-bold text-muted-foreground uppercase">Orders beyond this distance will be blocked at checkout.</p>
@@ -156,7 +157,7 @@ export default function GlobalSettingsPage() {
                                     type="number" 
                                     value={freeThreshold} 
                                     onChange={e => setFreeThreshold(Number(e.target.value))} 
-                                    className="h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
+                                    className="h-12 rounded-xl font-black text-lg tabular-nums"
                                 />
                             </div>
                         </div>
@@ -185,7 +186,7 @@ export default function GlobalSettingsPage() {
                                                 type="number" 
                                                 value={slab.upToKm} 
                                                 onChange={e => handleSlabChange(idx, 'upToKm', Number(e.target.value))} 
-                                                className="h-9 font-bold font-roboto tabular-nums"
+                                                className="h-9 font-bold tabular-nums"
                                             />
                                         </div>
                                         <div className="flex-1 space-y-1">
@@ -194,7 +195,7 @@ export default function GlobalSettingsPage() {
                                                 type="number" 
                                                 value={slab.fee} 
                                                 onChange={e => handleSlabChange(idx, 'fee', Number(e.target.value))} 
-                                                className="h-9 font-bold font-roboto tabular-nums"
+                                                className="h-9 font-bold tabular-nums"
                                             />
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => handleRemoveSlab(idx)} className="mt-4 text-red-500">
@@ -211,7 +212,7 @@ export default function GlobalSettingsPage() {
                                 type="number" 
                                 value={deliveryFee} 
                                 onChange={e => setDeliveryFee(Number(e.target.value))} 
-                                className="h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
+                                className="h-12 rounded-xl font-black text-lg tabular-nums"
                             />
                             <p className="text-[8px] font-bold text-muted-foreground uppercase italic">Used if distance cannot be calculated or doesn't match a slab.</p>
                         </div>
@@ -220,14 +221,14 @@ export default function GlobalSettingsPage() {
 
                 <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                     <CardHeader className="bg-gray-50/50 p-8">
-                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333]">
+                        <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333] font-headline">
                             <Crown className="h-5 w-5 text-primary" /> Loyalty Program
                         </CardTitle>
-                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Customer point accumulation rules</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest font-headline">Customer point accumulation rules</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 space-y-4">
                         <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Points per ₹100 spent</Label>
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] font-headline">Points per ₹100 spent</Label>
                             <Input 
                                 type="number" 
                                 value={loyaltyRatio} 
@@ -238,7 +239,7 @@ export default function GlobalSettingsPage() {
                     </CardContent>
                 </Card>
 
-                <div className="flex justify-end pt-6 pb-12">
+                <div className="flex justify-end pt-6 pb-12 font-headline">
                     <Button 
                         onClick={handleSave} 
                         disabled={isSaving}
