@@ -52,18 +52,25 @@ export default function LoginPage() {
   }, [user, userLoading, router]);
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth || typeof window === "undefined") return;
   
-    if (typeof window !== "undefined" && !window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-          size: "invisible",
-        }
-      );
+    const container = document.getElementById("recaptcha-container");
+    if (!container) return;
   
-      window.recaptchaVerifier.render().catch(console.error);
+    if (!window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier = new RecaptchaVerifier(
+          auth,                     // FIRST
+          "recaptcha-container",    // SECOND
+          {
+            size: "invisible",
+          }
+        );
+  
+        window.recaptchaVerifier.render().catch(console.error);
+      } catch (err) {
+        console.error("Recaptcha init error:", err);
+      }
     }
   }, [auth]);
     

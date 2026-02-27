@@ -12,16 +12,14 @@ interface FirebaseContextType {
   auth?: Auth;
 }
 
-const FirebaseContext = createContext<FirebaseContextType | null>(null);
-
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const [firebaseInstances, setFirebaseInstances] =
   useState<FirebaseContextType>({
-    firebase: undefined as any,
-    firestore: undefined as any,
-    auth: undefined as any,
+    firebase: undefined,
+    firestore: undefined,
+    auth: undefined,
   });
 
   useEffect(() => {
@@ -33,10 +31,10 @@ export const FirebaseClientProvider: React.FC<{
     init();
   }, []);
 
-  if (!firebaseInstances.firebase) {
-    return null; // Or a loading spinner
-  }
-
+  // Hydration safety: 
+  // We avoid returning 'null' here. Instead, we render the children immediately.
+  // The hooks (useUser, useDoc, etc.) are already built to handle 'null' or 'loading' states
+  // until the firebaseInstances are populated via the effect.
   return (
     <FirebaseProvider
       firebase={firebaseInstances.firebase}

@@ -8,7 +8,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* Core configuration options */
   typescript: {
     ignoreBuildErrors: true,
   },
