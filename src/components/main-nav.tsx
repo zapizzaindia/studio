@@ -45,10 +45,15 @@ export function MainNav() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('zapizza-mock-session');
-    window.location.href = '/login';
-  }
+  const auth = useAuth();
+
+const handleLogout = async () => {
+  if (!auth) return;
+
+  await signOut(auth);
+  localStorage.removeItem('zapizza-mock-session');
+  router.replace('/login');
+};
 
   const handleChangeLocation = () => {
     localStorage.removeItem("zapizza-city");
