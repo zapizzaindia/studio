@@ -1,6 +1,7 @@
-export const dynamic = "force-dynamic";
 
 "use client";
+
+
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
