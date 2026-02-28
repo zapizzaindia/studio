@@ -60,7 +60,7 @@ export default function FranchiseDashboardPage() {
                         <IndianRupee className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                       {isLoading ? <Skeleton className="h-8 w-3/4"/> : <div className="text-2xl font-black">₹{stats?.totalRevenue.toLocaleString()}</div>}
+                       {isLoading ? <Skeleton className="h-8 w-3/4"/> : <div className="text-2xl font-black font-roboto tabular-nums">₹{stats?.totalRevenue.toLocaleString()}</div>}
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-white">
@@ -69,7 +69,7 @@ export default function FranchiseDashboardPage() {
                         <ShoppingBag className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-black">{stats?.totalOrders}</div>}
+                        {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-black font-roboto tabular-nums">{stats?.totalOrders}</div>}
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-white">
@@ -78,7 +78,7 @@ export default function FranchiseDashboardPage() {
                         <Store className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-black">{activeOutlets} / {outlets?.length || 0}</div>}
+                        {isLoading ? <Skeleton className="h-8 w-1/2"/> : <div className="text-2xl font-black font-roboto tabular-nums">{activeOutlets} / {outlets?.length || 0}</div>}
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-white">
@@ -87,7 +87,7 @@ export default function FranchiseDashboardPage() {
                         <Map className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        {isLoading ? <Skeleton className="h-8 w-1/4"/> : <div className="text-2xl font-black">{totalCities}</div>}
+                        {isLoading ? <Skeleton className="h-8 w-1/4"/> : <div className="text-2xl font-black font-roboto tabular-nums">{totalCities}</div>}
                     </CardContent>
                 </Card>
             </div>
@@ -107,10 +107,10 @@ export default function FranchiseDashboardPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black uppercase text-[#14532d]">Zapizza</p>
-                                    <p className="text-lg font-black tracking-tight">₹{stats?.zapizza.revenue.toLocaleString()}</p>
+                                    <p className="text-lg font-black tracking-tight font-roboto tabular-nums">₹{stats?.zapizza.revenue.toLocaleString()}</p>
                                 </div>
                             </div>
-                            <Badge variant="outline" className="font-black text-[10px] uppercase">{stats?.zapizza.orders} Orders</Badge>
+                            <Badge variant="outline" className="font-black text-[10px] uppercase font-roboto tabular-nums">{stats?.zapizza.orders} Orders</Badge>
                         </div>
                         <div className="flex items-center justify-between p-4 bg-[#e31837]/5 rounded-2xl border border-[#e31837]/10">
                             <div className="flex items-center gap-3">
@@ -119,10 +119,10 @@ export default function FranchiseDashboardPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black uppercase text-[#e31837]">Zfry</p>
-                                    <p className="text-lg font-black tracking-tight">₹{stats?.zfry.revenue.toLocaleString()}</p>
+                                    <p className="text-lg font-black tracking-tight font-roboto tabular-nums">₹{stats?.zfry.revenue.toLocaleString()}</p>
                                 </div>
                             </div>
-                            <Badge variant="outline" className="font-black text-[10px] uppercase">{stats?.zfry.orders} Orders</Badge>
+                            <Badge variant="outline" className="font-black text-[10px] uppercase font-roboto tabular-nums">{stats?.zfry.orders} Orders</Badge>
                         </div>
                     </CardContent>
                 </Card>
@@ -148,12 +148,12 @@ export default function FranchiseDashboardPage() {
                                                 <div className={`h-2 w-2 rounded-full ${outlet?.brand === 'zfry' ? 'bg-[#e31837]' : 'bg-[#14532d]'}`} />
                                                 <div>
                                                     <p className="text-xs font-black uppercase text-[#333] tracking-tight">{outlet?.name || 'N/A'}</p>
-                                                    <p className="text-[9px] font-bold text-muted-foreground uppercase">{order.createdAt.toDate().toLocaleTimeString()}</p>
+                                                    <p className="text-[9px] font-bold text-muted-foreground uppercase font-roboto tabular-nums">{order.createdAt.toDate().toLocaleTimeString()}</p>
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <p className="text-xs font-black">₹{order.total.toFixed(2)}</p>
+                                            <p className="text-xs font-black font-roboto tabular-nums">₹{order.total.toFixed(2)}</p>
                                             <p className={`text-[8px] font-black uppercase ${order.status === 'Cancelled' ? 'text-red-500' : 'text-green-600'}`}>{order.status}</p>
                                         </TableCell>
                                     </TableRow>
@@ -192,7 +192,7 @@ export default function FranchiseDashboardPage() {
                                 const city = outlet ? findCity(outlet.cityId) : null;
                                 return (
                                 <TableRow key={order.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
-                                    <TableCell className="font-black text-xs pl-8 tracking-widest text-primary uppercase">#{order.id.substring(0,7)}</TableCell>
+                                    <TableCell className="font-black text-xs pl-8 tracking-widest text-primary uppercase font-roboto">#{order.id.substring(0,7)}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
                                             <span className="font-black text-[11px] uppercase text-[#333] tracking-tight">{outlet?.name || 'N/A'}</span>
@@ -202,8 +202,8 @@ export default function FranchiseDashboardPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-[10px] font-bold uppercase text-muted-foreground">{city?.name || 'N/A'}</TableCell>
-                                    <TableCell className="font-black text-xs text-[#333]">₹{order.total.toFixed(2)}</TableCell>
-                                    <TableCell className="text-[10px] font-bold uppercase text-muted-foreground">{order.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</TableCell>
+                                    <TableCell className="font-black text-xs text-[#333] font-roboto tabular-nums">₹{order.total.toFixed(2)}</TableCell>
+                                    <TableCell className="text-[10px] font-bold uppercase text-muted-foreground font-roboto tabular-nums">{order.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</TableCell>
                                     <TableCell className="text-right pr-8">
                                         <Badge variant={order.status === 'Cancelled' ? 'destructive' : 'secondary'} className="text-[8px] font-black uppercase">
                                             {order.status}
