@@ -41,7 +41,8 @@ import {
   Filter,
   Package,
   Layers,
-  Clock
+  Clock,
+  Store
 } from "lucide-react";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -138,6 +139,18 @@ export default function FranchiseReportsPage() {
             };
         }).filter(c => c.revenue > 0).sort((a, b) => b.revenue - a.revenue);
 
+        // Outlet Performance breakdown
+        const outletPerformance = outlets.map(outlet => {
+            const outletOrders = completedOrders.filter(o => o.outletId === outlet.id);
+            return {
+                id: outlet.id,
+                name: outlet.name,
+                brand: outlet.brand,
+                orders: outletOrders.length,
+                revenue: outletOrders.reduce((sum, o) => sum + o.total, 0)
+            };
+        }).filter(o => o.orders > 0).sort((a, b) => b.revenue - a.revenue);
+
         // City & Brand Performance
         const cityPerformance = cities.map(city => {
             const cityOutlets = outlets.filter(o => o.cityId === city.id);
@@ -162,7 +175,7 @@ export default function FranchiseReportsPage() {
         for (let i = 0; i < daysCount; i++) {
             const d = subDays(dateRange.to, i);
             const dateStr = format(d, 'MMM dd');
-            dayMap[dateStr] = { date: dateStr, zapizza: dateStr === format(new Date(), 'MMM dd') ? 0 : 0, zfry: 0 };
+            dayMap[dateStr] = { date: dateStr, zapizza: 0, zfry: 0 };
         }
 
         completedOrders.forEach(o => {
@@ -192,6 +205,7 @@ export default function FranchiseReportsPage() {
             peakHours: Object.values(hourMap),
             itemSales,
             categorySales,
+            outletPerformance,
             totalCompleted: completedOrders.length,
             totalOrders: filteredOrders.length,
             brandData,
@@ -252,6 +266,7 @@ export default function FranchiseReportsPage() {
 
     const filteredItemSales = stats.itemSales.filter(i => activeBrandFilter === 'all' || i.brand === activeBrandFilter);
     const filteredCategorySales = stats.categorySales.filter(c => activeBrandFilter === 'all' || c.brand === activeBrandFilter);
+    const filteredOutletPerformance = stats.outletPerformance.filter(o => activeBrandFilter === 'all' || o.brand === activeBrandFilter);
 
     return (
         <div className="container mx-auto p-0 space-y-8 pb-20">
@@ -425,7 +440,62 @@ export default function FranchiseReportsPage() {
                 </Card>
             </div>
 
-            {/* Detailed Item Performance Matrix */}
+            {/* Outlet Breakdown Table */}
+            <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                <CardHeader className="bg-gray-50/50 pb-6 border-b">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                <Store className="h-4 w-4 text-primary" /> Outlet Contributions
+                            </CardTitle>
+                            <CardDescription className="text-[10px] font-bold uppercase">Revenue & Volume per physical node</CardDescription>
+                        </div>
+                        <Tabs value={activeBrandFilter} onValueChange={(v: any) => setActiveBrandFilter(v)} className="bg-white rounded-lg p-1 border">
+                            <TabsList className="h-8 p-0 bg-transparent">
+                                <TabsTrigger value="all" className="text-[8px] font-black uppercase h-6 rounded-md">All</TabsTrigger>
+                                <TabsTrigger value="zapizza" className="text-[8px] font-black uppercase h-6 rounded-md">Zapizza</TabsTrigger>
+                                <TabsTrigger value="zfry" className="text-[8px] font-black uppercase h-6 rounded-md">Zfry</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-white z-10">
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="text-[9px] font-black uppercase tracking-widest pl-8">Outlet Name</TableHead>
+                                    <TableHead className="text-[9px] font-black uppercase tracking-widest">Brand</TableHead>
+                                    <TableHead className="text-[9px] font-black uppercase tracking-widest text-center">Orders</TableHead>
+                                    <TableHead className="text-[9px] font-black uppercase tracking-widest text-right pr-8">Sales Revenue</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredOutletPerformance.map(outlet => (
+                                    <TableRow key={outlet.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <TableCell className="pl-8 py-4">
+                                            <span className="text-xs font-bold uppercase tracking-tight text-[#333]">{outlet.name}</span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className={cn("text-[7px] font-black uppercase h-4 px-1", outlet.brand === 'zfry' ? 'border-[#e31837]/30 text-[#e31837]' : 'border-[#14532d]/30 text-[#14532d]')}>
+                                                {outlet.brand}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-center font-black text-xs font-roboto tabular-nums">{outlet.orders}</TableCell>
+                                        <TableCell className="text-right pr-8 font-black text-xs font-roboto tabular-nums">₹{outlet.revenue.toLocaleString()}</TableCell>
+                                    </TableRow>
+                                ))}
+                                {filteredOutletPerformance.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-12 text-muted-foreground italic text-xs uppercase font-bold opacity-40">No outlet data found for this range</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
             <div className="grid gap-6 md:grid-cols-2">
                 <Card className="border-none shadow-sm bg-white overflow-hidden rounded-[32px]">
                     <CardHeader className="bg-gray-50/50 pb-6">
@@ -436,13 +506,6 @@ export default function FranchiseReportsPage() {
                                 </CardTitle>
                                 <CardDescription className="text-[10px] font-bold uppercase">Volume & Revenue per SKU</CardDescription>
                             </div>
-                            <Tabs value={activeBrandFilter} onValueChange={(v: any) => setActiveBrandFilter(v)} className="bg-white rounded-lg p-1 border">
-                                <TabsList className="h-8 p-0 bg-transparent">
-                                    <TabsTrigger value="all" className="text-[8px] font-black uppercase h-6 rounded-md">All</TabsTrigger>
-                                    <TabsTrigger value="zapizza" className="text-[8px] font-black uppercase h-6 rounded-md">Zapizza</TabsTrigger>
-                                    <TabsTrigger value="zfry" className="text-[8px] font-black uppercase h-6 rounded-md">Zfry</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
                         </div>
                     </CardHeader>
                     <CardContent className="p-0">
