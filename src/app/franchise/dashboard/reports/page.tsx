@@ -20,7 +20,7 @@ import {
   LineChart as RechartsLineChart,
   Pie,
   PieChart as RechartsPieChart,
-  Cell,
+  Cell, 
   ResponsiveContainer,
   Area,
   AreaChart as RechartsAreaChart
@@ -42,7 +42,8 @@ import {
   Package,
   Layers,
   Clock,
-  Store
+  Store,
+  LayoutList
 } from "lucide-react";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -151,6 +152,30 @@ export default function FranchiseReportsPage() {
             };
         }).filter(o => o.orders > 0).sort((a, b) => b.revenue - a.revenue);
 
+        // Daily Trend (Aggregated)
+        const dayMap: Record<string, { date: string, fullDate: string, zapizza: number, zfry: number, total: number, count: number }> = {};
+        const daysCount = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        for (let i = 0; i < daysCount; i++) {
+            const d = subDays(dateRange.to, i);
+            const dateStr = format(d, 'MMM dd');
+            const fullDate = format(d, 'do MMM yyyy');
+            dayMap[dateStr] = { date: dateStr, fullDate, zapizza: 0, zfry: 0, total: 0, count: 0 };
+        }
+
+        completedOrders.forEach(o => {
+            const d = o.createdAt.toDate();
+            const dateStr = format(d, 'MMM dd');
+            const brand = outlets.find(out => out.id === o.outletId)?.brand || 'zapizza';
+            if (dayMap[dateStr]) {
+                dayMap[dateStr][brand] += o.total;
+                dayMap[dateStr].total += o.total;
+                dayMap[dateStr].count += 1;
+            }
+        });
+
+        const dailyData = Object.values(dayMap).reverse();
+
         // City & Brand Performance
         const cityPerformance = cities.map(city => {
             const cityOutlets = outlets.filter(o => o.cityId === city.id);
@@ -168,25 +193,6 @@ export default function FranchiseReportsPage() {
             };
         }).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
 
-        // Daily Trend (Aggregated)
-        const dayMap: Record<string, { date: string, zapizza: number, zfry: number }> = {};
-        const daysCount = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        
-        for (let i = 0; i < daysCount; i++) {
-            const d = subDays(dateRange.to, i);
-            const dateStr = format(d, 'MMM dd');
-            dayMap[dateStr] = { date: dateStr, zapizza: 0, zfry: 0 };
-        }
-
-        completedOrders.forEach(o => {
-            const d = o.createdAt.toDate();
-            const dateStr = format(d, 'MMM dd');
-            const brand = outlets.find(out => out.id === o.outletId)?.brand || 'zapizza';
-            if (dayMap[dateStr]) {
-                dayMap[dateStr][brand] += o.total;
-            }
-        });
-
         // Peak Hours Comparison
         const hourMap: Record<number, { hour: string, zapizza: number, zfry: number }> = {};
         for(let i=0; i<24; i++) hourMap[i] = { hour: `${i}:00`, zapizza: 0, zfry: 0 };
@@ -201,7 +207,7 @@ export default function FranchiseReportsPage() {
             totalRevenue,
             brandMix,
             cityPerformance,
-            dailyData: Object.values(dayMap).reverse(),
+            dailyData,
             peakHours: Object.values(hourMap),
             itemSales,
             categorySales,
@@ -239,7 +245,7 @@ export default function FranchiseReportsPage() {
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", `zapizza_detailed_report_${format(new Date(), 'yyyyMMdd')}.csv`);
+        link.setAttribute("download", `zapizza_global_ledger_${format(new Date(), 'yyyyMMdd')}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -286,11 +292,11 @@ export default function FranchiseReportsPage() {
                                 <CalendarIcon className="h-4 w-4" />
                                 {dateRange?.from ? (
                                     dateRange.to ? (
-                                        <>
+                                        <span className="font-roboto tabular-nums">
                                             {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                                        </>
+                                        </span>
                                     ) : (
-                                        format(dateRange.from, "LLL dd, y")
+                                        <span className="font-roboto tabular-nums">{format(dateRange.from, "LLL dd, y")}</span>
                                     )
                                 ) : (
                                     <span>Pick a date range</span>
@@ -428,8 +434,8 @@ export default function FranchiseReportsPage() {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
-                                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} className="text-[10px] font-bold uppercase" />
-                                <YAxis stroke="#888" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v / 1000}k`} />
+                                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} className="text-[10px] font-bold uppercase font-roboto" />
+                                <YAxis stroke="#888" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v / 1000}k`} className="font-roboto" />
                                 <ChartTooltip content={<ChartTooltipContent />} />
                                 <ChartLegend content={<ChartLegendContent />} />
                                 <Area type="monotone" dataKey="zapizza" stroke="#14532d" strokeWidth={3} fillOpacity={1} fill="url(#colorZapizza)" />
@@ -439,6 +445,54 @@ export default function FranchiseReportsPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Everyday Sales Ledger (Tabular) */}
+            <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+                <CardHeader className="bg-gray-50/50 p-8 border-b">
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                            <CardTitle className="text-xl font-black uppercase tracking-tight italic flex items-center gap-2">
+                                <LayoutList className="h-5 w-5 text-primary" /> Everyday Sales Ledger
+                            </CardTitle>
+                            <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Aggregate business performance by date</CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent">
+                                <TableHead className="pl-8 font-black uppercase text-[10px] tracking-widest h-14">Business Date</TableHead>
+                                <TableHead className="font-black uppercase text-[10px] tracking-widest h-14 text-center">Orders Count</TableHead>
+                                <TableHead className="font-black uppercase text-[10px] tracking-widest h-14 text-center">Zapizza Share</TableHead>
+                                <TableHead className="font-black uppercase text-[10px] tracking-widest h-14 text-center">Zfry Share</TableHead>
+                                <TableHead className="pr-8 font-black uppercase text-[10px] tracking-widest h-14 text-right">Total Daily Gross</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[...stats.dailyData].reverse().map((day) => (
+                                <TableRow key={day.fullDate} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
+                                    <TableCell className="pl-8 py-4 font-bold text-xs uppercase text-[#333] font-roboto">
+                                        {day.fullDate}
+                                    </TableCell>
+                                    <TableCell className="text-center font-black text-sm font-roboto tabular-nums">
+                                        {day.count}
+                                    </TableCell>
+                                    <TableCell className="text-center font-black text-xs text-[#14532d] font-roboto tabular-nums">
+                                        ₹{day.zapizza.toLocaleString()}
+                                    </TableCell>
+                                    <TableCell className="text-center font-black text-xs text-[#e31837] font-roboto tabular-nums">
+                                        ₹{day.zfry.toLocaleString()}
+                                    </TableCell>
+                                    <TableCell className="pr-8 text-right font-black text-sm font-roboto tabular-nums text-primary">
+                                        ₹{day.total.toLocaleString()}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
 
             {/* Outlet Breakdown Table */}
             <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
@@ -593,7 +647,7 @@ export default function FranchiseReportsPage() {
                     <ChartContainer config={chartConfig} className="h-[300px] w-full">
                         <RechartsBarChart data={stats.peakHours}>
                             <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
-                            <XAxis dataKey="hour" tickLine={false} axisLine={false} className="text-[8px] font-bold" />
+                            <XAxis dataKey="hour" tickLine={false} axisLine={false} className="text-[8px] font-bold font-roboto" />
                             <YAxis hide />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <Bar dataKey="zapizza" fill="#14532d" stackId="a" radius={[4, 4, 0, 0]} name="Zapizza Vol" />
@@ -615,8 +669,8 @@ export default function FranchiseReportsPage() {
                     <ChartContainer config={chartConfig} className="h-[400px] w-full">
                         <RechartsBarChart data={stats.cityPerformance} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                             <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
-                            <XAxis dataKey="city" tickLine={false} axisLine={false} className="text-[10px] font-black uppercase tracking-tighter" />
-                            <YAxis stroke="#888" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v / 1000}k`} />
+                            <XAxis dataKey="city" tickLine={false} axisLine={false} className="text-[10px] font-black uppercase tracking-tighter font-roboto" />
+                            <YAxis stroke="#888" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v / 1000}k`} className="font-roboto" />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <ChartLegend content={<ChartLegendContent />} />
                             <Bar dataKey="zapizza" fill="#14532d" radius={[4, 4, 0, 0]} name="Zapizza" />
