@@ -163,7 +163,7 @@ export default function AdminReportsPage() {
                         <IndianRupee className="h-4 w-4 text-[#14532d]" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-black text-[#14532d]">₹{stats.totalRevenue.toLocaleString()}</div>
+                        <div className="text-2xl font-black text-[#14532d] font-roboto tabular-nums">₹{stats.totalRevenue.toLocaleString()}</div>
                         <p className="text-[10px] font-bold text-green-600 mt-1 flex items-center gap-1">
                             <TrendingUp className="h-3 w-3" /> +12% from last week
                         </p>
@@ -175,7 +175,7 @@ export default function AdminReportsPage() {
                         <ArrowUpRight className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-black">₹{Math.round(stats.aov)}</div>
+                        <div className="text-2xl font-black font-roboto tabular-nums">₹{Math.round(stats.aov)}</div>
                         <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase">Per completed order</p>
                     </CardContent>
                 </Card>
@@ -185,7 +185,7 @@ export default function AdminReportsPage() {
                         <ShoppingBag className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-black">{Math.round(stats.successRate)}%</div>
+                        <div className="text-2xl font-black font-roboto tabular-nums">{Math.round(stats.successRate)}%</div>
                         <div className="w-full bg-muted h-1 rounded-full mt-2 overflow-hidden">
                             <div className="bg-orange-500 h-full" style={{ width: `${stats.successRate}%` }} />
                         </div>
@@ -197,7 +197,7 @@ export default function AdminReportsPage() {
                         <Utensils className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-black">{stats.completedCount} / {stats.totalCount}</div>
+                        <div className="text-2xl font-black font-roboto tabular-nums">{stats.completedCount} / {stats.totalCount}</div>
                         <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase">Kitchen Load</p>
                     </CardContent>
                 </Card>
@@ -251,9 +251,9 @@ export default function AdminReportsPage() {
                                 <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-black text-[#333333] uppercase leading-none mb-1">{item.name}</span>
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{item.qty} units sold</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase font-roboto tabular-nums">{item.qty} units sold</span>
                                     </div>
-                                    <span className="text-sm font-black text-[#14532d]">₹{item.rev.toLocaleString()}</span>
+                                    <span className="text-sm font-black text-[#14532d] font-roboto tabular-nums">₹{item.rev.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>
@@ -292,7 +292,7 @@ export default function AdminReportsPage() {
                                         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
                                         <span>{item.name}</span>
                                     </div>
-                                    <span className="font-black">₹{item.value.toLocaleString()}</span>
+                                    <span className="font-black font-roboto tabular-nums">₹{item.value.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>
@@ -309,7 +309,7 @@ export default function AdminReportsPage() {
                         <ChartContainer config={chartConfig} className="h-[200px] w-full">
                             <RechartsBarChart data={stats.peakHours}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
-                                <XAxis dataKey="hour" tickLine={false} axisLine={false} className="text-[8px] font-bold" />
+                                <XAxis dataKey="hour" tickLine={false} axisLine={false} className="text-[8px] font-bold font-roboto" />
                                 <YAxis hide />
                                 <ChartTooltip content={<ChartTooltipContent />} />
                                 <Bar dataKey="orders" fill="#14532d" radius={[4, 4, 0, 0]} />
@@ -332,7 +332,7 @@ export default function AdminReportsPage() {
                 </div>
                 <div>
                     <h4 className="text-xs font-black uppercase text-red-900 tracking-widest">Discount Impact</h4>
-                    <p className="text-[10px] font-medium text-red-700 uppercase">You have given ₹{stats.totalDiscounts.toLocaleString()} in coupon discounts. This is {Math.round((stats.totalDiscounts / stats.totalRevenue) * 100) || 0}% of your gross revenue.</p>
+                    <p className="text-[10px] font-medium text-red-700 uppercase">You have given ₹<span className="font-roboto tabular-nums">{stats.totalDiscounts.toLocaleString()}</span> in coupon discounts. This is <span className="font-roboto tabular-nums">{Math.round((stats.totalDiscounts / stats.totalRevenue) * 100) || 0}%</span> of your gross revenue.</p>
                 </div>
             </div>
         </div>

@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
                         <IndianRupee className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{todaysRevenue.toFixed(2)}</div>
+                        <div className="text-2xl font-bold font-roboto tabular-nums">₹{todaysRevenue.toFixed(2)}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
                         <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">+{todaysOrders.length}</div>
+                        <div className="text-2xl font-bold font-roboto tabular-nums">+{todaysOrders.length}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
                         <List className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{newOrders.length}</div>
+                        <div className="text-2xl font-bold font-roboto tabular-nums">{newOrders.length}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
                         <AlertCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{itemsOutOfStock}</div>
+                        <div className="text-2xl font-bold font-roboto tabular-nums">{itemsOutOfStock}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -96,10 +96,10 @@ export default function AdminDashboardPage() {
                         <TableBody>
                             {outletOrders.slice(0, 5).map((order) => (
                                 <TableRow key={order.id}>
-                                    <TableCell className="font-medium">{order.id.substring(0,7)}...</TableCell>
+                                    <TableCell className="font-medium font-roboto">#{order.id.substring(0,7)}...</TableCell>
                                     <TableCell>{order.customerName}</TableCell>
-                                    <TableCell>₹{order.total.toFixed(2)}</TableCell>
-                                    <TableCell>{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
+                                    <TableCell className="font-roboto tabular-nums">₹{order.total.toFixed(2)}</TableCell>
+                                    <TableCell className="font-roboto tabular-nums">{order.createdAt.toDate().toLocaleTimeString()}</TableCell>
                                     <TableCell>
                                         <Badge variant={order.status === 'Cancelled' ? 'destructive' : 'secondary'}>
                                             {order.status}

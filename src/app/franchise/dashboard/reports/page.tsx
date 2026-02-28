@@ -162,7 +162,7 @@ export default function FranchiseReportsPage() {
         for (let i = 0; i < daysCount; i++) {
             const d = subDays(dateRange.to, i);
             const dateStr = format(d, 'MMM dd');
-            dayMap[dateStr] = { date: dateStr, zapizza: 0, zfry: 0 };
+            dayMap[dateStr] = { date: dateStr, zapizza: dateStr === format(new Date(), 'MMM dd') ? 0 : 0, zfry: 0 };
         }
 
         completedOrders.forEach(o => {
@@ -309,7 +309,7 @@ export default function FranchiseReportsPage() {
                         <IndianRupee className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black tracking-tight italic">₹{stats.totalRevenue.toLocaleString()}</div>
+                        <div className="text-3xl font-black tracking-tight italic font-roboto tabular-nums">₹{stats.totalRevenue.toLocaleString()}</div>
                         <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase">Across {stats.totalCompleted} Completed Orders</p>
                     </CardContent>
                 </Card>
@@ -320,7 +320,7 @@ export default function FranchiseReportsPage() {
                         <ArrowUpRight className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black tracking-tight italic">₹{Math.round(stats.totalRevenue / (stats.totalCompleted || 1))}</div>
+                        <div className="text-3xl font-black tracking-tight italic font-roboto tabular-nums">₹{Math.round(stats.totalRevenue / (stats.totalCompleted || 1))}</div>
                         <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase">Avg. value per cart</p>
                     </CardContent>
                 </Card>
@@ -331,7 +331,7 @@ export default function FranchiseReportsPage() {
                         <Badge variant="outline" className="text-[8px] font-black uppercase h-4 px-1">Live</Badge>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black tracking-tight italic text-[#14532d]">₹{stats.brandData.zapizza.revenue.toLocaleString()}</div>
+                        <div className="text-3xl font-black tracking-tight italic text-[#14532d] font-roboto tabular-nums">₹{stats.brandData.zapizza.revenue.toLocaleString()}</div>
                         <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase">{stats.brandData.zapizza.orders} Total Orders</p>
                     </CardContent>
                 </Card>
@@ -342,7 +342,7 @@ export default function FranchiseReportsPage() {
                         <Badge variant="outline" className="text-[8px] font-black uppercase h-4 px-1">Live</Badge>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black tracking-tight italic text-[#e31837]">₹{stats.brandData.zfry.revenue.toLocaleString()}</div>
+                        <div className="text-3xl font-black tracking-tight italic text-[#e31837] font-roboto tabular-nums">₹{stats.brandData.zfry.revenue.toLocaleString()}</div>
                         <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase">{stats.brandData.zfry.orders} Total Orders</p>
                     </CardContent>
                 </Card>
@@ -382,7 +382,7 @@ export default function FranchiseReportsPage() {
                                         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: brand.color }} />
                                         <span className="text-[10px] font-black uppercase tracking-widest">{brand.name}</span>
                                     </div>
-                                    <span className="text-xs font-black">₹{brand.value.toLocaleString()}</span>
+                                    <span className="text-xs font-black font-roboto tabular-nums">₹{brand.value.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>
@@ -470,8 +470,8 @@ export default function FranchiseReportsPage() {
                                                     {item.brand}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-center font-black text-xs">{item.qty}</TableCell>
-                                            <TableCell className="text-right pr-8 font-black text-xs">₹{item.revenue.toLocaleString()}</TableCell>
+                                            <TableCell className="text-center font-black text-xs font-roboto tabular-nums">{item.qty}</TableCell>
+                                            <TableCell className="text-right pr-8 font-black text-xs font-roboto tabular-nums">₹{item.revenue.toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -508,7 +508,7 @@ export default function FranchiseReportsPage() {
                                                     {cat.brand}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right pr-8 font-black text-xs">₹{cat.revenue.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right pr-8 font-black text-xs font-roboto tabular-nums">₹{cat.revenue.toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
