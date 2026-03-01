@@ -81,7 +81,7 @@ export function OutletSelector({ cityId, onOutletSelect, onBack }: OutletSelecto
                      <Badge 
                        variant={outlet.isOpen ? "secondary" : "destructive"} 
                        className="text-[8px] font-black uppercase h-5 px-2.5 border-none shadow-md font-headline bg-white"
-                       style={{ color: outlet.isOpen ? brandColor : undefined }}
+                       style={{ color: outlet.isOpen ? brandColor : '#e31837' }}
                      >
                        {outlet.isOpen ? "Live" : "Offline"}
                      </Badge>
