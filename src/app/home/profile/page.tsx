@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useUser, useDoc, useFirestore } from "@/firebase";
+import { useUser, useDoc, useFirestore, useAuth } from "@/firebase";
 import type { UserProfile, Outlet } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -43,10 +43,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { doc, updateDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   const db = useFirestore();
   const { data: profile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
@@ -79,38 +81,43 @@ export default function ProfilePage() {
     return points;
   }, [profile]);
 
-const auth = useAuth();
+  const handleLogout = async () => {
+    if (!auth) return;
+    await signOut(auth);
+    localStorage.removeItem('zapizza-mock-session');
+    router.replace('/login');
+  };
 
-const handleLogout = async () => {
-  if (!auth) return;
-
-  await signOut(auth);
-  localStorage.removeItem('zapizza-mock-session');
-  router.replace('/login');
-};
-
-  const handleUpdateProfile = async () => {
+  const handleUpdateProfile = () => {
     if (!user || !db) return;
     
+    const userRef = doc(db, 'users', user.uid);
     const updatedData = {
       displayName: newDisplayName,
       email: newEmail,
       birthday: newBirthday,
     };
 
-    try {
-      await updateDoc(doc(db, 'users', user.uid), updatedData);
-      setIsEditDialogOpen(false);
-    } catch (e) {
-      console.error(e);
-    }
+    // Non-blocking mutation as per guidelines
+    updateDoc(userRef, updatedData)
+      .then(() => {
+        setIsEditDialogOpen(false);
+      })
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'update',
+          requestResourceData: updatedData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   if (!isHydrated || userLoading || profileLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#f8f9fa] items-center justify-center p-6">
         <Skeleton className="h-12 w-12 rounded-full animate-spin mb-4" />
-        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Loading Profile...</p>
+        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest font-headline">Loading Profile...</p>
       </div>
     );
   }
@@ -132,7 +139,7 @@ const handleLogout = async () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-12">
       {/* Header Section */}
-      <div className="bg-[#14532d] text-white px-6 pt-12 pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden">
+      <div className="bg-[#14532d] text-white px-6 pt-12 pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button 
@@ -157,7 +164,7 @@ const handleLogout = async () => {
                   EDIT
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-[90vw] rounded-2xl p-6">
+              <DialogContent className="max-w-[90vw] rounded-2xl p-6 font-headline">
                 <DialogHeader>
                   <DialogTitle className="text-[#14532d] font-black uppercase tracking-widest">Edit Profile</DialogTitle>
                 </DialogHeader>
@@ -191,7 +198,7 @@ const handleLogout = async () => {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleUpdateProfile} className="w-full h-12 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl">
+                  <Button onClick={handleUpdateProfile} className="w-full h-14 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-2xl shadow-lg active:scale-95 transition-all">
                     Save Changes
                   </Button>
                 </DialogFooter>
@@ -202,7 +209,7 @@ const handleLogout = async () => {
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <h1 className="text-3xl font-black tracking-tight italic uppercase leading-none">{profile?.displayName || 'Gourmet'}</h1>
-              <p className="text-xs font-bold text-white/70 tracking-widest">+91-{user?.phoneNumber?.slice(-10) || profile?.phoneNumber?.slice(-10) || '9131024724'}</p>
+              <p className="text-xs font-bold text-white/70 tracking-widest font-roboto tabular-nums">+91-{user?.phoneNumber?.slice(-10) || profile?.phoneNumber?.slice(-10) || '0000000000'}</p>
               {profile?.birthday && (
                 <p className="text-[10px] font-black text-yellow-400 uppercase tracking-[0.2em] flex items-center gap-1">
                   <Cake className="h-3 w-3" /> {new Date(profile.birthday).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}
@@ -214,7 +221,7 @@ const handleLogout = async () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/80">
               <span>Complete your profile</span>
-              <span>{completionPercentage}%</span>
+              <span className="font-roboto tabular-nums">{completionPercentage}%</span>
             </div>
             <div className="relative h-2.5 w-full bg-black/20 rounded-full overflow-hidden border border-white/5">
               <Progress value={completionPercentage} className="h-full bg-white transition-all duration-1000" />
@@ -236,8 +243,8 @@ const handleLogout = async () => {
                         <Crown className="h-7 w-7" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14532d]">Loyalty Balance</p>
-                        <h3 className="text-2xl font-black text-[#333] italic tracking-tighter">{profile?.loyaltyPoints || 0} LP COINS</h3>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14532d] font-headline">Loyalty Balance</p>
+                        <h3 className="text-2xl font-black text-[#333] italic tracking-tighter font-headline"><span className="font-roboto tabular-nums">{profile?.loyaltyPoints || 0}</span> LP COINS</h3>
                     </div>
                 </div>
                 <Button 
@@ -252,7 +259,7 @@ const handleLogout = async () => {
         </Card>
 
         {/* Action Menu Card */}
-        <Card className="border-none shadow-xl rounded-[32px] overflow-hidden">
+        <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardContent className="p-0">
             <div className="divide-y divide-gray-50">
               {menuItems.map((item, idx) => (
@@ -265,7 +272,7 @@ const handleLogout = async () => {
                     <div className="text-gray-400 group-hover:text-[#14532d] transition-colors">
                       {item.icon}
                     </div>
-                    <span className="text-[13px] font-bold text-[#333333] uppercase tracking-tight">{item.label}</span>
+                    <span className="text-[13px] font-bold text-[#333333] uppercase tracking-tight font-headline">{item.label}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-gray-300" />
                 </button>
@@ -278,19 +285,19 @@ const handleLogout = async () => {
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardContent className="p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-black text-[#14532d] uppercase italic tracking-tighter">
+              <h3 className="text-lg font-black text-[#14532d] uppercase italic tracking-tighter font-headline">
                 {outlet?.name || 'Zapizza Rudrapur'}
               </h3>
-              <p className="text-[11px] font-bold text-muted-foreground mt-1 leading-relaxed uppercase">
-                {outlet?.address || 'Zapizza Outlet, first floor infront of PNB bank, Near janta inter college Rudrapur'}
+              <p className="text-[11px] font-bold text-muted-foreground mt-1 leading-relaxed uppercase font-headline">
+                {outlet?.address || 'Location Details Not Available'}
               </p>
             </div>
             
             <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-50">
-              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2">
+              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2 font-headline">
                 <Phone className="h-3.5 w-3.5" /> Call Outlet
               </Button>
-              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2">
+              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2 font-headline">
                 <Navigation className="h-3.5 w-3.5" /> Get Directions
               </Button>
             </div>
@@ -304,7 +311,7 @@ const handleLogout = async () => {
               <div className="h-12 w-12 rounded-2xl bg-[#1877F2]/10 flex items-center justify-center text-[#1877F2]">
                 <Facebook className="h-6 w-6 fill-current" />
               </div>
-              <div className="text-center">
+              <div className="text-center font-headline">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Like Us on</p>
                 <p className="text-sm font-black text-[#333333] uppercase">Facebook</p>
               </div>
@@ -313,7 +320,7 @@ const handleLogout = async () => {
               <div className="h-12 w-12 rounded-2xl bg-[#E4405F]/10 flex items-center justify-center text-[#E4405F]">
                 <Instagram className="h-6 w-6" />
               </div>
-              <div className="text-center">
+              <div className="text-center font-headline">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Follow Us on</p>
                 <p className="text-sm font-black text-[#333333] uppercase">Instagram</p>
               </div>
@@ -322,8 +329,8 @@ const handleLogout = async () => {
         </Card>
 
         {/* Footer */}
-        <div className="py-10 text-center space-y-4">
-          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">v2.8.5 (Gold Edition)</p>
+        <div className="py-10 text-center space-y-4 font-headline">
+          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] font-roboto tabular-nums">v2.8.5 (Gold Edition)</p>
           <div className="flex flex-col items-center gap-1 opacity-40">
             <span className="text-[9px] font-bold text-[#333333] uppercase tracking-widest">Powered by</span>
             <div className="flex items-center gap-1 text-[#14532d] font-black italic text-sm">
