@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore } from "@/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,12 +23,36 @@ export default function OnboardingPage() {
   const [email, setEmail] = useState("");
   const [birthday, setBirthday] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.replace("/login");
+    if (!userLoading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (db) {
+        // Intelligent Identity Check:
+        // If this is a returning user who already has a profile, skip onboarding.
+        const verifyProfile = async () => {
+          try {
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists() && docSnap.data().displayName) {
+              // User exists! Taking them straight to the feast.
+              router.replace("/home");
+            } else {
+              // New user. Show the welcome form.
+              setIsChecking(false);
+            }
+          } catch (e) {
+            console.error("Profile check failed:", e);
+            setIsChecking(false);
+          }
+        };
+        verifyProfile();
+      }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, router, db]);
 
   const handleFinish = async () => {
     if (!name || !db || !user) {
@@ -58,7 +82,17 @@ export default function OnboardingPage() {
     }
   };
 
-  if (userLoading) return null;
+  if (userLoading || isChecking) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 gap-4">
+        <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse" />
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground font-headline">Authenticating Identity...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6">
@@ -72,14 +106,14 @@ export default function OnboardingPage() {
             <ZapizzaLogo className="h-12 w-12 text-[#14532d]" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333]">Almost There!</h1>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Help us know you better for special treats</p>
+            <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline text-left w-full">Almost There!</h1>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline text-left w-full">Help us know you better for special treats</p>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 text-left">
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-[#333]">Your Full Name *</Label>
+            <Label className="text-[10px] font-black uppercase tracking-widest text-[#333] font-headline">Your Full Name *</Label>
             <Input 
               placeholder="e.g. John Doe" 
               value={name} 
@@ -89,7 +123,7 @@ export default function OnboardingPage() {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-[#333]">Email Address (Optional)</Label>
+            <Label className="text-[10px] font-black uppercase tracking-widest text-[#333] font-headline">Email Address (Optional)</Label>
             <Input 
               placeholder="name@example.com" 
               type="email"
@@ -101,8 +135,8 @@ export default function OnboardingPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-[#333]">Birthday (Optional)</Label>
-              <span className="text-[8px] font-black text-[#14532d] uppercase flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-[#333] font-headline">Birthday (Optional)</Label>
+              <span className="text-[8px] font-black text-[#14532d] uppercase flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full font-headline">
                 <PartyPopper className="h-2 w-2" /> Surprise inside
               </span>
             </div>
@@ -118,7 +152,7 @@ export default function OnboardingPage() {
         <Button 
           onClick={handleFinish}
           disabled={isSaving || !name}
-          className="w-full h-14 bg-[#14532d] text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-green-900/20 gap-2 text-sm"
+          className="w-full h-14 bg-[#14532d] text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-green-900/20 gap-2 text-sm font-headline"
         >
           {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : (
             <>
@@ -127,7 +161,7 @@ export default function OnboardingPage() {
           )}
         </Button>
 
-        <p className="text-center text-[9px] font-bold text-muted-foreground uppercase tracking-tight">
+        <p className="text-center text-[9px] font-bold text-muted-foreground uppercase tracking-tight font-headline">
           By continuing, you agree to our Terms of Service.
         </p>
       </motion.div>
