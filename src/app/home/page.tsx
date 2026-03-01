@@ -209,32 +209,30 @@ export default function HomePage() {
             }
           });
 
-          if (nearestCity) {
-            handleCitySelect(nearestCity);
-            
-            const outletSnap = await getDocs(collection(db, 'outlets'));
-            const outletsList = outletSnap.docs
-              .map(d => ({ id: d.id, ...d.data() } as Outlet))
-              .filter(o => o.cityId === (nearestCity as City).id);
-
-            let nearestOutlet: Outlet | undefined;
-            let minOutletDist = Infinity;
-
-            outletsList.forEach(outlet => {
-              if (outlet.latitude && outlet.longitude) {
-                const d = getDistance(latitude, longitude, outlet.latitude, outlet.longitude);
-                if (d < minOutletDist) {
-                  minOutletDist = d;
-                  nearestOutlet = outlet;
-                }
-              }
-            });
-
-            if (nearestOutlet) {
-              handleOutletSelect(nearestOutlet);
-              toast({ title: "Location Detected", description: `Welcome to ${nearestOutlet.name}!` });
-            }
+          if (!nearestCity || minCityDist > 30) {
+            setIsDetecting(false);
+            return; // Too far → show CitySelector
           }
+          
+          handleCitySelect(nearestCity!);
+          
+          // Get outlets for that city
+          const outletSnap = await getDocs(collection(db, "outlets"));
+          const outletsInCity = outletSnap.docs
+            .map(d => ({ id: d.id, ...d.data() } as Outlet))
+            .filter(o => o.cityId === nearestCity!.id && o.isOpen);
+          
+          // If only ONE outlet → auto open
+          if (outletsInCity.length === 1) {
+            handleOutletSelect(outletsInCity[0]);
+            toast({
+              title: "Location Detected",
+              description: `Welcome to ${outletsInCity[0].name}!`
+            });
+          }
+          
+          // If multiple outlets → do NOTHING
+          // OutletSelector will automatically render
         } catch (e) {
           console.error("Auto-location failed", e);
         } finally {
@@ -243,6 +241,11 @@ export default function HomePage() {
       },
       () => {
         setIsDetecting(false);
+        toast({
+          variant: "destructive",
+          title: "Location Disabled",
+          description: "Please select your city manually."
+        });
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
