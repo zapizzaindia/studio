@@ -44,12 +44,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // If user is already logged in and navigates to /login, send them home
-    if (!userLoading && user) {
-      router.replace('/home');
-    }
-  }, [user, userLoading, router]);
 
   useEffect(() => {
     if (!auth || typeof window === "undefined") return;
