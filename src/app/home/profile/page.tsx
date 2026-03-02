@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -88,7 +88,7 @@ export default function ProfilePage() {
     router.replace('/login');
   };
 
-  const handleUpdateProfile = () => {
+  const handleUpdateProfile = async () => {
     if (!user || !db) return;
     
     const userRef = doc(db, 'users', user.uid);
@@ -99,7 +99,7 @@ export default function ProfilePage() {
     };
 
     // Non-blocking mutation as per guidelines
-    updateDoc(userRef, updatedData)
+    setDoc(userRef, updatedData, { merge: true })
       .then(() => {
         setIsEditDialogOpen(false);
       })
