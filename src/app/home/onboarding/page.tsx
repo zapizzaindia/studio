@@ -36,14 +36,31 @@ export default function OnboardingPage() {
           try {
             const docRef = doc(db, "users", user.uid);
             const docSnap = await getDoc(docRef);
-            
-            if (docSnap.exists() && docSnap.data().displayName) {
-              // User exists! Taking them straight to the feast.
+        
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+        
+              // 🔥 If role missing → fix silently
+              if (!data.role || data.role !== "customer") {
+                await setDoc(docRef, {
+                  uid: user.uid,
+                  phoneNumber: user.phoneNumber || "",
+                  role: "customer",
+                  loyaltyPoints: data.loyaltyPoints ?? 0,
+                }, { merge: true });
+        
+                setIsChecking(false);
+                return;
+              }
+        
+              // ✅ Fully onboarded → go home
               router.replace("/home");
-            } else {
-              // New user. Show the welcome form.
-              setIsChecking(false);
+              return;
             }
+        
+            // 🆕 New user → show onboarding form
+            setIsChecking(false);
+        
           } catch (e) {
             console.error("Profile check failed:", e);
             setIsChecking(false);
