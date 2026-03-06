@@ -1,3 +1,4 @@
+
 export const dynamic = "force-dynamic";
 
 import type { Metadata, Viewport } from 'next';
@@ -5,6 +6,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { CartProvider } from '@/hooks/use-cart';
+import { FCMHandler } from '@/components/fcm-handler';
 
 export const metadata: Metadata = {
   title: 'Zapizza',
@@ -47,6 +49,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <CartProvider>
+            <FCMHandler />
             {children}
           </CartProvider>
         </FirebaseClientProvider>

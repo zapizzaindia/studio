@@ -155,6 +155,7 @@ export type UserProfile = {
     loyaltyPoints?: number;
     phoneNumber?: string;
     birthday?: string;
+    fcmToken?: string;
 };
 
 export type Address = {
@@ -179,6 +180,15 @@ export type Banner = {
   brand: Brand;
   isHero?: boolean;
   mediaType?: 'image' | 'video';
+};
+
+export type AppBanner = {
+  id: string;
+  imageUrl: string;
+  isActive: boolean;
+  deepLink?: string;
+  duration: number; // in seconds
+  createdAt: Timestamp;
 };
 
 export type OutletMenuAvailability = {
