@@ -209,7 +209,7 @@ export default function HomePage() {
             }
           });
 
-          if (!nearestCity || minCityDist > 30) {
+          if (!nearestCity || minCityDist > 50) {
             setIsDetecting(false);
             return; // Too far → show CitySelector
           }
@@ -253,19 +253,27 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsHydrated(true);
+  
     const savedCity = localStorage.getItem("zapizza-city");
     const savedOutlet = localStorage.getItem("zapizza-outlet");
-    
-    if (savedCity && savedOutlet) {
-        try { 
-          setSelectedCity(JSON.parse(savedCity)); 
-          setSelectedOutletState(JSON.parse(savedOutlet));
-        } catch(e) {
-          detectAndSetLocation();
+  
+    try {
+      if (savedCity) {
+        const city = JSON.parse(savedCity);
+        setSelectedCity(city);
+  
+        if (savedOutlet) {
+          const outlet = JSON.parse(savedOutlet);
+          setSelectedOutletState(outlet);
         }
-    } else {
-      detectAndSetLocation();
+  
+        return; // stop detection
+      }
+    } catch (e) {
+      console.warn("Failed to restore location", e);
     }
+  
+    detectAndSetLocation();
   }, [detectAndSetLocation]);
 
   useEffect(() => {
