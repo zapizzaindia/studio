@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
-import Link from 'next/link';
 import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useUser, useAuth } from '@/firebase';
@@ -16,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -234,19 +232,6 @@ export default function LoginPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="mt-10 text-center text-[10px] font-bold uppercase tracking-widest border-t border-gray-50 pt-6 font-headline">
-        <p className="text-muted-foreground/60">
-          Admin or Franchise Partner?
-        </p>
-        <div className="mt-3 flex justify-center gap-6">
-          <Button variant="link" asChild className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-[#14532d]">
-            <Link href="/admin/login">Admin Login</Link>
-          </Button>
-          <Button variant="link" asChild className="h-auto p-0 text-[10px] font-black uppercase tracking-widest text-[#14532d]">
-            <Link href="/franchise/login">Franchise Login</Link>
-          </Button>
-        </div>
-      </div>
       <div id="recaptcha-container"></div>
     </div>
   );
