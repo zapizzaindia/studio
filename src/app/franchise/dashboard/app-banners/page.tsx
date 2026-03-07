@@ -18,11 +18,14 @@ import type { AppBanner } from '@/lib/types';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { app } from "@/firebase/config";
 
 export default function FranchiseAppBannersPage() {
   const firestore = useFirestore();
   const { data: banners, loading } = useCollection<AppBanner>('appBanners');
   const { toast } = useToast();
+  const storage = getStorage(app);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<AppBanner | null>(null);
@@ -44,17 +47,31 @@ export default function FranchiseAppBannersPage() {
     setIsDialogOpen(true);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setNewUrl(dataUrl);
-      toast({ title: 'Visual Loaded', description: 'Banner ready for preview.' });
-    };
-    reader.readAsDataURL(file);
+  
+    try {
+      const storageRef = ref(storage, `appBanners/${Date.now()}-${file.name}`);
+  
+      const snapshot = await uploadBytes(storageRef, file);
+  
+      const downloadURL = await getDownloadURL(snapshot.ref);
+  
+      setNewUrl(downloadURL);
+  
+      toast({
+        title: "Image Uploaded",
+        description: "Banner ready for preview"
+      });
+  
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Upload Failed",
+        description: "Could not upload image"
+      });
+    }
   };
 
   const handleSave = () => {
