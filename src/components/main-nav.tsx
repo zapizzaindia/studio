@@ -19,6 +19,9 @@ import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
+import { useDoc } from "@/firebase";
+import type { UserProfile } from "@/lib/types";
+
 
 export function MainNav() {
   const { user, loading } = useUser();
@@ -26,6 +29,7 @@ export function MainNav() {
   const { totalItems } = useCart();
   const [locationLabel, setLocationLabel] = useState("Select Location");
   const [brand, setBrand] = useState<"zapizza" | "zfry">("zapizza");
+  const { data: UserProfile } = useDoc<UserProfile>("users", user?.uid || "dummy");
 
   useEffect(() => {
     const savedCity = localStorage.getItem("zapizza-city");
@@ -111,7 +115,7 @@ const handleLogout = async () => {
                     <AvatarFallback className={cn("text-white font-headline", brandBg)}>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-black text-[#14532d] truncate uppercase font-headline">{user.displayName || 'Demo User'}</span>
+                    <span className="text-sm font-black text-[#14532d] truncate uppercase font-headline">{UserProfile?.displayName || user.displayName || 'Customer'}</span>
                     <span className="text-[10px] text-muted-foreground truncate font-body">{user.email}</span>
                   </div>
                 </div>

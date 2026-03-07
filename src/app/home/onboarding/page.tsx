@@ -44,6 +44,7 @@ export default function OnboardingPage() {
               if (!data.role || data.role !== "customer") {
                 await setDoc(docRef, {
                   uid: user.uid,
+                  
                   phoneNumber: user.phoneNumber || "",
                   role: "customer",
                   loyaltyPoints: data.loyaltyPoints ?? 0,
