@@ -14,6 +14,7 @@ import type { UserProfile } from '@/lib/types';
 import { broadcastPushNotification } from "@/app/actions/notifications";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { ZapizzaLogo } from "@/components/icons";
 
 export default function FranchiseNotificationsPage() {
   const { data: users, loading: usersLoading } = useCollection<UserProfile>('users');
