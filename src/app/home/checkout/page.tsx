@@ -36,7 +36,7 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a = 
     Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * Math.PI / 180) * 
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
@@ -389,10 +389,18 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
-                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
+                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1 transition-colors hover:text-primary"><Minus className="h-3 w-3" /></button>
                     <span className="text-sm font-black min-w-[20px] text-center font-roboto tabular-nums">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
+                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1 transition-colors hover:text-primary"><Plus className="h-3 w-3" /></button>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                    onClick={() => removeItem(item.cartId)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}
