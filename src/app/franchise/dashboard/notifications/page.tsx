@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BellRing, Send, Smartphone, Users, Globe, Loader2, Info, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import { BellRing, Send, Smartphone, Users, Globe, Loader2, Info, AlertCircle, Image as ImageIcon, Upload, Link as LinkIcon } from 'lucide-react';
 import { useCollection } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import type { UserProfile } from '@/lib/types';
@@ -15,20 +15,52 @@ import { broadcastPushNotification } from "@/app/actions/notifications";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { ZapizzaLogo } from "@/components/icons";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { app } from "@/firebase/config";
 
 export default function FranchiseNotificationsPage() {
   const { data: users, loading: usersLoading } = useCollection<UserProfile>('users');
   const { toast } = useToast();
+  const storage = getStorage(app);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [deepLink, setDeepLink] = useState("/home/offers");
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Filter users who have allowed notifications (have an fcmToken)
   const usersWithTokens = users?.filter(u => !!u.fcmToken) || [];
   const tokenCount = usersWithTokens.length;
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `marketingPushes/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setImageUrl(downloadURL);
+      toast({
+        title: "Asset Uploaded",
+        description: "Visual is ready for broadcast."
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: "Could not sync image to storage."
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleBroadcast = async () => {
     if (!title || !body) {
@@ -114,16 +146,31 @@ export default function FranchiseNotificationsPage() {
                     />
                 </div>
                 <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                            <ImageIcon className="h-3 w-3" /> Visual Asset URL (Optional)
+                            <ImageIcon className="h-3 w-3" /> Visual Asset (Optional)
                         </Label>
-                        <Input 
-                            placeholder="https://..." 
-                            value={imageUrl} 
-                            onChange={e => setImageUrl(e.target.value)}
-                            className="h-11 rounded-xl text-xs font-bold"
-                        />
+                        <div className="grid grid-cols-2 gap-3">
+                            <input type="file" hidden ref={fileInputRef} accept="image/*" onChange={handleFileUpload} />
+                            <Button 
+                                variant="outline" 
+                                className="h-11 rounded-xl font-black uppercase text-[9px] tracking-widest border-2"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
+                            >
+                                {isUploading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-2 h-3.5 w-3.5" />}
+                                {imageUrl ? "Change Image" : "Upload Image"}
+                            </Button>
+                            <div className="relative">
+                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                <Input 
+                                    placeholder="Direct URL" 
+                                    value={imageUrl} 
+                                    onChange={e => setImageUrl(e.target.value)}
+                                    className="pl-8 h-11 text-[10px] font-bold rounded-xl"
+                                />
+                            </div>
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Deep Link Redirect</Label>
@@ -139,7 +186,7 @@ export default function FranchiseNotificationsPage() {
                 <div className="pt-4">
                     <Button 
                         onClick={handleBroadcast} 
-                        disabled={isSending || tokenCount === 0}
+                        disabled={isSending || tokenCount === 0 || isUploading}
                         className="w-full h-16 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
                     >
                         {isSending ? <Loader2 className="h-6 w-6 animate-spin" /> : (
