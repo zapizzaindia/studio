@@ -66,6 +66,7 @@ export default function SplashPage() {
       router.replace('/login');
     }
   };
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -90,6 +91,7 @@ export default function SplashPage() {
   
       {promoBanner && (
         <motion.div
+        style={{ opacity: imageLoaded ? 1 : 0 }}
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{
             opacity: 1,
@@ -117,6 +119,7 @@ export default function SplashPage() {
               sizes="100vw"
               className="object-cover"
               priority
+              onLoadingComplete={() => setImageLoaded(true)}
             />
           </motion.div>
   
