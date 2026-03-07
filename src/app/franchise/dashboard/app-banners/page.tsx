@@ -249,7 +249,7 @@ export default function FranchiseAppBannersPage() {
                   <TableCell>
                     <Switch 
                         checked={banner.isActive} 
-                        onCheckedChange={(val) => updateDoc(doc(firestore, 'appBanners', banner.id), { isActive: val })} 
+                        onCheckedChange={(val) => updateDoc(doc(firestore!, 'appBanners', banner.id), { isActive: val })} 
                     />
                   </TableCell>
                   <TableCell className="text-right pr-8">
