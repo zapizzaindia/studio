@@ -9,6 +9,7 @@ import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import type { AppBanner } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { orderBy } from "firebase/firestore";
 
 export default function SplashPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function SplashPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [promoBanner, setPromoBanner] = useState<AppBanner | null>(null);
   const [showPromo, setShowPromo] = useState(false);
+  
 
   useEffect(() => {
     setIsMounted(true);
@@ -29,8 +31,9 @@ export default function SplashPage() {
     const checkPromo = async () => {
       try {
         const q = query(
-          collection(db, 'appBanners'), 
+          collection(db, 'appBanners'),
           where('isActive', '==', true),
+          orderBy('createdAt', 'desc'),
           limit(1)
         );
         const snap = await getDocs(q);
@@ -64,6 +67,12 @@ export default function SplashPage() {
       router.replace('/login');
     }
   };
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMobile(window.innerWidth <= 768);
+    }
+  }, []);
 
   const handleBannerClick = () => {
     if (promoBanner?.deepLink) {
@@ -72,6 +81,10 @@ export default function SplashPage() {
   };
 
   if (!isMounted) return null;
+  if (!isMobile) {
+    router.replace('/home');
+    return null;
+  }
 
   return (
     <main className="flex h-screen w-full flex-col items-center justify-center bg-background relative overflow-hidden">
