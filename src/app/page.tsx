@@ -90,27 +90,47 @@ export default function SplashPage() {
     <main className="flex h-screen w-full flex-col items-center justify-center bg-background relative overflow-hidden">
       <AnimatePresence mode="wait">
         {showPromo && promoBanner ? (
-          <motion.div 
-            key="promo"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-black"
-            onClick={handleBannerClick}
+          <motion.div
+          key="promo"
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            transition: { duration: 0.6, ease: "easeOut" }
+          }}
+          exit={{
+            opacity: 0,
+            scale: 0.96,
+            transition: { duration: 0.4 }
+          }}
+          className="absolute inset-0 z-50 bg-black"
+          onClick={handleBannerClick}
+        >
+          <motion.div
+            animate={{ scale: [1, 1.02, 1] }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0"
           >
-            <Image 
-              src={promoBanner.imageUrl} 
-              alt="Promotion" 
-              fill 
+            <Image
+              src={promoBanner.imageUrl}
+              alt="Promotion"
+              fill
+              sizes="100vw"
               className="object-cover"
               priority
             />
-            <div className="absolute bottom-10 left-0 right-0 flex justify-center">
-               <div className="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full border border-white/10 text-[10px] text-white font-black uppercase tracking-widest">
-                 Loading Zapizza...
-               </div>
-            </div>
           </motion.div>
+        
+          <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+            <div className="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full border border-white/10 text-[10px] text-white font-black uppercase tracking-widest">
+              Loading Zapizza...
+            </div>
+          </div>
+        </motion.div>
         ) : (
           <motion.div 
             key="logo"
