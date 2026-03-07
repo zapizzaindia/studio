@@ -70,7 +70,7 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
     Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * Math.PI / 180) * 
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
@@ -382,12 +382,11 @@ export default function HomePage() {
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
   
       <div
-        style={{ backgroundColor: brandColor }}
-        className="text-white px-6 pt-6 pb-10 relative transition-all duration-700"
+        className="bg-white text-[#333] px-6 pt-6 pb-10 relative transition-all duration-700 border-b"
       >
         <div className="flex justify-between items-start">
           <div className="flex flex-col">
-            <p className="text-white/80 text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 font-headline">
+            <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 font-headline">
               Welcome Back,
             </p>
   
@@ -397,31 +396,15 @@ export default function HomePage() {
                 "Valued Customer"}
               !
             </h1>
-  
-            <motion.div
-              key={userProfile?.loyaltyPoints}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push("/home/rewards")}
-              className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 w-fit cursor-pointer transition-all"
-            >
-              <Wallet className="h-3 w-3 text-yellow-400 fill-current" />
-              <span className="text-[10px] font-black uppercase tracking-widest tabular-nums font-roboto">
-                {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP
-                COINS
-              </span>
-              <ChevronRight className="h-2.5 w-2.5 opacity-50" />
-            </motion.div>
           </div>
   
-          <div className="flex bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/5 h-10 items-stretch">
+          <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 h-10 items-stretch">
             <button
               onClick={() => setOrderType("delivery")}
               className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${
                 orderType === "delivery"
                   ? "bg-white text-[#333] shadow-sm"
-                  : "text-white/80"
+                  : "text-muted-foreground"
               }`}
             >
               <Bike className="h-3.5 w-3.5" />
@@ -435,7 +418,7 @@ export default function HomePage() {
               className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${
                 orderType === "takeaway"
                   ? "bg-white text-[#333] shadow-sm"
-                  : "text-white/80"
+                  : "text-muted-foreground"
               }`}
             >
               <ShoppingBasket className="h-3.5 w-3.5" />
