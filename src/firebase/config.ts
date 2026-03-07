@@ -11,7 +11,11 @@ const firebaseConfig = {
   appId: "1:197006828213:web:261179eeb89f86ce6b94fc",
   measurementId: "G-V1TMNB954N"
 };
-
+module.exports = {
+  images: {
+    domains: ["images.unsplash.com"],
+  },
+};
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);

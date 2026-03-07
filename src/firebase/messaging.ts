@@ -6,7 +6,7 @@ import { app } from './config';
 
 // NOTE: Replace with your actual VAPID key from Firebase Console
 // Project Settings -> Cloud Messaging -> Web Configuration -> Web Push certificates
-const VAPID_KEY = "REPLACE_WITH_YOUR_ACTUAL_VAPID_KEY";
+const VAPID_KEY = "BDs-DwZsERc8ry_rgUfTn_P6kQJeu-6P6GHFUkJGbAFGnNaoi0wAnbSoO89D9XOhPIOmuubhqHruzZ6lX3cxIYo";
 
 export const requestForToken = async () => {
   try {
