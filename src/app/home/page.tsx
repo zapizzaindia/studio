@@ -99,7 +99,7 @@ const BoxedItemCard = ({ item, brandColor, onAdd }: { item: MenuItem, brandColor
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent flex flex-col justify-end p-4 text-left">
           <div className="flex items-center gap-1.5 mb-1">
             <div className={cn("h-2.5 w-2.5 border flex items-center justify-center rounded-sm bg-white", item.isVeg ? 'border-green-600' : 'border-red-600')}>
-              <div className={cn("h-1-1 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
+              <div className={cn("h-1 w-1 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
             </div>
             <h3 className="text-white text-sm font-black uppercase italic leading-tight font-headline line-clamp-1">{item.name}</h3>
           </div>
@@ -588,8 +588,8 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 gap-6">
           {menuItemsLoading ? Array.from({length: 3}).map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-[32px]" />
-          )) : menuItems?.map((item) => (
+            <Skeleton className="h-48 w-full rounded-[32px]" key={i} />
+          )) : menuItems?.slice(0, 10).map((item) => (
             <motion.div 
               key={item.id} 
               initial={{ opacity: 0, y: 20 }}
@@ -601,7 +601,7 @@ export default function HomePage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                      <div className={`h-1-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                      <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                     </div>
                     <div className="flex gap-1">
                       <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1.5 py-0 rounded-sm border-none font-headline">Bestseller</Badge>
