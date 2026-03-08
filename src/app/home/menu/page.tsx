@@ -291,7 +291,7 @@ export default function MenuPage() {
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333] font-headline">Featured Items</h2>
             <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide pb-2">
               {menuItems.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer font-headline" onClick={() => handleAddClick(item)}>
+                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-md overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer font-headline" onClick={() => handleAddClick(item)}>
                   <div className="relative h-44 w-full">
                     <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   </div>
