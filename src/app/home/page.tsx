@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -247,11 +248,7 @@ export default function HomePage() {
       },
       () => {
         setIsDetecting(false);
-        toast({
-          variant: "destructive",
-          title: "Location Disabled",
-          description: "Please select your city manually."
-        });
+        // Silently fail auto-detection if denied
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
@@ -290,11 +287,15 @@ export default function HomePage() {
     return () => clearInterval(intervalId);
   }, [api]);
 
-  const handleCitySelect = (city: City) => {
+  const handleCitySelect = (city: City, outlet?: Outlet) => {
     setSelectedCity(city);
     localStorage.setItem("zapizza-city", JSON.stringify(city));
-    setSelectedOutletState(null);
-    localStorage.removeItem("zapizza-outlet");
+    if (outlet) {
+        handleOutletSelect(outlet);
+    } else {
+        setSelectedOutletState(null);
+        localStorage.removeItem("zapizza-outlet");
+    }
   };
 
   const handleOutletSelect = (outlet: Outlet) => {

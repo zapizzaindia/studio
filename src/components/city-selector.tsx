@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Search, Loader2 } from "lucide-react";
-import type { City } from "@/lib/types";
+import type { City, Outlet } from "@/lib/types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ZapizzaLogo } from "./icons";
@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { collection, getDocs } from "firebase/firestore";
 
 type CitySelectorProps = {
-  onCitySelect: (city: City) => void;
+  onCitySelect: (city: City, outlet?: Outlet) => void;
 };
 
 // Haversine formula to calculate distance in KM
@@ -24,7 +24,7 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
     Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * Math.PI / 180) * 
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
@@ -53,7 +53,7 @@ export function CitySelector({ onCitySelect }: CitySelectorProps) {
           const citySnap = await getDocs(collection(db, 'cities'));
           const allCities = citySnap.docs.map(d => ({ id: d.id, ...d.data() } as City));
           
-          let nearest: City | null = null;
+          let nearestCity: City | null = null;
           let minDist = Infinity;
 
           for (const city of allCities) {
@@ -61,31 +61,47 @@ export function CitySelector({ onCitySelect }: CitySelectorProps) {
               const dist = getDistance(latitude, longitude, city.latitude, city.longitude);
               if (dist < minDist) {
                 minDist = dist;
-                nearest = city;
+                nearestCity = city;
               }
             }
           }
 
-          if (nearest !== null) {
-            const city = nearest;
-            onCitySelect(city);
-            toast({
-              title: "Found you!",
-              description: `Identifying outlets in ${city.name}.`
-            });
+          if (nearestCity !== null && minDist < 50) {
+            // Find outlets in this city to see if we can auto-select
+            const outletSnap = await getDocs(collection(db, "outlets"));
+            const outletsInCity = outletSnap.docs
+              .map(d => ({ id: d.id, ...d.data() } as Outlet))
+              .filter(o => o.cityId === nearestCity!.id && o.isOpen);
+
+            if (outletsInCity.length === 1) {
+                // Auto-select city AND outlet
+                onCitySelect(nearestCity, outletsInCity[0]);
+                toast({
+                    title: "Found you!",
+                    description: `Welcome to ${outletsInCity[0].name}!`
+                });
+            } else {
+                // Just select the city
+                onCitySelect(nearestCity);
+                toast({
+                    title: "Location detected",
+                    description: `Showing outlets in ${nearestCity.name}.`
+                });
+            }
           } else {
-            toast({ variant: "destructive", title: "Location mismatch", description: "We haven't launched in your current region yet." });
+            toast({ variant: "destructive", title: "Out of Service", description: "We haven't launched in your current region yet." });
           }
         } catch (e) {
-          toast({ variant: "destructive", title: "Error", description: "Could not fetch city data." });
+          toast({ variant: "destructive", title: "Error", description: "Could not sync location data." });
         } finally {
           setIsDetecting(false);
         }
       },
       () => {
         setIsDetecting(false);
-        toast({ variant: "destructive", title: "Permission Denied", description: "Please select your city manually." });
-      }
+        toast({ variant: "destructive", title: "Permission Denied", description: "Please allow location access to find the nearest outlet." });
+      },
+      { enableHighAccuracy: true }
     );
   };
 
