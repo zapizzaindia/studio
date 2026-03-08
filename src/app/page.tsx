@@ -44,7 +44,7 @@ export default function SplashPage() {
           // Hold for configured duration
           setTimeout(() => {
             finishSplash();
-          }, banner.duration * 1000);
+          }, (banner.duration || 3) * 1000);
         } else {
           // No promo -> standard delay
           setTimeout(finishSplash, 2500);
@@ -91,7 +91,7 @@ export default function SplashPage() {
   
       {promoBanner && (
         <motion.div
-        style={{ opacity: imageLoaded ? 1 : 0 }}
+        
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{
             opacity: 1,
