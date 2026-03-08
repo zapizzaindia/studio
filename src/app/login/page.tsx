@@ -42,6 +42,13 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+   /* ADD THIS */
+   useEffect(() => {
+    if (!userLoading && user) {
+      router.replace("/home");
+    }
+  }, [user, userLoading, router]);
+
 
   useEffect(() => {
     if (!auth || typeof window === "undefined") return;
