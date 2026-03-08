@@ -28,6 +28,7 @@ export function MainNav() {
   const router = useRouter();
   const { totalItems } = useCart();
   const [locationLabel, setLocationLabel] = useState("Select Location");
+  const [cityName, setCityName] = useState("");
   const [brand, setBrand] = useState<"zapizza" | "zfry">("zapizza");
   const { data: UserProfile } = useDoc<UserProfile>("users", user?.uid || "dummy");
 
@@ -35,16 +36,21 @@ export function MainNav() {
     const savedCity = localStorage.getItem("zapizza-city");
     const savedOutlet = localStorage.getItem("zapizza-outlet");
     
+    if (savedCity) {
+      try {
+        const city: City = JSON.parse(savedCity);
+        setCityName(city.name);
+        if (!savedOutlet) {
+          setLocationLabel(city.name);
+        }
+      } catch (e) {}
+    }
+
     if (savedOutlet) {
       try {
         const outlet: Outlet = JSON.parse(savedOutlet);
         setLocationLabel(outlet.name);
         setBrand(outlet.brand || "zapizza");
-      } catch (e) {}
-    } else if (savedCity) {
-      try {
-        const city: City = JSON.parse(savedCity);
-        setLocationLabel(city.name);
       } catch (e) {}
     }
   }, []);
@@ -77,7 +83,9 @@ const handleLogout = async () => {
               <span className="truncate max-w-[150px] sm:max-w-[180px]">{locationLabel}</span>
               <ChevronDown className="ml-1 h-4 w-4" />
             </div>
-            <span className="text-[10px] text-white/70 whitespace-nowrap font-headline">Tap to change location</span>
+            <span className="text-[10px] text-white/70 whitespace-nowrap font-headline">
+              {cityName || "Tap to change location"}
+            </span>
           </div>
         </div>
         
