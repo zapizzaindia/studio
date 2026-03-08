@@ -1,13 +1,9 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { 
-  getAuth, 
-  setPersistence, 
-  browserLocalPersistence 
-} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDIkIO3nfKPkcR33rDyqs_12TK4jw2M",
+  apiKey: "AIzaSyDIkIO0RI3nfKPkcR33rDyqs_12TK4jw2M",
   authDomain: "zapizza-backend.firebaseapp.com",
   projectId: "zapizza-backend",
   storageBucket: "zapizza-backend.firebasestorage.app",
@@ -20,12 +16,5 @@ export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const firestore = getFirestore(app);
-
-/* 🔥 ADD THIS BLOCK */
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    console.log("Firebase auth persistence enabled");
-  })
-  .catch(console.error);
 
 export default app;

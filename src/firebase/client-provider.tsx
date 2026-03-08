@@ -11,6 +11,12 @@ interface FirebaseContextType {
   firestore?: Firestore;
   auth?: Auth;
 }
+import { setPersistence, browserLocalPersistence } from "firebase/auth";
+import { auth } from "./config";
+
+useEffect(() => {
+  setPersistence(auth, browserLocalPersistence).catch(console.error);
+}, []);
 
 export const FirebaseClientProvider: React.FC<{
   children: React.ReactNode;
