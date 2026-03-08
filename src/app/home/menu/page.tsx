@@ -1,3 +1,4 @@
+
 "use client";
 
 export const dynamic = "force-dynamic";
@@ -292,7 +293,7 @@ export default function MenuPage() {
               {menuItems.slice(0, 5).map((item) => (
                 <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer font-headline" onClick={() => handleAddClick(item)}>
                   <div className="relative h-44 w-full">
-                    <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
+                    <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   </div>
                   <div className="p-4 flex-1 flex flex-col gap-1">
                     <div className="flex items-center gap-2">
@@ -428,7 +429,7 @@ export default function MenuPage() {
             style={{ backgroundColor: brandColor }}
             className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 font-headline"
           >
-            <div className="flex flex-col items-start font-body tabular-nums">
+            <div className="flex flex-col items-start font-sans tabular-nums">
               <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span>
               <span className="text-xl font-black">₹{totalPrice}</span>
             </div>

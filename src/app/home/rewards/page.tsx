@@ -133,7 +133,7 @@ export default function RewardsPage() {
           <CardContent className="p-0">
             <div className="p-6 flex justify-between items-center">
               <div>
-                <h3 className="text-3xl font-black text-[#333] leading-none font-body tabular-nums">{profile?.loyaltyPoints || 0} LP COINS</h3>
+                <h3 className="text-3xl font-black text-[#333] leading-none font-sans tabular-nums">{profile?.loyaltyPoints || 0} LP COINS</h3>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-2 font-headline">1 LP Coin = ₹1</p>
               </div>
               <Button variant="outline" className="rounded-xl h-10 border-green-100 text-[#14532d] font-black text-[10px] uppercase tracking-widest gap-2 font-headline">
@@ -177,7 +177,7 @@ export default function RewardsPage() {
 
               <div className="text-center">
                 <p className="text-sm font-bold text-[#333] uppercase font-headline">
-                  Order Worth <span className="font-black text-[#14532d] font-body tabular-nums">₹1000</span> To Reach ACE Level
+                  Order Worth <span className="font-black text-[#14532d] font-sans tabular-nums">₹1000</span> To Reach ACE Level
                 </p>
               </div>
             </div>
