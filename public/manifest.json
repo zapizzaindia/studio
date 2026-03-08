@@ -3,18 +3,18 @@
   "name": "Zapizza PWA",
   "short_name": "Zapizza",
   "description": "Fastest Pizza Delivery in India",
-  "start_url": "/home",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#00143c",
   "theme_color": "#00143c",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/zapizza/192/192",
+      "src": "/zapizza-icon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://picsum.photos/seed/zapizza/512/512",
+      "src": "/zapizza-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
