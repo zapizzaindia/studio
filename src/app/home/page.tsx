@@ -110,8 +110,8 @@ const BoxedItemCard = ({ item, brandColor, onAdd }: { item: MenuItem, brandColor
           <div className="bg-black/60 backdrop-blur-md -mx-4 -mb-4 p-4 flex items-center justify-between border-t border-white/10">
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="text-white text-sm font-black font-roboto tabular-nums">₹{displayPrice}</span>
-                <span className="text-white/40 text-[10px] line-through font-roboto tabular-nums">₹{Math.round(originalPrice)}</span>
+                <span className="text-white text-sm font-black font-sans tabular-nums">₹{displayPrice}</span>
+                <span className="text-white/40 text-[10px] line-through font-sans tabular-nums">₹{Math.round(originalPrice)}</span>
               </div>
               <p className="text-white/60 text-[7px] font-black uppercase tracking-widest mt-0.5 font-headline">
                 Customizable
@@ -464,7 +464,7 @@ export default function HomePage() {
                   <div className="absolute inset-0 flex flex-col justify-center p-6">
                     {banner.subtitle && <Badge className="w-fit mb-2 bg-yellow-400 text-black font-black uppercase text-[8px] tracking-widest rounded-sm font-headline">{banner.subtitle}</Badge>}
                     {banner.title && <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md font-headline">{banner.title}</h2>}
-                    {banner.price && <p className="text-white font-black text-lg drop-shadow-md font-roboto tabular-nums">₹{banner.price}</p>}
+                    {banner.price && <p className="text-white font-black text-lg drop-shadow-md font-sans tabular-nums">₹{banner.price}</p>}
                   </div>
                 </div>
               </CarouselItem>
@@ -608,7 +608,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <h3 className="text-sm font-black text-[#333] uppercase leading-tight tracking-tight font-headline">{item.name}</h3>
-                  <p className="text-sm font-black font-roboto tabular-nums" style={{ color: brandColor }}>{getPriceDisplay(item)}</p>
+                  <p className="text-sm font-black font-sans tabular-nums" style={{ color: brandColor }}>{getPriceDisplay(item)}</p>
                   <div className="flex items-center gap-0.5">
                     {Array.from({length: 5}).map((_, i) => (
                       <Star key={i} className={`h-2.5 w-2.5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
@@ -645,7 +645,7 @@ export default function HomePage() {
           
           <div className="relative z-10 space-y-2 font-headline">
             <h2 className="text-xl font-black uppercase leading-tight px-4 drop-shadow-sm">
-              Place Orders Worth Rs.<span className="font-roboto tabular-nums">1000</span> to Upgrade Your Account to ACE Level
+              Place Orders Worth Rs.<span className="font-sans tabular-nums">1000</span> to Upgrade Your Account to ACE Level
             </h2>
             <p className="text-xs font-bold uppercase tracking-widest opacity-80">
               Get LP Coins on Every Order
@@ -656,33 +656,33 @@ export default function HomePage() {
             <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden text-left">
               <CardContent className="p-6">
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-2xl font-black text-[#333] leading-none tabular-nums font-roboto">
+                  <h3 className="text-2xl font-black text-[#333] leading-none tabular-nums font-sans">
                     {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)} LP Coins
                   </h3>
                   <div className="flex items-center gap-2 mt-3 text-muted-foreground">
                     <Timer className="h-3.5 w-3.5" />
                     <p className="text-[10px] font-black uppercase tracking-tight">
-                      <span className="font-roboto tabular-nums">10</span>% of the Subtotal Value can be paid using the LP ...
+                      <span className="font-sans tabular-nums">10</span>% of the Subtotal Value can be paid using the LP ...
                     </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-px bg-gray-100 rounded-2xl border border-gray-100 mt-6 overflow-hidden">
                   <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-lg font-black text-[#333] tabular-nums font-roboto">
+                    <span className="text-lg font-black text-[#333] tabular-nums font-sans">
                       {profileLoading ? "..." : (userProfile?.loyaltyPoints || 0)}
                     </span>
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Total Coins</span>
                   </div>
                   <div className="bg-gray-50/50 p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-lg font-black text-[#333] tabular-nums font-roboto">0</span>
+                    <span className="text-lg font-black text-[#333] tabular-nums font-sans">0</span>
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Coins Used</span>
                   </div>
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-black text-[#333] uppercase font-roboto tabular-nums">1 LP Coin = ₹1</span>
+                    <span className="text-[11px] font-black text-[#333] uppercase font-sans tabular-nums">1 LP Coin = ₹1</span>
                   </div>
                   <Button variant="link" onClick={() => router.push('/home/rewards')} className="p-0 h-auto font-black text-xs uppercase tracking-widest underline decoration-2 underline-offset-4 font-headline" style={{ color: brandColor }}>
                     Rewards Details
@@ -704,7 +704,7 @@ export default function HomePage() {
         >
           <div className="relative z-10 font-headline">
             <h3 className="text-2xl font-black uppercase leading-tight italic">
-              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} <span className="font-roboto tabular-nums">700</span>+
+              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} <span className="font-sans tabular-nums">700</span>+
             </h3>
             <p className="text-sm font-bold uppercase tracking-widest opacity-80 mt-1">Outlets across the World</p>
             
@@ -746,11 +746,11 @@ export default function HomePage() {
               className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px] cursor-pointer active:scale-95 transition-all"
             >
                <div className="flex items-center gap-1 text-white px-1.5 py-0.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
-                  <span className="text-[10px] font-black font-roboto tabular-nums">{selectedOutlet?.rating?.toFixed(1) || "4.5"}</span>
+                  <span className="text-[10px] font-black font-sans tabular-nums">{selectedOutlet?.rating?.toFixed(1) || "4.5"}</span>
                   <Star className="h-2 w-2 fill-current" />
                </div>
                <span className="text-[8px] font-black text-muted-foreground uppercase font-headline">
-                 <span className="font-roboto tabular-nums">{selectedOutlet?.reviewCount || "0"}</span> Reviews
+                 <span className="font-sans tabular-nums">{selectedOutlet?.reviewCount || "0"}</span> Reviews
                </span>
             </div>
           </CardContent>
@@ -856,7 +856,7 @@ export default function HomePage() {
                     value={enquiryPhone}
                     onChange={e => setEnquiryPhone(e.target.value)}
                     placeholder="+91 XXXX XXX XXX" 
-                    className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 rounded-xl font-bold font-roboto tabular-nums" 
+                    className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 rounded-xl font-bold font-sans tabular-nums" 
                   />
                 </div>
               </div>
@@ -883,7 +883,7 @@ export default function HomePage() {
                       value={enquiryInvestment}
                       onChange={e => setEnquiryInvestment(e.target.value)}
                       placeholder="e.g. 25" 
-                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 pr-12 rounded-xl font-bold font-roboto tabular-nums" 
+                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 pr-12 rounded-xl font-bold font-sans tabular-nums" 
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase">Lakhs</span>
                   </div>
@@ -947,7 +947,7 @@ export default function HomePage() {
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
                           <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase">{v.name}</span></Label>
-                          <div className="flex items-center gap-3"><span className="text-xs font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
+                          <div className="flex items-center gap-3"><span className="text-xs font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
                         </div>
                       ))}
                     </RadioGroup>
@@ -964,7 +964,7 @@ export default function HomePage() {
                             <span className="text-sm font-bold text-[#333] uppercase">{addon.name}</span>
                           </Label>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{addon.price}</span>
+                            <span className="text-xs font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{addon.price}</span>
                             <Checkbox 
                               id={`a-${addon.name}`} 
                               checked={selectedAddons.some(a => a.name === addon.name)}
@@ -983,7 +983,7 @@ export default function HomePage() {
               <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4 font-headline">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
-                  <span className="text-2xl font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
+                  <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
                 </div>
                 <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all">ADD TO CART</Button>
               </div>
@@ -995,7 +995,7 @@ export default function HomePage() {
       {totalItems > 0 && (
         <div className="fixed bottom-20 left-4 right-4 z-40">
           <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none transition-all duration-500 font-headline">
-            <div className="flex flex-col items-start font-roboto tabular-nums"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
+            <div className="flex flex-col items-start font-sans tabular-nums"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
             <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">VIEW CART <ShoppingBag className="h-5 w-5" /></div>
           </Button>
         </div>

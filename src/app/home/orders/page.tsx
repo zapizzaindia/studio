@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -120,18 +119,18 @@ export default function OrdersPage() {
               <CardContent className="p-0">
                 <div className="p-4 border-b flex justify-between items-start bg-white">
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Order ID: <span className="font-body tabular-nums">{order.id.slice(-6).toUpperCase()}</span></p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Order ID: <span className="font-sans tabular-nums">{order.id.slice(-6).toUpperCase()}</span></p>
                     <p className="text-sm font-black text-[#333333] mt-1 font-headline">
                     {order.items.map((i, index) => (
   <span key={i.menuItemId}>
-    <span className="font-body tabular-nums">{i.quantity}</span>x {i.name}
+    <span className="font-sans tabular-nums">{i.quantity}</span>x {i.name}
     {index < order.items.length - 1 && ", "}
   </span>
 ))}
                     </p>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground mt-2 font-headline">
                       <Clock className="h-3 w-3" />
-                      <span className="font-body tabular-nums">{order.createdAt.toDate().toLocaleDateString()} at {order.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="font-sans tabular-nums">{order.createdAt.toDate().toLocaleDateString()} at {order.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 font-headline">
@@ -148,7 +147,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 <div className="p-4 bg-white flex justify-between items-center">
-                  <div className="text-lg font-black text-[#14532d] font-body tabular-nums">
+                  <div className="text-lg font-black text-[#14532d] font-sans tabular-nums">
                     ₹{order.total.toFixed(2)}
                   </div>
                   <Button 
@@ -174,7 +173,7 @@ export default function OrdersPage() {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Real-Time Tracking</p>
                     <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">
-                      #<span className="font-body tabular-nums">{selectedOrder.id.slice(-6).toUpperCase()}</span>
+                      #<span className="font-sans tabular-nums">{selectedOrder.id.slice(-6).toUpperCase()}</span>
                     </DialogTitle>
                   </div>
                   <Badge variant="outline" className="text-white border-white/20 bg-white/10 uppercase text-[10px] font-black px-4 py-1.5 rounded-full">
@@ -213,7 +212,7 @@ export default function OrdersPage() {
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-start bg-gray-50/30 p-4 rounded-2xl border border-gray-100/50">
                         <div className="flex gap-4">
-                          <span className="font-black text-[#14532d] bg-green-50 h-8 w-8 rounded-lg flex items-center justify-center text-xs shadow-sm font-body tabular-nums">{item.quantity}x</span>
+                          <span className="font-black text-[#14532d] bg-green-50 h-8 w-8 rounded-lg flex items-center justify-center text-xs shadow-sm font-sans tabular-nums">{item.quantity}x</span>
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-black text-[#333] uppercase italic font-headline">{item.name}</span>
                             {item.variation && (
@@ -228,7 +227,7 @@ export default function OrdersPage() {
                             )}
                           </div>
                         </div>
-                        <span className="text-xs font-black text-[#333] font-body tabular-nums">₹{item.price * item.quantity}</span>
+                        <span className="text-xs font-black text-[#333] font-sans tabular-nums">₹{item.price * item.quantity}</span>
                       </div>
                     ))}
                   </div>
@@ -240,27 +239,27 @@ export default function OrdersPage() {
                 <div className="space-y-3 bg-gray-50 p-6 rounded-[24px] font-headline">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     <span>Item Total</span>
-                    <span className="font-body tabular-nums">₹{selectedOrder.subtotal.toFixed(2)}</span>
+                    <span className="font-sans tabular-nums">₹{selectedOrder.subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     <span>Delivery Fee</span>
-                    <span className={cn("font-body tabular-nums", selectedOrder.deliveryFee === 0 ? "text-green-600 font-headline" : "")}>
+                    <span className={cn("font-sans tabular-nums", selectedOrder.deliveryFee === 0 ? "text-green-600 font-headline" : "")}>
                       {selectedOrder.deliveryFee === 0 ? "FREE" : `₹${selectedOrder.deliveryFee}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     <span>GST (Taxes)</span>
-                    <span className="font-body tabular-nums">₹{selectedOrder.gst.toFixed(2)}</span>
+                    <span className="font-sans tabular-nums">₹{selectedOrder.gst.toFixed(2)}</span>
                   </div>
                   {selectedOrder.discount > 0 && (
                     <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest animate-pulse">
                       <span>Promo Applied</span>
-                      <span className="font-body tabular-nums">-₹{selectedOrder.discount.toFixed(2)}</span>
+                      <span className="font-sans tabular-nums">-₹{selectedOrder.discount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="pt-3 border-t border-dashed flex justify-between items-center">
                     <span className="text-sm font-black text-[#333] uppercase">Grand Total</span>
-                    <span className="text-2xl font-black text-[#14532d] italic font-body tabular-nums">₹{selectedOrder.total.toFixed(2)}</span>
+                    <span className="text-2xl font-black text-[#14532d] italic font-sans tabular-nums">₹{selectedOrder.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

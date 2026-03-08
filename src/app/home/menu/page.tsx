@@ -465,7 +465,7 @@ export default function MenuPage() {
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
                           <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase font-headline">{v.name}</span></Label>
-                          <div className="flex items-center gap-3"><span className="text-xs font-black font-body tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
+                          <div className="flex items-center gap-3"><span className="text-xs font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
                         </div>
                       ))}
                     </RadioGroup>
@@ -482,7 +482,7 @@ export default function MenuPage() {
                             <span className="text-sm font-bold text-[#333] uppercase font-headline">{addon.name}</span>
                           </Label>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-black font-body tabular-nums" style={{ color: brandColor }}>₹{addon.price}</span>
+                            <span className="text-xs font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{addon.price}</span>
                             <Checkbox 
                               id={`a-${addon.name}`} 
                               checked={selectedAddons.some(a => a.name === addon.name)}
@@ -501,7 +501,7 @@ export default function MenuPage() {
               <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4 font-headline">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
-                  <span className="text-2xl font-black font-body tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
+                  <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
                 </div>
                 <Button onClick={handleConfirmCustomization} style={{ backgroundColor: brandColor }} className="text-white px-10 h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl flex-1 border-none active:scale-95 transition-all">ADD TO CART</Button>
               </div>

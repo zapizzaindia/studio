@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -359,7 +358,7 @@ export default function CheckoutPage() {
                         <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1 mb-1">
                             <Navigation className="h-2 w-2 fill-current" /> GPS PINNED
                         </span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase font-roboto tabular-nums">{calculations.distanceKm.toFixed(1)} KM</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase font-sans tabular-nums">{calculations.distanceKm.toFixed(1)} KM</span>
                     </div>
                 )}
               </div>
@@ -384,13 +383,13 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight font-headline">{item.name}</h4>
-                    <span className="text-[11px] font-black mt-1.5 block font-roboto tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
+                    <span className="text-[11px] font-black mt-1.5 block font-sans tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
                     <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1 transition-colors hover:text-primary"><Minus className="h-3 w-3" /></button>
-                    <span className="text-sm font-black min-w-[20px] text-center font-roboto tabular-nums">{item.quantity}</span>
+                    <span className="text-sm font-black min-w-[20px] text-center font-sans tabular-nums">{item.quantity}</span>
                     <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1 transition-colors hover:text-primary"><Plus className="h-3 w-3" /></button>
                   </div>
                   <Button 
@@ -418,7 +417,7 @@ export default function CheckoutPage() {
                             </div>
                             <div>
                                 <p className="text-[10px] font-black uppercase text-[#333]">Redeem LP Coins</p>
-                                <p className="text-[9px] font-bold text-muted-foreground uppercase">Balance: <span className="font-roboto tabular-nums">{userProfile.loyaltyPoints}</span> Coins</p>
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase">Balance: <span className="font-sans tabular-nums">{userProfile.loyaltyPoints}</span> Coins</p>
                             </div>
                         </div>
                         <Switch 
@@ -431,7 +430,7 @@ export default function CheckoutPage() {
                         <div className="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-100 flex items-center gap-2">
                             <CheckCircle2 className="h-3.5 w-3.5 text-yellow-600" />
                             <p className="text-[9px] font-black text-yellow-800 uppercase">
-                                Applying ₹<span className="font-roboto tabular-nums">{calculations.loyaltyDiscount.toFixed(0)}</span> discount from your vault.
+                                Applying ₹<span className="font-sans tabular-nums">{calculations.loyaltyDiscount.toFixed(0)}</span> discount from your vault.
                             </p>
                         </div>
                     )}
@@ -514,18 +513,18 @@ export default function CheckoutPage() {
           <CardContent className="p-4 space-y-3 bg-white font-headline">
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
               <span>Item Total</span>
-              <span className="font-roboto tabular-nums">₹{calculations.subtotal}</span>
+              <span className="font-sans tabular-nums">₹{calculations.subtotal}</span>
             </div>
             {calculations.discount > 0 && (
               <div className="flex justify-between text-xs font-black text-green-600 uppercase">
                 <span>Coupon Discount</span>
-                <span className="font-roboto tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
+                <span className="font-sans tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
               </div>
             )}
             {calculations.loyaltyDiscount > 0 && (
               <div className="flex justify-between text-xs font-black text-yellow-600 uppercase">
                 <span>Loyalty Points</span>
-                <span className="font-roboto tabular-nums">-₹{calculations.loyaltyDiscount.toFixed(2)}</span>
+                <span className="font-sans tabular-nums">-₹{calculations.loyaltyDiscount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
@@ -535,17 +534,17 @@ export default function CheckoutPage() {
                     <span className="text-[7px] text-muted-foreground/60 leading-none mt-0.5">Based on {calculations.distanceKm.toFixed(1)}km distance</span>
                 )}
               </div>
-              <span className={cn("font-roboto tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>
+              <span className={cn("font-sans tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>
                 {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}
               </span>
             </div>
             <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
               <span>GST ({settings?.gstPercentage ?? 18}%)</span>
-              <span className="font-roboto tabular-nums">₹{calculations.gstTotal.toFixed(2)}</span>
+              <span className="font-sans tabular-nums">₹{calculations.gstTotal.toFixed(2)}</span>
             </div>
             <div className="border-t border-dashed pt-3 flex justify-between items-center">
               <span className="text-lg font-black text-[#333333]">TO PAY</span>
-              <span className="text-2xl font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
+              <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
             </div>
           </CardContent>
         </Card>
