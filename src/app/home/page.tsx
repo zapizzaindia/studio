@@ -167,7 +167,14 @@ export default function HomePage() {
   const { data: allBanners, loading: bannersLoading } = useCollection<Banner>('banners');
   const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
   
-  const categories = useMemo(() => allCategories?.filter(c => c.brand === selectedOutlet?.brand) || [], [allCategories, selectedOutlet]);
+  // Sort categories by order descending to always show newest first
+  const categories = useMemo(() => {
+    if (!allCategories) return [];
+    return allCategories
+      .filter(c => c.brand === selectedOutlet?.brand)
+      .sort((a, b) => (b.order || 0) - (a.order || 0));
+  }, [allCategories, selectedOutlet]);
+
   const menuItems = useMemo(() => allMenuItems?.filter(i => i.brand === selectedOutlet?.brand) || [], [allMenuItems, selectedOutlet]);
   const banners = useMemo(() => allBanners?.filter(b => b.brand === selectedOutlet?.brand) || [], [allBanners, selectedOutlet]);
   const heroBanner = useMemo(() => banners.find(b => b.active && b.isHero), [banners]);
