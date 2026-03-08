@@ -338,7 +338,7 @@ export default function MenuPage() {
                 <div className="px-6 py-10 flex items-center gap-4">
                   <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-gray-200" />
                   <div className="flex flex-col items-center">
-                    <h3 className="text-xl font-black uppercase italic leading-none font-headline tracking-tight" style={{ color: brandColor }}>
+                    <h3 className="text-2xl font-black uppercase italic leading-none font-headline tracking-tighter" style={{ color: brandColor }}>
                       {category.name}
                     </h3>
                     <div className="h-1.5 w-1.5 rounded-full mt-3" style={{ backgroundColor: brandColor }} />
