@@ -67,6 +67,13 @@ export default function MenuPage() {
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories', {
     where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
   });
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    // Sort categories by order descending to show newest first
+    return [...categories].sort((a, b) => (b.order || 0) - (a.order || 0));
+  }, [categories]);
+
   const { data: menuItems, loading: menuItemsLoading } = useCollection<MenuItem>('menuItems', {
     where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
   });
@@ -298,7 +305,7 @@ export default function MenuPage() {
                   <div className="p-4 flex-1 flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                        <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                        <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                       </div>
                       <div className="flex gap-1">
                         <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1 py-0 rounded-sm border-none">Bestseller</Badge>
@@ -329,7 +336,7 @@ export default function MenuPage() {
                 <Skeleton className="h-32 w-full rounded-2xl" />
               </div>
             ))
-          ) : categories?.map((category) => {
+          ) : sortedCategories.map((category) => {
             const categoryItems = filteredMenuItems.filter(i => i.category === category.id);
             if (categoryItems.length === 0) return null;
 
@@ -399,7 +406,7 @@ export default function MenuPage() {
             >
               <h3 className="text-sm font-black uppercase tracking-widest mb-4 font-headline shrink-0" style={{ color: brandColor }}>Choose Category</h3>
               <div className="grid grid-cols-1 gap-1 overflow-y-auto scrollbar-hide pr-1">
-                {categories?.map((cat) => (
+                {sortedCategories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => scrollToCategory(cat.id)}
