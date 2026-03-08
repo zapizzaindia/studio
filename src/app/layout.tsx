@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   title: 'Zapizza',
   description: 'Fastest Pizza Delivery in India',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/icon-192.png'
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
