@@ -291,7 +291,7 @@ export default function MenuPage() {
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333] font-headline">Featured Items</h2>
             <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide pb-2">
               {menuItems.slice(0, 5).map((item) => (
-                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-md overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer font-headline" onClick={() => handleAddClick(item)}>
+                <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-md overflow-hidden flex flex-col group active:scale-95 transition-all cursor-pointer font-headline hover:shadow-lg" onClick={() => handleAddClick(item)}>
                   <div className="relative h-44 w-full">
                     <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   </div>
@@ -335,15 +335,19 @@ export default function MenuPage() {
 
             return (
               <div key={category.id} id={`cat-${category.id}`} className="scroll-mt-36">
-                <div className="px-6 py-8">
-                  <h3 className="text-lg font-black text-[#333] uppercase italic leading-none text-center font-headline">
-                    {category.name}
-                  </h3>
-                  <div className="h-0.5 w-12 bg-[#333] mx-auto mt-2" />
+                <div className="px-6 py-10 flex items-center gap-4">
+                  <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-gray-200" />
+                  <div className="flex flex-col items-center">
+                    <h3 className="text-xl font-black uppercase italic leading-none font-headline tracking-tight" style={{ color: brandColor }}>
+                      {category.name}
+                    </h3>
+                    <div className="h-1.5 w-1.5 rounded-full mt-3" style={{ backgroundColor: brandColor }} />
+                  </div>
+                  <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-gray-200" />
                 </div>
-                <div className="space-y-px bg-gray-100">
+                <div className="px-4 space-y-4">
                   {categoryItems.map((item) => (
-                    <div key={item.id} className="bg-white px-6 py-8 flex gap-6 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer" onClick={() => handleAddClick(item)}>
+                    <div key={item.id} className="bg-white px-6 py-8 flex gap-6 hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer rounded-3xl shadow-sm border border-gray-50" onClick={() => handleAddClick(item)}>
                       <div className="flex-1 flex flex-col">
                         <div className="flex items-center gap-2 mb-2">
                           <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
