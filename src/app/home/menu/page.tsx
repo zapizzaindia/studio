@@ -288,7 +288,7 @@ export default function MenuPage() {
         {!searchQuery && menuItems && (
           <div className="py-8 border-b">
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333] font-headline">Featured Items</h2>
-            <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide">
+            <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide pb-2">
               {menuItems.slice(0, 5).map((item) => (
                 <div key={item.id} className="flex-shrink-0 w-48 bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col group active:scale-95 transition-transform cursor-pointer font-headline" onClick={() => handleAddClick(item)}>
                   <div className="relative h-44 w-full">
@@ -350,7 +350,7 @@ export default function MenuPage() {
                           </div>
                         </div>
                         <h4 className="text-[15px] font-black text-[#333] uppercase leading-tight tracking-tight mb-1 font-headline">{item.name}</h4>
-                        <p className="text-[14px] font-black text-[#333] mb-2 font-sans tabular-nums">{getPriceDisplay(item)}</p>
+                        <h4 className="text-[14px] font-black text-[#333] mb-2 font-sans tabular-nums">{getPriceDisplay(item)}</h4>
                         <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-relaxed font-body">
                           {item.description} <span className="text-gray-400 font-bold font-headline">Read More</span>
                         </p>
@@ -390,10 +390,10 @@ export default function MenuPage() {
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="fixed bottom-36 left-4 right-4 bg-white rounded-2xl z-[52] shadow-2xl p-6 overflow-hidden border border-gray-100"
+              className="fixed bottom-36 left-4 right-4 md:left-auto md:right-6 md:w-80 bg-white rounded-2xl z-[52] shadow-2xl p-6 border border-gray-100 flex flex-col max-h-[60vh]"
             >
-              <h3 className="text-sm font-black uppercase tracking-widest mb-4 font-headline" style={{ color: brandColor }}>Choose Category</h3>
-              <div className="grid grid-cols-1 gap-1">
+              <h3 className="text-sm font-black uppercase tracking-widest mb-4 font-headline shrink-0" style={{ color: brandColor }}>Choose Category</h3>
+              <div className="grid grid-cols-1 gap-1 overflow-y-auto scrollbar-hide pr-1">
                 {categories?.map((cat) => (
                   <button
                     key={cat.id}
