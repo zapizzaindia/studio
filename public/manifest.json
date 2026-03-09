@@ -1,24 +1,20 @@
 {
   "name": "Zapizza",
   "short_name": "Zapizza",
-  "description": "Fastest Pizza Delivery in India",
-  "start_url": "/login",
+  "start_url": "/home",
   "display": "standalone",
-  "orientation": "portrait",
   "theme_color": "#14532d",
   "background_color": "#ffffff",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
