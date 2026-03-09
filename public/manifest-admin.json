@@ -1,7 +1,7 @@
 {
   "name": "Zapizza Admin",
   "short_name": "Zapizza Admin",
-  "start_url": "/superadmin",
+  "start_url": "/franchise/login",
   "display": "standalone",
   "theme_color": "#111111",
   "background_color": "#111111",

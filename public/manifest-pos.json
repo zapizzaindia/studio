@@ -1,7 +1,7 @@
 {
   "name": "Zapizza POS",
   "short_name": "Zapizza POS",
-  "start_url": "/admin",
+  "start_url": "/admin/login",
   "display": "standalone",
   "theme_color": "#000000",
   "background_color": "#000000",

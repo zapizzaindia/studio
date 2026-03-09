@@ -1,7 +1,7 @@
 {
   "name": "Zapizza",
   "short_name": "Zapizza",
-  "start_url": "/home",
+  "start_url": "/",
   "display": "standalone",
   "theme_color": "#14532d",
   "background_color": "#ffffff",
