@@ -2,7 +2,7 @@
   "name": "Zapizza Admin",
   "short_name": "Zapizza Admin",
   "description": "Master Dashboard for Global Operations",
-  "start_url": "/superadmin",
+  "start_url": "/franchise/login",
   "display": "standalone",
   "orientation": "any",
   "theme_color": "#111111",

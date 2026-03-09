@@ -2,7 +2,7 @@
   "name": "Zapizza POS",
   "short_name": "Zapizza POS",
   "description": "Kitchen Management Terminal",
-  "start_url": "/admin",
+  "start_url": "/admin/login",
   "display": "standalone",
   "orientation": "landscape",
   "theme_color": "#000000",
