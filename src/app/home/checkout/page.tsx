@@ -59,7 +59,7 @@ export default function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [specialNote, setSpecialNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"Online">("Online");
+  const [paymentMethod, setPaymentMethod] = useState<"Online" | "Cash">("Online");
   const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false);
 
   useEffect(() => {
@@ -245,6 +245,16 @@ export default function CheckoutPage() {
     }
 
     setIsPlacing(true);
+
+    if (paymentMethod === 'Cash') {
+      try {
+        await saveOrderToFirestore("CASH_ON_DELIVERY", "Pending");
+      } catch (e: any) {
+        toast({ variant: 'destructive', title: "Order Failed", description: e.message });
+        setIsPlacing(false);
+      }
+      return;
+    }
 
     try {
       toast({ title: "Initiating Gateway", description: "Connecting to secure servers..." });
@@ -479,6 +489,22 @@ export default function CheckoutPage() {
                 </div>
                 <RadioGroupItem value="Online" id="online" className="border-2" />
               </div>
+
+              <div className={cn(
+                "flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                paymentMethod === 'Cash' ? "border-current bg-opacity-5" : "border-gray-100 bg-gray-50/50"
+              )} style={{ color: paymentMethod === 'Cash' ? brandColor : undefined }}>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-muted-foreground">
+                    <Wallet className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <Label htmlFor="cash" className="text-sm font-black uppercase cursor-pointer">Cash on Delivery</Label>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Pay at your doorstep</p>
+                  </div>
+                </div>
+                <RadioGroupItem value="Cash" id="cash" className="border-2" />
+              </div>
             </RadioGroup>
           </CardContent>
         </Card>
@@ -536,7 +562,7 @@ export default function CheckoutPage() {
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (
             calculations.isOutOfRange ? "UNAVAILABLE IN YOUR AREA" : (
-                `PAY ₹${Math.round(calculations.finalTotal)}`
+                `PLACE ORDER ₹${Math.round(calculations.finalTotal)}`
             )
           )}
         </Button>
