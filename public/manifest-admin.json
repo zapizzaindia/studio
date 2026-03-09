@@ -1,0 +1,12 @@
+{
+  "name": "Zapizza Admin",
+  "short_name": "Zapizza Admin",
+  "start_url": "/superadmin",
+  "display": "standalone",
+  "theme_color": "#111111",
+  "background_color": "#111111",
+  "icons": [
+    { "src": "/admin-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/admin-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
