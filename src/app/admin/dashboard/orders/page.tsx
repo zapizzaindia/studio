@@ -13,9 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { WakeLock } from "@/components/wake-lock";
-
-<WakeLock />
 
 import {
   Dialog,
@@ -25,7 +22,6 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from '@/components/ui/separator';
 
-const ALERT_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3";
 const ACCEPTANCE_TIMEOUT_MS = 5 * 60 * 1000;
 
 const OrderTimer = ({ createdAt, orderId, onTimeout }: { createdAt: any, orderId: string, onTimeout: (id: string) => void }) => {
@@ -74,16 +70,40 @@ export default function AdminOrdersPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const prevNewOrdersCount = useRef<number>(0);
+  const alarmRef = useRef<HTMLAudioElement | null>(null);
+const alarmPlaying = useRef(false);
+useEffect(() => {
+  alarmRef.current = new Audio("/sounds/order-alarm.mp3");
+  alarmRef.current.loop = true;
+  alarmRef.current.volume = 1;
+}, []);
 
-  useEffect(() => {
-    if (!orders || ordersLoading) return;
-    const newOrders = orders.filter(o => o.status === 'New');
-    if (newOrders.length > prevNewOrdersCount.current) {
-      if (!isMuted) new Audio(ALERT_SOUND_URL).play().catch(() => {});
-      toast({ title: "NEW ORDER RECEIVED!", variant: "default" });
+useEffect(() => {
+  if (!orders || ordersLoading) return;
+
+  const newOrders = orders.filter(o => o.status === "New");
+
+  if (newOrders.length > 0 && !isMuted) {
+    if (!alarmPlaying.current) {
+      alarmRef.current?.play().catch(() => {});
+      alarmPlaying.current = true;
+
+      toast({
+        title: "🚨 NEW ORDER RECEIVED!",
+        description: "Kitchen attention required",
+      });
     }
-    prevNewOrdersCount.current = newOrders.length;
-  }, [orders, ordersLoading, isMuted, toast]);
+  }
+
+  if (newOrders.length === 0) {
+    if (alarmPlaying.current) {
+      alarmRef.current?.pause();
+      alarmRef.current!.currentTime = 0;
+      alarmPlaying.current = false;
+    }
+  }
+
+}, [orders, ordersLoading, isMuted]);
 
   const handleUpdateStatus = (orderId: string, status: OrderStatus, reason?: string) => {
     if (!firestore) return;
@@ -92,12 +112,22 @@ export default function AdminOrdersPage() {
     if (reason) updateData.cancellationReason = reason;
 
     updateDoc(orderRef, updateData)
-      .then(() => {
-        toast({ title: "Status Updated" });
-        if (selectedOrder?.id === orderId) {
-            setSelectedOrder(prev => prev ? { ...prev, status } : null);
-        }
-      })
+  .then(() => {
+
+    toast({ title: "Status Updated" });
+
+    // STOP ALARM when order accepted or rejected
+    if (status === "Preparing" || status === "Cancelled") {
+      alarmRef.current?.pause();
+      if (alarmRef.current) alarmRef.current.currentTime = 0;
+      alarmPlaying.current = false;
+    }
+
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder(prev => prev ? { ...prev, status } : null);
+    }
+
+  })
       .catch(() => {
         toast({ variant: 'destructive', title: "Error updating status" });
       });
