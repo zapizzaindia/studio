@@ -6,13 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import type { Order, OrderStatus, UserProfile, Outlet } from '@/lib/types';
-import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket, MessageSquareText, UserCheck, PackageCheck, Wallet } from 'lucide-react';
+import { Truck, CheckCircle, XCircle, Loader, CircleDot, Volume2, VolumeX, Timer, MapPin, Phone, Eye, Crown, Navigation, Share2, IndianRupee, CreditCard, Ticket, MessageSquareText, UserCheck, PackageCheck, Wallet, RefreshCcw } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { refundRazorpayOrder } from '@/app/home/checkout/actions';
 
 import {
   Dialog,
@@ -69,71 +70,86 @@ export default function AdminOrdersPage() {
 
   const [isMuted, setIsMuted] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const prevNewOrdersCount = useRef<number>(0);
   const alarmRef = useRef<HTMLAudioElement | null>(null);
-const alarmPlaying = useRef(false);
-useEffect(() => {
-  alarmRef.current = new Audio("/sounds/order-alarm.mp3");
-  alarmRef.current.loop = true;
-  alarmRef.current.volume = 1;
-}, []);
+  const alarmPlaying = useRef(false);
 
-useEffect(() => {
-  if (!orders || ordersLoading) return;
-
-  const newOrders = orders.filter(o => o.status === "New");
-
-  if (newOrders.length > 0 && !isMuted) {
-    if (!alarmPlaying.current) {
-      alarmRef.current?.play().catch(() => {});
-      alarmPlaying.current = true;
-
-      toast({
-        title: "🚨 NEW ORDER RECEIVED!",
-        description: "Kitchen attention required",
-      });
+  useEffect(() => {
+    alarmRef.current = new Audio("/sounds/order-alarm.mp3");
+    if (alarmRef.current) {
+      alarmRef.current.loop = true;
+      alarmRef.current.volume = 1;
     }
-  }
+  }, []);
 
-  if (newOrders.length === 0) {
-    if (alarmPlaying.current) {
-      alarmRef.current?.pause();
-      alarmRef.current!.currentTime = 0;
-      alarmPlaying.current = false;
+  useEffect(() => {
+    if (!orders || ordersLoading) return;
+
+    const newOrders = orders.filter(o => o.status === "New");
+
+    if (newOrders.length > 0 && !isMuted) {
+      if (!alarmPlaying.current) {
+        alarmRef.current?.play().catch(() => {});
+        alarmPlaying.current = true;
+
+        toast({
+          title: "🚨 NEW ORDER RECEIVED!",
+          description: "Kitchen attention required",
+        });
+      }
     }
-  }
 
-}, [orders, ordersLoading, isMuted]);
+    if (newOrders.length === 0) {
+      if (alarmPlaying.current) {
+        alarmRef.current?.pause();
+        if (alarmRef.current) alarmRef.current.currentTime = 0;
+        alarmPlaying.current = false;
+      }
+    }
 
-  const handleUpdateStatus = (orderId: string, status: OrderStatus, reason?: string) => {
+  }, [orders, ordersLoading, isMuted, toast]);
+
+  const handleUpdateStatus = (order: Order, status: OrderStatus, reason?: string) => {
     if (!firestore) return;
-    const orderRef = doc(firestore, 'orders', orderId);
+    const orderRef = doc(firestore, 'orders', order.id);
     const updateData: any = { status };
     if (reason) updateData.cancellationReason = reason;
 
+    // Handle Automated Refund for Pre-paid orders
+    if (status === 'Cancelled' && order.paymentMethod === 'Online' && order.paymentId && order.paymentId !== 'CASH_ON_DELIVERY') {
+      toast({ title: "Initializing Refund", description: "Reversing online payment..." });
+      refundRazorpayOrder(order.paymentId, order.total)
+        .then(() => {
+          updateDoc(orderRef, { paymentStatus: 'Refunded' });
+          toast({ title: "Refund Success", description: "Gateway confirmed reversal." });
+        })
+        .catch(() => {
+          toast({ variant: 'destructive', title: "Refund Automation Error", description: "Please process refund manually via Razorpay dashboard." });
+        });
+    }
+
     updateDoc(orderRef, updateData)
-  .then(() => {
+      .then(() => {
+        toast({ title: "Status Updated" });
 
-    toast({ title: "Status Updated" });
+        if (status === "Preparing" || status === "Cancelled") {
+          alarmRef.current?.pause();
+          if (alarmRef.current) alarmRef.current.currentTime = 0;
+          alarmPlaying.current = false;
+        }
 
-    // STOP ALARM when order accepted or rejected
-    if (status === "Preparing" || status === "Cancelled") {
-      alarmRef.current?.pause();
-      if (alarmRef.current) alarmRef.current.currentTime = 0;
-      alarmPlaying.current = false;
-    }
-
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder(prev => prev ? { ...prev, status } : null);
-    }
-
-  })
+        if (selectedOrder?.id === order.id) {
+          setSelectedOrder(prev => prev ? { ...prev, status } : null);
+        }
+      })
       .catch(() => {
         toast({ variant: 'destructive', title: "Error updating status" });
       });
   };
 
-  const handleAutoCancel = (orderId: string) => handleUpdateStatus(orderId, 'Cancelled', 'Kitchen Timeout');
+  const handleAutoCancel = (orderId: string) => {
+    const order = orders?.find(o => o.id === orderId);
+    if (order) handleUpdateStatus(order, 'Cancelled', 'Kitchen Timeout');
+  };
 
   const handleShareLocation = (order: Order) => {
     const addr = order.deliveryAddress;
@@ -141,14 +157,11 @@ useEffect(() => {
     const note = order.specialNote ? `\n\n📝 *KITCHEN NOTE:* ${order.specialNote.toUpperCase()}` : '';
     const payNote = order.paymentMethod === 'Cash' ? `\n\n💵 *COLLECT CASH:* ₹${order.total.toFixed(2)}` : `\n\n✅ *PRE-PAID ORDER*`;
     
-    // Construct the "Magic Link" for the rider to mark as delivered
-    // Ensure we strip any double slashes from the final URL
     const host = window.location.origin.replace(/\/$/, "");
     const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery/${order.id}`;
 
     const text = `🍕 *${outlet?.brand === 'zfry' ? 'ZFRY' : 'ZAPIZZA'} ORDER* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${payNote}${magicLink}`;
     
-    // Using WhatsApp API for better mobile support
     const encodedText = encodeURIComponent(text);
     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
   };
@@ -195,15 +208,15 @@ useEffect(() => {
                 </div>
                 {order.status === 'New' && (
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" className="text-red-600 font-black text-[10px] uppercase h-9" onClick={() => handleUpdateStatus(order.id, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
-                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-primary/20" onClick={() => handleUpdateStatus(order.id, 'Preparing')}>Accept Order</Button>
+                    <Button variant="ghost" size="sm" className="text-red-600 font-black text-[10px] uppercase h-9" onClick={() => handleUpdateStatus(order, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
+                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-primary/20" onClick={() => handleUpdateStatus(order, 'Preparing')}>Accept Order</Button>
                   </div>
                 )}
                 {order.status === 'Preparing' && (
-                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-primary/20" onClick={() => handleUpdateStatus(order.id, 'Out for Delivery')}>Mark Dispatched</Button>
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-primary/20" onClick={() => handleUpdateStatus(order, 'Out for Delivery')}>Mark Dispatched</Button>
                 )}
                 {order.status === 'Out for Delivery' && (
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-green-900/20" onClick={() => handleUpdateStatus(order.id, 'Completed')}>Mark Delivered</Button>
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-6 h-9 font-black text-[10px] uppercase shadow-md shadow-green-900/20" onClick={() => handleUpdateStatus(order, 'Completed')}>Mark Delivered</Button>
                 )}
               </div>
             </CardContent>
@@ -385,13 +398,13 @@ useEffect(() => {
               <div className="p-8 bg-gray-50/80 border-t flex gap-4">
                 <Button variant="ghost" onClick={() => setSelectedOrder(null)} className="flex-1 h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest transition-all hover:bg-white active:scale-95">Close Terminal</Button>
                 {selectedOrder.status === 'New' && (
-                  <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Preparing')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95" style={{ backgroundColor: brandColor }}>Activate Prep Pipeline</Button>
+                  <Button onClick={() => handleUpdateStatus(selectedOrder, 'Preparing')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95" style={{ backgroundColor: brandColor }}>Activate Prep Pipeline</Button>
                 )}
                 {selectedOrder.status === 'Preparing' && (
-                  <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Out for Delivery')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95" style={{ backgroundColor: brandColor }}>Mark as Dispatched</Button>
+                  <Button onClick={() => handleUpdateStatus(selectedOrder, 'Out for Delivery')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95" style={{ backgroundColor: brandColor }}>Mark as Dispatched</Button>
                 )}
                 {selectedOrder.status === 'Out for Delivery' && (
-                  <Button onClick={() => handleUpdateStatus(selectedOrder.id, 'Completed')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-green-900/20 transition-all active:scale-95 bg-green-600 hover:bg-green-700">Confirm Delivery</Button>
+                  <Button onClick={() => handleUpdateStatus(selectedOrder, 'Completed')} className="flex-[2] text-white h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-green-900/20 transition-all active:scale-95 bg-green-600 hover:bg-green-700">Confirm Delivery</Button>
                 )}
               </div>
             </>

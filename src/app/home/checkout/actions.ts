@@ -1,4 +1,3 @@
-
 'use server';
 
 import Razorpay from 'razorpay';
@@ -45,5 +44,40 @@ export async function createRazorpayOrder(amount: number) {
   } catch (error) {
     console.error("Razorpay Order Creation Error:", error);
     throw new Error("Could not initiate payment gateway.");
+  }
+}
+
+/**
+ * Server Action to process a refund for a cancelled order.
+ */
+export async function refundRazorpayOrder(paymentId: string, amount: number) {
+  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    console.warn("Razorpay Keys not found. Simulating refund.");
+    return { success: true, message: "Refund simulated (No API Keys)." };
+  }
+
+  const instance = new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+
+  try {
+    // Initiate refund via Razorpay Refunds API
+    const refund = await instance.refunds.create({
+      payment_id: paymentId,
+      amount: Math.round(amount * 100), // in paise
+    });
+    
+    return { 
+      success: true, 
+      refundId: refund.id,
+      message: "Refund processed successfully." 
+    };
+  } catch (error: any) {
+    console.error("Razorpay Refund Error:", error);
+    throw new Error(error.message || "Could not process refund via gateway.");
   }
 }
