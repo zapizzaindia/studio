@@ -13,6 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { WakeLock } from "@/components/wake-lock";
+
+<WakeLock />
 
 import {
   Dialog,

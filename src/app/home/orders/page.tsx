@@ -1,14 +1,16 @@
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, XCircle, AlertCircle, RefreshCcw, CookingPot, Home } from "lucide-react";
+import { ArrowLeft, Clock, ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, XCircle, AlertCircle, RefreshCcw, CookingPot, Home, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useCollection, useUser } from "@/firebase";
-import type { Order, OrderStatus } from "@/lib/types";
+import { useCollection, useUser, useDoc } from "@/firebase";
+import type { Order, OrderStatus, Outlet } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import dynamic from 'next/dynamic';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +19,11 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+
+const OrderTrackingMap = dynamic(() => import('@/components/order-tracking-map'), { 
+  ssr: false,
+  loading: () => <Skeleton className="h-56 w-full rounded-[24px]" />
+});
 
 const statusIcons: Record<string, React.ReactNode> = {
   "New": <Package className="h-4 w-4 text-blue-500" />,
@@ -77,6 +84,7 @@ export default function OrdersPage() {
     where: user ? ['customerId', '==', user.uid] : undefined
   });
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const { data: selectedOutlet } = useDoc<Outlet>('outlets', selectedOrder?.outletId || 'dummy');
 
   if (loading) {
     return (
@@ -122,11 +130,11 @@ export default function OrdersPage() {
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-headline">Order ID: <span className="font-sans tabular-nums">{order.id.slice(-6).toUpperCase()}</span></p>
                     <p className="text-sm font-black text-[#333333] mt-1 font-headline">
                     {order.items.map((i, index) => (
-  <span key={i.menuItemId}>
-    <span className="font-sans tabular-nums">{i.quantity}</span>x {i.name}
-    {index < order.items.length - 1 && ", "}
-  </span>
-))}
+                      <span key={i.menuItemId}>
+                        <span className="font-sans tabular-nums">{i.quantity}</span>x {i.name}
+                        {index < order.items.length - 1 && ", "}
+                      </span>
+                    ))}
                     </p>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground mt-2 font-headline">
                       <Clock className="h-3 w-3" />
@@ -165,10 +173,10 @@ export default function OrdersPage() {
       </div>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-[95vw] md:max-w-lg rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
+        <DialogContent className="max-w-[95vw] md:max-w-lg rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
           {selectedOrder && (
-            <div className="flex flex-col bg-white">
-              <DialogHeader className="p-8 bg-[#14532d] text-white">
+            <div className="flex flex-col bg-white h-full overflow-hidden">
+              <DialogHeader className="px-6 py-6 sm:p-8 bg-[#14532d] text-white shrink-0">
                 <div className="flex justify-between items-start font-headline">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Real-Time Tracking</p>
@@ -182,8 +190,38 @@ export default function OrdersPage() {
                 </div>
               </DialogHeader>
 
-              <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh] scrollbar-hide font-headline">
-                {/* 1. Tracker Component */}
+              <div className="px-5 py-6 sm:p-8 space-y-8 overflow-y-auto scrollbar-hide font-headline flex-1">
+                {/* 1. Enhanced Map View */}
+                {selectedOrder.deliveryAddress.latitude && selectedOutlet?.latitude && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transit Intelligence</h4>
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-[8px] font-black text-green-600 uppercase tracking-widest">Signal Locked</span>
+                      </div>
+                    </div>
+                    <div className="h-56 w-full rounded-[24px] overflow-hidden border-2 border-gray-50 shadow-inner relative group">
+                      <OrderTrackingMap 
+                        customerCoords={{ 
+                          lat: selectedOrder.deliveryAddress.latitude, 
+                          lng: selectedOrder.deliveryAddress.longitude! 
+                        }}
+                        outletCoords={{ 
+                          lat: selectedOutlet.latitude, 
+                          lng: selectedOutlet.longitude! 
+                        }}
+                        status={selectedOrder.status}
+                      />
+                      <div className="absolute top-2 right-2 z-[1000] bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg shadow-sm border border-gray-100 flex items-center gap-1.5">
+                        <Navigation className="h-2.5 w-2.5 text-[#14532d]" />
+                        <span className="text-[7px] font-black uppercase tracking-tight text-[#333]">Live Path Tracking</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Tracker Component */}
                 <div className="bg-gray-50/50 p-6 rounded-[24px] border border-gray-100">
                   <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Journey Progress</h4>
                   <StatusTracker status={selectedOrder.status} />
@@ -205,14 +243,17 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {/* 2. Order Items */}
+                {/* 3. Manifest */}
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Manifest</h4>
-                  <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Manifest</h4>
+                    <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">{selectedOrder.items.length} SKUs Identified</span>
+                  </div>
+                  <div className="space-y-3">
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-start bg-gray-50/30 p-4 rounded-2xl border border-gray-100/50">
                         <div className="flex gap-4">
-                          <span className="font-black text-[#14532d] bg-green-50 h-8 w-8 rounded-lg flex items-center justify-center text-xs shadow-sm font-sans tabular-nums">{item.quantity}x</span>
+                          <span className="font-black text-[#14532d] bg-green-50 h-8 w-8 rounded-lg flex items-center justify-center text-[10px] shadow-sm font-sans tabular-nums">{item.quantity}x</span>
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-black text-[#333] uppercase italic font-headline">{item.name}</span>
                             {item.variation && (
@@ -235,7 +276,7 @@ export default function OrdersPage() {
 
                 <Separator className="opacity-50" />
 
-                {/* 3. Financial Breakdown */}
+                {/* 4. Financial Breakdown */}
                 <div className="space-y-3 bg-gray-50 p-6 rounded-[24px] font-headline">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     <span>Item Total</span>
@@ -264,7 +305,7 @@ export default function OrdersPage() {
                 </div>
               </div>
               
-              <div className="p-8 bg-gray-50/80 border-t">
+              <div className="p-6 sm:p-8 bg-gray-50/80 border-t shrink-0">
                 <Button 
                   onClick={() => setSelectedOrder(null)}
                   className="w-full h-14 bg-[#14532d] text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all font-headline"

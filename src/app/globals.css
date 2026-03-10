@@ -46,3 +46,16 @@
     scrollbar-width: none;
   }
 }
+
+@keyframes leaflet-line-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animated-polyline {
+  animation: leaflet-line-flow 1s linear infinite;
+}
