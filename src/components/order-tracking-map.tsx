@@ -3,8 +3,9 @@
 
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { OrderStatus } from '@/lib/types';
+import { Bike } from 'lucide-react';
 
 // Custom icons using inline SVGs for better reliability and brand consistency
 const createIcon = (color: string, type: 'outlet' | 'customer') => {
@@ -44,11 +45,43 @@ export default function OrderTrackingMap({
   outletCoords: { lat: number, lng: number },
   status: OrderStatus
 }) {
-  // Animating from customer to outlet as requested by user
-  const points = useMemo(() => [
-    [customerCoords.lat, customerCoords.lng] as [number, number],
-    [outletCoords.lat, outletCoords.lng] as [number, number]
-  ], [outletCoords, customerCoords]);
+  const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
+  const [distance, setDistance] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch road route from OSRM (Open Source Routing Machine)
+    const fetchRoute = async () => {
+      try {
+        // OSRM coordinates format: lng,lat
+        const response = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${outletCoords.lng},${outletCoords.lat};${customerCoords.lng},${customerCoords.lat}?overview=full&geometries=geojson`
+        );
+        const data = await response.json();
+        
+        if (data.routes && data.routes.length > 0) {
+          const coordinates = data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]] as [number, number]);
+          setRoutePoints(coordinates);
+          
+          const distInKm = (data.routes[0].distance / 1000).toFixed(1);
+          setDistance(`${distInKm} KM`);
+        } else {
+          // Fallback to straight line if routing fails
+          setRoutePoints([
+            [outletCoords.lat, outletCoords.lng],
+            [customerCoords.lat, customerCoords.lng]
+          ]);
+        }
+      } catch (err) {
+        console.error("Routing error:", err);
+        setRoutePoints([
+          [outletCoords.lat, outletCoords.lng],
+          [customerCoords.lat, customerCoords.lng]
+        ]);
+      }
+    };
+
+    fetchRoute();
+  }, [customerCoords, outletCoords]);
 
   const outletIcon = useMemo(() => createIcon('#14532d', 'outlet'), []);
   const customerIcon = useMemo(() => createIcon('#e31837', 'customer'), []);
@@ -56,7 +89,7 @@ export default function OrderTrackingMap({
   return (
     <div className="h-full w-full relative">
       <MapContainer 
-        center={points[0]} 
+        center={[outletCoords.lat, outletCoords.lng]} 
         zoom={13} 
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
@@ -65,21 +98,64 @@ export default function OrderTrackingMap({
         <TileLayer 
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" 
         />
-        <Marker position={points[1]} icon={outletIcon} />
-        <Marker position={points[0]} icon={customerIcon} />
-        <Polyline 
-          positions={points} 
-          pathOptions={{
-            color: '#14532d',
-            weight: 3,
-            dashArray: '1, 12',
-            lineCap: 'round',
-            lineJoin: 'round',
-          }}
-          className="animated-polyline"
-        />
-        <MapBounds points={points} />
+        
+        <Marker position={[outletCoords.lat, outletCoords.lng]} icon={outletIcon} />
+        <Marker position={[customerCoords.lat, customerCoords.lng]} icon={customerIcon} />
+        
+        {routePoints.length > 0 && (
+          <Polyline 
+            positions={routePoints} 
+            pathOptions={{
+              color: '#14532d',
+              weight: 5,
+              opacity: 0.2,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+        )}
+
+        {/* Animated Road Path Flow */}
+        {routePoints.length > 0 && status !== 'Cancelled' && status !== 'Completed' && (
+           <Polyline 
+             positions={routePoints} 
+             pathOptions={{
+               color: '#14532d',
+               weight: 4,
+               dashArray: '15, 20', // Long dashes for better visibility on roads
+               lineCap: 'round',
+               lineJoin: 'round',
+             }}
+             className="animated-polyline"
+           />
+        )}
+
+        {/* Static Road Line for Final States */}
+        {routePoints.length > 0 && (status === 'Cancelled' || status === 'Completed') && (
+           <Polyline 
+             positions={routePoints} 
+             pathOptions={{
+               color: status === 'Completed' ? '#14532d' : '#e31837',
+               weight: 4,
+               opacity: 0.6,
+               lineCap: 'round',
+               lineJoin: 'round',
+             }}
+           />
+        )}
+
+        {routePoints.length > 0 && <MapBounds points={routePoints} />}
       </MapContainer>
+
+      {/* Distance Overlay */}
+      {distance && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-2">
+          <Bike className="h-3.5 w-3.5 text-[#14532d]" />
+          <span className="text-[10px] font-black uppercase tracking-tight text-[#333]">
+            By Road: <span className="font-sans tabular-nums">{distance}</span>
+          </span>
+        </div>
+      )}
     </div>
   );
 }

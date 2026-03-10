@@ -44,7 +44,7 @@ const StatusTracker = ({ status }: { status: OrderStatus }) => {
   if (status === 'Cancelled') return null;
 
   return (
-    <div className="py-6 px-2 font-headline">
+    <div className="py-4 px-2 font-headline">
       <div className="relative flex justify-between">
         {/* Progress Line */}
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-100 z-0" />
@@ -173,14 +173,14 @@ export default function OrdersPage() {
       </div>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-[95vw] md:max-w-lg rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+        <DialogContent className="max-w-[95vw] md:max-w-lg rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[92vh]">
           {selectedOrder && (
             <div className="flex flex-col bg-white h-full overflow-hidden">
-              <DialogHeader className="px-6 py-6 sm:p-8 bg-[#14532d] text-white shrink-0">
+              <DialogHeader className="px-6 py-5 sm:p-8 bg-[#14532d] text-white shrink-0">
                 <div className="flex justify-between items-start font-headline">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Real-Time Tracking</p>
-                    <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic leading-none">
                       #<span className="font-sans tabular-nums">{selectedOrder.id.slice(-6).toUpperCase()}</span>
                     </DialogTitle>
                   </div>
@@ -190,18 +190,18 @@ export default function OrdersPage() {
                 </div>
               </DialogHeader>
 
-              <div className="px-5 py-6 sm:p-8 space-y-8 overflow-y-auto scrollbar-hide font-headline flex-1">
-                {/* 1. Enhanced Map View */}
+              <div className="px-5 py-4 sm:p-8 space-y-6 overflow-y-auto scrollbar-hide font-headline flex-1">
+                {/* 1. Enhanced Map View with Road Routing */}
                 {selectedOrder.deliveryAddress.latitude && selectedOutlet?.latitude && (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transit Intelligence</h4>
+                      <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Navigation Hub</h4>
                       <div className="flex items-center gap-1.5">
                         <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                         <span className="text-[8px] font-black text-green-600 uppercase tracking-widest">Signal Locked</span>
                       </div>
                     </div>
-                    <div className="h-56 w-full rounded-[24px] overflow-hidden border-2 border-gray-50 shadow-inner relative group">
+                    <div className="h-64 w-full rounded-[24px] overflow-hidden border-2 border-gray-50 shadow-inner relative group">
                       <OrderTrackingMap 
                         customerCoords={{ 
                           lat: selectedOrder.deliveryAddress.latitude, 
@@ -213,26 +213,22 @@ export default function OrdersPage() {
                         }}
                         status={selectedOrder.status}
                       />
-                      <div className="absolute top-2 right-2 z-[1000] bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg shadow-sm border border-gray-100 flex items-center gap-1.5">
-                        <Navigation className="h-2.5 w-2.5 text-[#14532d]" />
-                        <span className="text-[7px] font-black uppercase tracking-tight text-[#333]">Live Path Tracking</span>
-                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* 2. Tracker Component */}
-                <div className="bg-gray-50/50 p-6 rounded-[24px] border border-gray-100">
-                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Journey Progress</h4>
+                <div className="bg-gray-50/50 p-4 rounded-[24px] border border-gray-100">
+                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Journey Progress</h4>
                   <StatusTracker status={selectedOrder.status} />
                 </div>
 
                 {selectedOrder.status === 'Cancelled' && (
-                  <div className="bg-red-50 border border-red-100 p-6 rounded-[24px] flex items-start gap-4">
+                  <div className="bg-red-50 border border-red-100 p-5 rounded-[24px] flex items-start gap-4">
                     <AlertCircle className="h-6 w-6 text-red-600 mt-0.5" />
                     <div>
                       <p className="text-sm font-black text-red-900 uppercase italic">Order Voided</p>
-                      <p className="text-[11px] font-medium text-red-700 leading-relaxed uppercase mt-1">
+                      <p className="text-[10px] font-medium text-red-700 leading-relaxed uppercase mt-1">
                         {(selectedOrder as any).cancellationReason || "The kitchen was unable to process your order in time."}
                       </p>
                       <div className="mt-3 flex items-center gap-2 text-blue-600">
@@ -244,27 +240,20 @@ export default function OrdersPage() {
                 )}
 
                 {/* 3. Manifest */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Manifest</h4>
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Kitchen Manifest</h4>
                     <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">{selectedOrder.items.length} SKUs Identified</span>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-start bg-gray-50/30 p-4 rounded-2xl border border-gray-100/50">
-                        <div className="flex gap-4">
-                          <span className="font-black text-[#14532d] bg-green-50 h-8 w-8 rounded-lg flex items-center justify-center text-[10px] shadow-sm font-sans tabular-nums">{item.quantity}x</span>
-                          <div className="flex flex-col gap-1">
+                      <div key={idx} className="flex justify-between items-start bg-gray-50/30 p-3 rounded-2xl border border-gray-100/50">
+                        <div className="flex gap-3">
+                          <span className="font-black text-[#14532d] bg-green-50 h-7 w-7 rounded-lg flex items-center justify-center text-[10px] shadow-sm font-sans tabular-nums">{item.quantity}x</span>
+                          <div className="flex flex-col gap-0.5">
                             <span className="text-xs font-black text-[#333] uppercase italic font-headline">{item.name}</span>
                             {item.variation && (
-                              <Badge className="w-fit text-[8px] font-black uppercase px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded-sm border-none">{item.variation}</Badge>
-                            )}
-                            {item.addons && item.addons.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {item.addons.map((addon, aIdx) => (
-                                  <span key={aIdx} className="text-[9px] font-bold text-[#14532d] uppercase">+{addon}</span>
-                                ))}
-                              </div>
+                              <Badge className="w-fit text-[7px] font-black uppercase px-1.5 py-0 bg-gray-200 text-gray-600 rounded-sm border-none">{item.variation}</Badge>
                             )}
                           </div>
                         </div>
@@ -277,7 +266,7 @@ export default function OrdersPage() {
                 <Separator className="opacity-50" />
 
                 {/* 4. Financial Breakdown */}
-                <div className="space-y-3 bg-gray-50 p-6 rounded-[24px] font-headline">
+                <div className="space-y-2 bg-gray-50 p-5 rounded-[24px] font-headline">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     <span>Item Total</span>
                     <span className="font-sans tabular-nums">₹{selectedOrder.subtotal.toFixed(2)}</span>
@@ -288,24 +277,20 @@ export default function OrdersPage() {
                       {selectedOrder.deliveryFee === 0 ? "FREE" : `₹${selectedOrder.deliveryFee}`}
                     </span>
                   </div>
-                  <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    <span>GST (Taxes)</span>
-                    <span className="font-sans tabular-nums">₹{selectedOrder.gst.toFixed(2)}</span>
-                  </div>
                   {selectedOrder.discount > 0 && (
                     <div className="flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest animate-pulse">
                       <span>Promo Applied</span>
                       <span className="font-sans tabular-nums">-₹{selectedOrder.discount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="pt-3 border-t border-dashed flex justify-between items-center">
+                  <div className="pt-2 border-t border-dashed flex justify-between items-center">
                     <span className="text-sm font-black text-[#333] uppercase">Grand Total</span>
-                    <span className="text-2xl font-black text-[#14532d] italic font-sans tabular-nums">₹{selectedOrder.total.toFixed(2)}</span>
+                    <span className="text-xl font-black text-[#14532d] italic font-sans tabular-nums">₹{selectedOrder.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="p-6 sm:p-8 bg-gray-50/80 border-t shrink-0">
+              <div className="p-6 bg-gray-50/80 border-t shrink-0">
                 <Button 
                   onClick={() => setSelectedOrder(null)}
                   className="w-full h-14 bg-[#14532d] text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all font-headline"
