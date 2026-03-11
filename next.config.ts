@@ -5,6 +5,11 @@ const withPWA = withPWAInit({
   dest: "public",
   register: true,
   disable: process.env.NODE_ENV === "development",
+  // Aggressive caching for images to ensure "Instant" feel
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swMinify: true,
 });
 
 const nextConfig: NextConfig = {
