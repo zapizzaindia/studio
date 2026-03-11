@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Map, Check, Navigation, Loader2, LocateFixed } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Trash2, Home, Briefcase, Map, Check, Navigation, Loader2, LocateFixed, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,7 @@ export default function AddressesPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
   // Form State
   const [label, setLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
@@ -75,6 +76,16 @@ export default function AddressesPage() {
 
     fetchAddresses();
   }, [user, db]);
+
+  const resetForm = () => {
+    setLabel('Home');
+    setFlatNo("");
+    setArea("");
+    setLandmark("");
+    setCity("");
+    setCoords({});
+    setEditingAddress(null);
+  };
 
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
@@ -108,29 +119,46 @@ export default function AddressesPage() {
     }
 
     setIsAdding(true);
-    const newAddress = {
+    const addressData = {
       label,
       flatNo,
       area,
       landmark,
       city,
-      isDefault: addresses.length === 0,
-      latitude: coords.lat,
-longitude: coords.lng,
+      isDefault: editingAddress ? editingAddress.isDefault : addresses.length === 0,
+      latitude: coords.lat ?? null,
+      longitude: coords.lng ?? null,
     };
 
     try {
-      const docRef = await addDoc(collection(db, `users/${user.uid}/addresses`), newAddress);
-      setAddresses([...addresses, { id: docRef.id, ...newAddress }]);
+      if (editingAddress) {
+        const addrRef = doc(db, `users/${user.uid}/addresses`, editingAddress.id);
+        await updateDoc(addrRef, addressData);
+        setAddresses(addresses.map(a => a.id === editingAddress.id ? { ...a, ...addressData } as Address : a));
+        toast({ title: "Address updated successfully" });
+      } else {
+        const docRef = await addDoc(collection(db, `users/${user.uid}/addresses`), addressData);
+        setAddresses([...addresses, { id: docRef.id, ...addressData } as Address]);
+        toast({ title: "Address saved successfully" });
+      }
       setIsOpen(false);
-      toast({ title: "Address saved successfully" });
-      // Reset form
-      setFlatNo(""); setArea(""); setLandmark(""); setCity(""); setCoords({});
+      resetForm();
     } catch (e: any) {
-      toast({ title: "Failed to add address", description: e.message, variant: "destructive" });
+      toast({ title: "Operation failed", description: e.message, variant: "destructive" });
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleEdit = (addr: Address) => {
+    setEditingAddress(addr);
+    setLabel(addr.label);
+    setFlatNo(addr.flatNo);
+    setArea(addr.area);
+    setLandmark(addr.landmark || "");
+    setCity(addr.city);
+    setCoords({ lat: addr.latitude, lng: addr.longitude });
+    setIsOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -189,15 +217,20 @@ longitude: coords.lng,
                       <span className="text-[10px] font-black uppercase text-[#14532d] tracking-widest bg-[#14532d]/10 px-2 py-0.5 rounded-full">
                         {addr.label}
                       </span>
-                      {addr.latitude !== undefined && (
+                      {addr.latitude !== undefined && addr.latitude !== null && (
                         <span className="text-[8px] font-black uppercase text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1">
                           <Navigation className="h-2 w-2 fill-current" /> GPS PINNED
                         </span>
                       )}
                     </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => handleDelete(addr.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:bg-blue-50" onClick={() => handleEdit(addr)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-50" onClick={() => handleDelete(addr.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm font-black text-[#333333] leading-tight">
                     {addr.flatNo}, {addr.area}
@@ -227,15 +260,17 @@ longitude: coords.lng,
           ))
         )}
 
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={(val) => { setIsOpen(val); if(!val) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="w-full h-14 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl shadow-lg mt-4 flex items-center justify-center gap-2">
+            <Button onClick={() => { resetForm(); setIsOpen(true); }} className="w-full h-14 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl shadow-lg mt-4 flex items-center justify-center gap-2">
               ADD NEW ADDRESS <Plus className="h-5 w-5" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] rounded-3xl p-6 overflow-y-auto max-h-[95vh] border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-black text-[#14532d] uppercase tracking-widest italic">New Destination</DialogTitle>
+              <DialogTitle className="text-xl font-black text-[#14532d] uppercase tracking-widest italic">
+                {editingAddress ? "Update Destination" : "New Destination"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 mt-4">
               
@@ -255,7 +290,7 @@ longitude: coords.lng,
                     className="h-12 border-dashed border-[#14532d] text-[#14532d] font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 px-2"
                 >
                     <LocateFixed className="h-3.5 w-3.5" />
-                    {coords.lat ? "PIN ON MAP" : "PIN ON MAP"}
+                    {coords.lat ? "ADJUST PIN" : "PIN ON MAP"}
                 </Button>
               </div>
 
@@ -307,7 +342,7 @@ longitude: coords.lng,
                 disabled={isAdding}
                 className="w-full h-14 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-2xl shadow-xl mt-4"
               >
-                {isAdding ? <Loader2 className="animate-spin h-5 w-5" /> : "SAVE DESTINATION"}
+                {isAdding ? <Loader2 className="animate-spin h-5 w-5" /> : (editingAddress ? "UPDATE DESTINATION" : "SAVE DESTINATION")}
               </Button>
             </div>
           </DialogContent>
