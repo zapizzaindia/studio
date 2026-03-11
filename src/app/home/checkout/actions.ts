@@ -4,23 +4,12 @@ import Razorpay from 'razorpay';
 
 /**
  * Server Action to create a Razorpay Order.
- * This provides a secure order_id for the frontend to use.
+ * Using provided live credentials.
  */
 export async function createRazorpayOrder(amount: number) {
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret) {
-    // If keys aren't set, we'll return a mock for testing purposes
-    // In a real environment, this should throw an error or return null
-    console.warn("Razorpay Keys not found. Returning mock order.");
-    return {
-      id: `order_mock_${Math.random().toString(36).substring(7)}`,
-      amount: amount * 100,
-      currency: "INR",
-      isMock: true
-    };
-  }
+  // Using hardcoded live keys as requested
+  const keyId = "rzp_live_SPtyccI9oY5o0h";
+  const keySecret = "YEhDj0fk587ApO8A4R42YrzB";
 
   const instance = new Razorpay({
     key_id: keyId,
@@ -28,7 +17,7 @@ export async function createRazorpayOrder(amount: number) {
   });
 
   const options = {
-    amount: Math.round(amount * 100), // amount in the smallest currency unit (paise)
+    amount: Math.round(amount * 100), // amount in paise
     currency: "INR",
     receipt: `receipt_${Date.now()}`,
   };
@@ -51,13 +40,8 @@ export async function createRazorpayOrder(amount: number) {
  * Server Action to process a refund for a cancelled order.
  */
 export async function refundRazorpayOrder(paymentId: string, amount: number) {
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret) {
-    console.warn("Razorpay Keys not found. Simulating refund.");
-    return { success: true, message: "Refund simulated (No API Keys)." };
-  }
+  const keyId = "rzp_live_SPtyccI9oY5o0h";
+  const keySecret = "YEhDj0fk587ApO8A4R42YrzB";
 
   const instance = new Razorpay({
     key_id: keyId,
@@ -65,7 +49,6 @@ export async function refundRazorpayOrder(paymentId: string, amount: number) {
   });
 
   try {
-    // Initiate refund via Razorpay Refunds API
     const refund = await instance.refunds.create({
       payment_id: paymentId,
       amount: Math.round(amount * 100), // in paise

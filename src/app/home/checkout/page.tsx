@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, MessageSquareText, Wallet, IndianRupee as RupeeIcon, Navigation, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import Script from "next/script";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { createRazorpayOrder } from "./actions";
@@ -28,9 +25,8 @@ declare global {
   }
 }
 
-// Haversine formula to calculate distance in KM
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  const R = 6371; // Radius of the earth in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a = 
@@ -59,7 +55,6 @@ export default function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [specialNote, setSpecialNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"Online" | "Cash">("Online");
   const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false);
 
   useEffect(() => {
@@ -129,7 +124,6 @@ export default function CheckoutPage() {
       }
     }
 
-    // Loyalty Redemption Logic: Max 10% of subtotal
     let loyaltyDiscount = 0;
     if (useLoyaltyPoints && userProfile?.loyaltyPoints) {
         const maxRedeemable = subtotal * 0.1;
@@ -204,7 +198,7 @@ export default function CheckoutPage() {
         latitude: selectedAddress?.latitude || null,
         longitude: selectedAddress?.longitude || null
       },
-      paymentMethod: paymentMethod,
+      paymentMethod: "Online",
       paymentStatus: status,
       paymentId: paymentId,
       loyaltyPointsEarned: pointsEarned,
@@ -213,15 +207,12 @@ export default function CheckoutPage() {
 
     try {
       await addDoc(collection(db, 'orders'), orderData);
-      
-      // Atomic Loyalty Update: Increment earned, Decrement redeemed
       const netPointsUpdate = pointsEarned - (calculations.loyaltyDiscount || 0);
       if (netPointsUpdate !== 0) {
         await updateDoc(doc(db, 'users', user.uid), { 
             loyaltyPoints: increment(netPointsUpdate) 
         });
       }
-
       clearCart();
       router.push('/home/checkout/success');
     } catch (error) {
@@ -246,22 +237,12 @@ export default function CheckoutPage() {
 
     setIsPlacing(true);
 
-    if (paymentMethod === 'Cash') {
-      try {
-        await saveOrderToFirestore("CASH_ON_DELIVERY", "Pending");
-      } catch (e: any) {
-        toast({ variant: 'destructive', title: "Order Failed", description: e.message });
-        setIsPlacing(false);
-      }
-      return;
-    }
-
     try {
       toast({ title: "Initiating Gateway", description: "Connecting to secure servers..." });
       const order = await createRazorpayOrder(calculations.finalTotal);
 
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_mock_key",
+        key: "rzp_live_SPtyccI9oY5o0h",
         amount: order.amount,
         currency: order.currency,
         name: selectedOutlet?.brand === 'zfry' ? "Zfry India" : "Zapizza",
@@ -409,7 +390,6 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Loyalty Redemption Section */}
         {userProfile && (userProfile.loyaltyPoints || 0) > 0 && (
             <Card className="border-none shadow-sm overflow-hidden bg-white">
                 <CardContent className="p-4 font-headline">
@@ -466,49 +446,6 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm overflow-hidden font-headline">
-          <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
-              <Wallet className="h-4 w-4" /> Payment Method
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 bg-white">
-            <RadioGroup value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)} className="space-y-3">
-              <div className={cn(
-                "flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                paymentMethod === 'Online' ? "border-current bg-opacity-5" : "border-gray-100 bg-gray-50/50"
-              )} style={{ color: paymentMethod === 'Online' ? brandColor : undefined }}>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-muted-foreground">
-                    <CreditCard className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <Label htmlFor="online" className="text-sm font-black uppercase cursor-pointer">Pay Online</Label>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Cards, UPI, Wallets</p>
-                  </div>
-                </div>
-                <RadioGroupItem value="Online" id="online" className="border-2" />
-              </div>
-
-              <div className={cn(
-                "flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                paymentMethod === 'Cash' ? "border-current bg-opacity-5" : "border-gray-100 bg-gray-50/50"
-              )} style={{ color: paymentMethod === 'Cash' ? brandColor : undefined }}>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-muted-foreground">
-                    <Wallet className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <Label htmlFor="cash" className="text-sm font-black uppercase cursor-pointer">Cash on Delivery</Label>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Pay at your doorstep</p>
-                  </div>
-                </div>
-                <RadioGroupItem value="Cash" id="cash" className="border-2" />
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
-
         <Card className="border-none shadow-sm">
           <CardHeader className="bg-white border-b py-4">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Bill Details</CardTitle>
@@ -551,6 +488,13 @@ export default function CheckoutPage() {
             </div>
           </CardContent>
         </Card>
+
+        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-blue-600 mt-0.5" />
+          <p className="text-[9px] font-bold text-blue-800 uppercase leading-relaxed">
+            Secure 256-bit encrypted payment via Razorpay. Your transaction is 100% safe.
+          </p>
+        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
@@ -562,7 +506,7 @@ export default function CheckoutPage() {
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (
             calculations.isOutOfRange ? "UNAVAILABLE IN YOUR AREA" : (
-                `PLACE ORDER ₹${Math.round(calculations.finalTotal)}`
+                `PAY & PLACE ORDER ₹${Math.round(calculations.finalTotal)}`
             )
           )}
         </Button>
