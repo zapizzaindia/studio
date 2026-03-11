@@ -712,7 +712,7 @@ export default function HomePage() {
         >
           <div className="relative z-10 font-headline">
             <h3 className="text-2xl font-black uppercase leading-tight italic">
-              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} <span className="font-sans tabular-nums">700</span>+
+              {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} <span className="font-sans tabular-nums">100</span>+
             </h3>
             <p className="text-sm font-bold uppercase tracking-widest opacity-80 mt-1">Outlets across the World</p>
             
@@ -835,9 +835,9 @@ export default function HomePage() {
                   <Building2 className="h-5 w-5 text-white" />
                 </div>
               </div>
-              <DialogDescription className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-3 text-left">
+              <DialogTitle className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-3 text-left">
                 Join the fastest growing food network.
-              </DialogDescription>
+              </DialogTitle>
             </DialogHeader>
           </div>
 
