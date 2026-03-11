@@ -17,12 +17,18 @@ export default function SplashPage() {
   const [promoBanner, setPromoBanner] = useState<AppBanner | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Detect mobile device
   useEffect(() => {
     setIsMounted(true);
-    setIsMobile(window.innerWidth <= 768);
+
+    const ua = navigator.userAgent;
+    const mobile =
+      /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(ua);
+
+    setIsMobile(mobile);
   }, []);
 
-  // Redirect desktop users
+  // Desktop redirect
   useEffect(() => {
     if (!isMounted) return;
 
@@ -31,8 +37,9 @@ export default function SplashPage() {
     }
   }, [isMounted, isMobile]);
 
+  // Fetch promo banner
   useEffect(() => {
-    if (!isMounted || !db) return;
+    if (!isMounted || !db || !isMobile) return;
 
     const checkPromo = async () => {
       try {
@@ -66,7 +73,7 @@ export default function SplashPage() {
     };
 
     checkPromo();
-  }, [isMounted, db]);
+  }, [isMounted, db, isMobile]);
 
   const finishSplash = () => {
     if (loading) return;
@@ -84,21 +91,17 @@ export default function SplashPage() {
     }
   };
 
-  if (!isMounted) return null;
+  if (!isMounted || !isMobile) return null;
 
-  const bannerImage =
-    promoBanner?.imageUrl || "/fallback-splash.jpg"; // optional fallback
+  const bannerImage = promoBanner?.imageUrl || "/splash-fallback.jpg";
 
   return (
     <main className="fixed inset-0 bg-black overflow-hidden">
 
       <motion.div
-        initial={{ opacity: 0, scale: 1.1 }}
-        animate={{
-          opacity: 1,
-          scale: 1,
-          transition: { duration: 0.6, ease: "easeOut" },
-        }}
+        initial={{ opacity: 0, scale: 1.05 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
         className="absolute inset-0"
         onClick={handleBannerClick}
       >
@@ -114,12 +117,12 @@ export default function SplashPage() {
         >
           <Image
             src={bannerImage}
-            alt="Promotion"
+            alt="Zapizza Splash"
             fill
             sizes="100vw"
-            className="object-cover"
             priority
             unoptimized
+            className="object-cover"
           />
         </motion.div>
 
