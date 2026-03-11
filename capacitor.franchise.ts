@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Zapizza Franchise',
   webDir: 'out',
   server: {
-    url: 'https://orders.zapizza.co.in/superadmin/login',
+    url: 'https://orders.zapizza.co.in/franchise/login',
     cleartext: true
   }
 };
