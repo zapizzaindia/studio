@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -63,6 +64,10 @@ export default function CheckoutPage() {
       try { setSelectedOutlet(JSON.parse(savedOutlet)); } catch(e) {}
     }
   }, []);
+
+  const { data: realTimeOutlet } = useDoc<Outlet>('outlets', selectedOutlet?.id || 'dummy');
+  const outlet = realTimeOutlet || selectedOutlet;
+  const isOutletClosed = outlet?.isOpen === false;
 
   useEffect(() => {
     if (!user || !db) return;
@@ -165,7 +170,7 @@ export default function CheckoutPage() {
     if (!db || !user) return;
 
     const pointsEarned = Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1));
-    const outlet = selectedOutlet || { id: 'default' };
+    const outletObj = selectedOutlet || { id: 'default' };
 
     const orderData: any = {
       customerId: user.uid,
@@ -188,7 +193,7 @@ export default function CheckoutPage() {
       distanceKm: calculations.distanceKm,
       status: "New",
       createdAt: serverTimestamp(),
-      outletId: outlet.id,
+      outletId: outletObj.id,
       deliveryAddress: {
         label: selectedAddress?.label || "Home",
         flatNo: selectedAddress?.flatNo || "N/A",
@@ -226,6 +231,10 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user) { router.push('/login'); return; }
+    if (isOutletClosed) {
+      toast({ variant: 'destructive', title: "Outlet Closed", description: "This kitchen is currently not accepting orders." });
+      return;
+    }
     if (!selectedAddress) {
       toast({ variant: 'destructive', title: "Address Required", description: "Where should we deliver?" });
       return;
@@ -308,7 +317,19 @@ export default function CheckoutPage() {
       </div>
 
       <div className="container mx-auto p-4 space-y-4 max-w-lg text-left">
-        {calculations.isOutOfRange && (
+        {isOutletClosed && (
+          <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+            <div>
+              <p className="text-[10px] font-black text-red-900 uppercase">Outlet is Closed</p>
+              <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1">
+                This kitchen is currently not accepting new orders. Please check back during operating hours.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {calculations.isOutOfRange && !isOutletClosed && (
             <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
                 <div>
@@ -500,13 +521,15 @@ export default function CheckoutPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
         <Button 
           onClick={handlePlaceOrder}
-          disabled={isPlacing || !selectedAddress || calculations.isOutOfRange}
+          disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed}
           className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95"
           style={{ backgroundColor: brandColor }}
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (
-            calculations.isOutOfRange ? "UNAVAILABLE IN YOUR AREA" : (
-                `PAY & PLACE ORDER ₹${Math.round(calculations.finalTotal)}`
+            isOutletClosed ? "OUTLET CURRENTLY CLOSED" : (
+              calculations.isOutOfRange ? "UNAVAILABLE IN YOUR AREA" : (
+                  `PAY & PLACE ORDER ₹${Math.round(calculations.finalTotal)}`
+              )
             )
           )}
         </Button>

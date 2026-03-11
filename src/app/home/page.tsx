@@ -32,7 +32,8 @@ import {
   User as UserIcon,
   IndianRupee,
   Briefcase,
-  Layers
+  Layers,
+  X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -157,6 +158,9 @@ export default function HomePage() {
   const [enquiryPhone, setEnquiryPhone] = useState("");
   const [enquiryCity, setEnquiryCity] = useState("");
   const [enquiryInvestment, setEnquiryInvestment] = useState("");
+
+  const [showClosedModal, setShowClosedModal] = useState(false);
+  const [hasDismissedClosedModal, setHasDismissedClosedModal] = useState(false);
 
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
 
@@ -287,6 +291,13 @@ export default function HomePage() {
     return () => clearInterval(intervalId);
   }, [api]);
 
+  useEffect(() => {
+    // Show modal if outlet is closed and user hasn't dismissed it this session
+    if (selectedOutlet && selectedOutlet.isOpen === false && !hasDismissedClosedModal) {
+      setShowClosedModal(true);
+    }
+  }, [selectedOutlet?.isOpen, hasDismissedClosedModal]);
+
   const handleCitySelect = (city: City, outlet?: Outlet) => {
     setSelectedCity(city);
     localStorage.setItem("zapizza-city", JSON.stringify(city));
@@ -392,7 +403,7 @@ export default function HomePage() {
         className="bg-white text-[#333] px-6 py-4 relative transition-all duration-700 border-b"
       >
         <div className="flex justify-between items-start">
-          <div className="flex flex-col">
+          <div className="flex flex-col text-left">
             <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 font-headline">
               Welcome Back,
             </p>
@@ -438,27 +449,27 @@ export default function HomePage() {
       </div>
 
       {heroBanner && (
-  <div className="relative w-full h-[300px] overflow-hidden md:hidden">
-    {heroBanner.mediaType === "video" ? (
-      <video
-        src={heroBanner.imageId}
-        className="w-full h-full object-cover scale-105"
-        autoPlay
-        muted
-        loop
-        playsInline
-      />
-    ) : (
-      <Image
-        src={getImageUrl(heroBanner.imageId)}
-        alt="Hero Banner"
-        fill
-        priority
-        className="object-cover scale-105"
-      />
-    )}
-  </div>
-)}
+        <div className="relative w-full h-[300px] overflow-hidden md:hidden">
+          {heroBanner.mediaType === "video" ? (
+            <video
+              src={heroBanner.imageId}
+              className="w-full h-full object-cover scale-105"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <Image
+              src={getImageUrl(heroBanner.imageId)}
+              alt="Hero Banner"
+              fill
+              priority
+              className="object-cover scale-105"
+            />
+          )}
+        </div>
+      )}
   
       <div className="mt-6 px-6">
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
@@ -469,7 +480,7 @@ export default function HomePage() {
               <CarouselItem key={index}>
                 <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-lg group">
                   <Image src={getImageUrl(banner.imageId)} alt={banner.title || 'Promotion'} fill className="object-cover" />
-                  <div className="absolute inset-0 flex flex-col justify-center p-6">
+                  <div className="absolute inset-0 flex flex-col justify-center p-6 text-left">
                     {banner.subtitle && <Badge className="w-fit mb-2 bg-yellow-400 text-black font-black uppercase text-[8px] tracking-widest rounded-sm font-headline">{banner.subtitle}</Badge>}
                     {banner.title && <h2 className="text-white text-xl font-black uppercase italic leading-tight mb-2 drop-shadow-md font-headline">{banner.title}</h2>}
                     {banner.price && <p className="text-white font-black text-lg drop-shadow-md font-sans tabular-nums">₹{banner.price}</p>}
@@ -660,8 +671,8 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-8 px-2 relative z-10 font-headline">
-            <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden text-left">
+          <div className="mt-8 px-2 relative z-10 font-headline text-left">
+            <Card className="bg-white rounded-[24px] border-none shadow-2xl overflow-hidden">
               <CardContent className="p-6">
                 <div className="flex flex-col gap-1">
                   <h3 className="text-2xl font-black text-[#333] leading-none tabular-nums font-sans">
@@ -769,7 +780,7 @@ export default function HomePage() {
         <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white relative font-headline text-left">
           <CardContent className="p-8 flex items-center justify-between">
             <div className="space-y-2 max-w-[200px]">
-              <h2 className="text-3xl font-black text-[#14532d] uppercase italic tracking-tighter text-left">Beware!</h2>
+              <h2 className="text-3xl font-black text-[#14532d] uppercase italic tracking-tighter">Beware!</h2>
               <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase">
                 {selectedOutlet?.brand === 'zfry' ? 'Zfry' : 'Zapizza'} or its employees Do not call for any transaction OTP
               </p>
@@ -821,6 +832,56 @@ export default function HomePage() {
            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-muted-foreground/30" />
         </div>
       </div>
+
+      {/* Closed Outlet Modal */}
+      <Dialog open={showClosedModal} onOpenChange={(open) => {
+        setShowClosedModal(open);
+        if (!open) setHasDismissedClosedModal(true);
+      }}>
+        <DialogContent className="max-w-[90vw] sm:max-w-md rounded-[32px] p-8 overflow-hidden border-none shadow-2xl bg-white font-headline text-center">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative h-48 w-48">
+              <Image 
+                src="https://picsum.photos/seed/closed-shop/400/400" 
+                alt="Outlet Closed" 
+                fill 
+                className="object-contain"
+                data-ai-hint="closed sign"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2 text-primary font-black uppercase text-sm">
+                <MapPin className="h-4 w-4" /> {selectedOutlet?.name}
+              </div>
+              <h2 className="text-xl font-bold text-muted-foreground uppercase tracking-widest">Outlet is Currently</h2>
+              <h3 className="text-5xl font-black text-destructive italic tracking-tighter uppercase">CLOSED</h3>
+            </div>
+
+            <div className="w-full space-y-4 pt-4">
+              <Button 
+                onClick={() => {
+                  localStorage.removeItem("zapizza-city");
+                  localStorage.removeItem("zapizza-outlet");
+                  window.location.reload();
+                }}
+                className="w-full h-14 bg-[#14532d] hover:bg-[#0f4023] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all active:scale-95"
+              >
+                Explore Other Outlets
+              </Button>
+              <button 
+                onClick={() => {
+                  setShowClosedModal(false);
+                  setHasDismissedClosedModal(true);
+                }}
+                className="text-xs font-black text-muted-foreground uppercase tracking-widest underline decoration-2 underline-offset-4 hover:text-[#333] transition-colors"
+              >
+                Proceed Anyway
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isFranchiseModalOpen} onOpenChange={setIsFranchiseModalOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl bg-white font-headline flex flex-col max-h-[95vh]">
