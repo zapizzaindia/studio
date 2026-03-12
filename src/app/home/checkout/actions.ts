@@ -38,6 +38,7 @@ export async function createRazorpayOrder(amount: number) {
 
 /**
  * Server Action to process a refund for a cancelled order.
+ * This is triggered automatically when an order is Rejected or Timed Out.
  */
 export async function refundRazorpayOrder(paymentId: string, amount: number) {
   const keyId = "rzp_live_SPtyccI9oY5o0h";
@@ -61,6 +62,7 @@ export async function refundRazorpayOrder(paymentId: string, amount: number) {
     };
   } catch (error: any) {
     console.error("Razorpay Refund Error:", error);
-    throw new Error(error.message || "Could not process refund via gateway.");
+    // Return error message to allow the admin to know if manual intervention is needed
+    throw new Error(error.description || error.message || "Could not process refund via gateway.");
   }
 }

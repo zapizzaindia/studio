@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -115,16 +114,18 @@ export default function AdminOrdersPage() {
     const updateData: any = { status };
     if (reason) updateData.cancellationReason = reason;
 
-    // Handle Automated Refund for Pre-paid orders
-    if (status === 'Cancelled' && order.paymentMethod === 'Online' && order.paymentId && order.paymentId !== 'CASH_ON_DELIVERY') {
+    // SCENARIO: Reject or Timeout -> Trigger Refund
+    if (status === 'Cancelled' && order.paymentMethod === 'Online' && order.paymentId) {
       toast({ title: "Initializing Refund", description: "Reversing online payment..." });
+      
       refundRazorpayOrder(order.paymentId, order.total)
         .then(() => {
           updateDoc(orderRef, { paymentStatus: 'Refunded' });
           toast({ title: "Refund Success", description: "Gateway confirmed reversal." });
         })
-        .catch(() => {
-          toast({ variant: 'destructive', title: "Refund Automation Error", description: "Please process refund manually via Razorpay dashboard." });
+        .catch((err) => {
+          console.error("Refund Error:", err);
+          toast({ variant: 'destructive', title: "Refund Failed", description: err.message || "Manual reversal required in Razorpay." });
         });
     }
 
@@ -149,7 +150,9 @@ export default function AdminOrdersPage() {
 
   const handleAutoCancel = (orderId: string) => {
     const order = orders?.find(o => o.id === orderId);
-    if (order) handleUpdateStatus(order, 'Cancelled', 'Kitchen Timeout');
+    if (order && order.status === 'New') {
+      handleUpdateStatus(order, 'Cancelled', 'Kitchen Timeout');
+    }
   };
 
   const handleShareLocation = (order: Order) => {
@@ -193,7 +196,7 @@ export default function AdminOrdersPage() {
                         </div>
                     )}
                     <Badge variant="outline" className="text-[8px] font-black uppercase h-4 px-1.5 border-green-200 text-green-600">
-                        Paid
+                        Paid Online
                     </Badge>
                   </div>
                 </div>
@@ -368,7 +371,7 @@ export default function AdminOrdersPage() {
                     <div className="flex flex-col">
                         <span className="text-[14px] font-black uppercase text-[#333] tracking-tighter italic">Total Amount to Settle</span>
                         <div className="flex items-center gap-1.5 mt-1">
-                            <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">PAID: {selectedOrder.paymentMethod || 'Online'}</Badge>
+                            <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">PAID ONLINE</Badge>
                             <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                     </div>
