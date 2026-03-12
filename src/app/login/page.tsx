@@ -51,22 +51,29 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    if (!auth || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
+    if (!auth) return;
   
-    if (!window.recaptchaVerifier) {
-      const verifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-          size: "invisible",
+    const timer = setTimeout(() => {
+      if (!window.recaptchaVerifier) {
+        try {
+          window.recaptchaVerifier = new RecaptchaVerifier(
+            auth,
+            "recaptcha-container",
+            {
+              size: "invisible"
+            }
+          );
+  
+          window.recaptchaVerifier.render();
+          console.log("Recaptcha initialized");
+        } catch (err) {
+          console.error("Recaptcha init failed:", err);
         }
-      );
+      }
+    }, 500); // small delay fixes auth race condition
   
-      verifier.render().then(() => {
-        window.recaptchaVerifier = verifier;
-        console.log("Recaptcha initialized");
-      });
-    }
+    return () => clearTimeout(timer);
   }, [auth]);
     
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
