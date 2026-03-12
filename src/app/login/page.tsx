@@ -51,25 +51,21 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    if (!auth || typeof window === "undefined") return;
-  
-    const container = document.getElementById("recaptcha-container");
-    if (!container) return;
+    if (!auth) return;
   
     if (!window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier = new RecaptchaVerifier(
-          auth,                     // FIRST
-          "recaptcha-container",    // SECOND
-          {
-            size: "invisible",
-          }
-        );
+      const verifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible"
+        }
+      );
   
-        window.recaptchaVerifier.render().catch(console.error);
-      } catch (err) {
-        console.error("Recaptcha init error:", err);
-      }
+      verifier.render().then(() => {
+        window.recaptchaVerifier = verifier;
+        console.log("Recaptcha initialized");
+      });
     }
   }, [auth]);
     
@@ -97,10 +93,15 @@ export default function LoginPage() {
       const phone = `+91${values.phone}`;
       setPhoneNumber(phone);
   
-      const appVerifier = window.recaptchaVerifier;
-      if (!appVerifier) {
-        throw new Error("Recaptcha not initialized. Please refresh the page.");
+      if (!window.recaptchaVerifier) {
+        toast({
+          title: "Initializing security check...",
+          description: "Please wait 1 second and try again."
+        });
+        return;
       }
+      
+      const appVerifier = window.recaptchaVerifier;
   
       const confirmationResult = await signInWithPhoneNumber(
         auth,
