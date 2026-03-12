@@ -51,14 +51,14 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth || typeof window === "undefined") return;
   
     if (!window.recaptchaVerifier) {
       const verifier = new RecaptchaVerifier(
         auth,
         "recaptcha-container",
         {
-          size: "invisible"
+          size: "invisible",
         }
       );
   
