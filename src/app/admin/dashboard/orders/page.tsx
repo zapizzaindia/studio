@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -155,7 +156,7 @@ export default function AdminOrdersPage() {
     const addr = order.deliveryAddress;
     const mapLink = addr?.latitude ? `\n📍 *Map:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
     const note = order.specialNote ? `\n\n📝 *KITCHEN NOTE:* ${order.specialNote.toUpperCase()}` : '';
-    const payNote = order.paymentMethod === 'Cash' ? `\n\n💵 *COLLECT CASH:* ₹${order.total.toFixed(2)}` : `\n\n✅ *PRE-PAID ORDER*`;
+    const payNote = `\n\n✅ *PRE-PAID ORDER*`;
     
     const host = window.location.origin.replace(/\/$/, "");
     const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery/${order.id}`;
@@ -191,8 +192,8 @@ export default function AdminOrdersPage() {
                         <MessageSquareText className="h-2.5 w-2.5" /> Note
                         </div>
                     )}
-                    <Badge variant="outline" className={cn("text-[8px] font-black uppercase h-4 px-1.5", order.paymentMethod === 'Cash' ? "border-amber-200 text-amber-600" : "border-green-200 text-green-600")}>
-                        {order.paymentMethod === 'Cash' ? 'Cash' : 'Paid'}
+                    <Badge variant="outline" className="text-[8px] font-black uppercase h-4 px-1.5 border-green-200 text-green-600">
+                        Paid
                     </Badge>
                   </div>
                 </div>
@@ -367,12 +368,8 @@ export default function AdminOrdersPage() {
                     <div className="flex flex-col">
                         <span className="text-[14px] font-black uppercase text-[#333] tracking-tighter italic">Total Amount to Settle</span>
                         <div className="flex items-center gap-1.5 mt-1">
-                            {selectedOrder.paymentMethod === 'Cash' ? (
-                                <Badge className="bg-amber-500/10 text-amber-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">UNPAID: CASH ON DELIVERY</Badge>
-                            ) : (
-                                <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">PAID: {selectedOrder.paymentMethod || 'Online'}</Badge>
-                            )}
-                            {selectedOrder.paymentMethod === 'Cash' ? <Wallet className="h-3.5 w-3.5 text-muted-foreground" /> : <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />}
+                            <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">PAID: {selectedOrder.paymentMethod || 'Online'}</Badge>
+                            <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                     </div>
                     <span className="text-3xl font-black tracking-tighter italic" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(2)}</span>

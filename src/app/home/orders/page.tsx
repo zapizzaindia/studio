@@ -57,7 +57,7 @@ const StatusTracker = ({ status }: { status: OrderStatus }) => {
             <div key={idx} className="relative z-10 flex flex-col items-center gap-2">
               <div className={cn(
                 "h-10 w-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm transition-all duration-500",
-                isDone ? "bg-green-500 text-white" : 
+                isDone ? "bg-green-50 text-white" : 
                 isCurrent ? "bg-[#14532d] text-white scale-110 ring-4 ring-green-100" : 
                 "bg-gray-100 text-gray-400"
               )}>
@@ -232,8 +232,17 @@ export default function OrdersPage() {
                         {(selectedOrder as any).cancellationReason || "The kitchen was unable to process your order in time."}
                       </p>
                       <div className="mt-3 flex items-center gap-2 text-blue-600">
-                        <RefreshCcw className="h-3.5 w-3.5 animate-spin" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Full Refund Initialized</span>
+                        {selectedOrder.paymentStatus === 'Refunded' ? (
+                          <>
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-green-600">Full Refund Processed</span>
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCcw className="h-3.5 w-3.5 animate-spin" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Full Refund Initialized</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
