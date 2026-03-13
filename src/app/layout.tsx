@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'default', // 'default' results in a white status bar with black text on iOS
     title: 'Zapizza',
   },
   formatDetection: {
@@ -31,12 +31,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#ffffff', // Changed to white as requested for the status bar area
+  themeColor: '#ffffff', // Ensures the browser and wrapper identify the preferred theme color
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover', // Ensures the app content can flow under the status bar if needed
+  viewportFit: 'cover', // Allows the app to utilize the full screen behind the status bar
 };
 
 export default function RootLayout({
