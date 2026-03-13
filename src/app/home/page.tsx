@@ -400,15 +400,15 @@ export default function HomePage() {
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
   
       <div
-        className="bg-white text-[#333] px-6 py-4 relative transition-all duration-700 border-b"
+        className="bg-white text-[#333] px-6 py-5 relative transition-all duration-700 border-b"
       >
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-center">
           <div className="flex flex-col text-left">
             <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 font-headline">
               Welcome Back,
             </p>
   
-            <h1 className="text-2xl font-black italic tracking-tighter leading-none mb-3 font-headline">
+            <h1 className="text-2xl font-black italic tracking-tighter leading-none font-headline">
               {userProfile?.displayName?.split(" ")[0] ||
                 user?.displayName?.split(" ")[0] ||
                 "Valued Customer"}
