@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import { ChevronDown, MapPin, User, LogOut, ShoppingCart, History, Settings } from "lucide-react";
@@ -74,7 +73,7 @@ const handleLogout = async () => {
   const brandBg = brand === "zfry" ? "bg-[#e31837]" : "bg-[#14532d]";
 
   return (
-    <header className={cn("fixed top-0 left-0 right-0 z-30 text-white transition-colors duration-500", brandBg)}>
+    <header className={cn("fixed top-0 left-0 right-0 z-30 text-white transition-colors duration-500 pt-safe", brandBg)}>
       <div className="container mx-auto flex h-16 max-w-full items-center justify-between px-4">
         <div className="flex items-center gap-1 overflow-hidden cursor-pointer" onClick={handleChangeLocation}>
           <MapPin className="h-5 w-5 text-white flex-shrink-0" />

@@ -31,11 +31,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#14532d',
+  themeColor: '#ffffff', // Changed to white as requested for the status bar area
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: 'cover', // Ensures the app content can flow under the status bar if needed
 };
 
 export default function RootLayout({
