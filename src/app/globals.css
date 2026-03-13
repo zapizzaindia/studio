@@ -60,3 +60,11 @@
 .animated-polyline {
   animation: leaflet-line-flow 1s linear infinite;
 }
+/* Fix Android status bar overlap */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+body {
+  padding-top: env(safe-area-inset-top);
+}
