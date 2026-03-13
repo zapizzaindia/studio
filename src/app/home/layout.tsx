@@ -8,7 +8,7 @@ export default function HomeLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-white">
+    <div className="relative flex min-h-screen w-full flex-col bg-white pt-safe">
       <MainNav />
       <main className="flex-1 pt-16 pb-16">{children}</main>
       <MobileNav />
