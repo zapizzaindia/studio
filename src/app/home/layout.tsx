@@ -10,7 +10,7 @@ export default function HomeLayout({
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-white pt-safe">
       <MainNav />
-      <main className="flex-1 pb-16">{children}</main>
+      <main className="flex-1 pt-10 pb-16">{children}</main>
       <MobileNav />
     </div>
   );
