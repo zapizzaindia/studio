@@ -162,7 +162,7 @@ export default function LoginPage() {
     exit: { opacity: 0, x: 50 },
   };
 
-  if (userLoading) return null;
+  if (userLoading || !auth) return null;
 
   return (
     <div className="w-full max-w-sm p-4">
