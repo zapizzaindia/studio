@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { CartProvider } from '@/hooks/use-cart';
 import { FCMHandler } from '@/components/fcm-handler';
+import { OfflineDetector } from '@/components/offline-detector';
 
 export const metadata: Metadata = {
   title: 'Zapizza',
@@ -62,6 +63,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <CartProvider>
             <FCMHandler />
+            <OfflineDetector />
             {children}
           </CartProvider>
         </FirebaseClientProvider>
