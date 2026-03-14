@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -25,14 +25,12 @@ import { signOut } from 'firebase/auth';
 import type { UserProfile, Outlet } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Dashboard removed from navItems as requested
 const navItems = [
   { href: "/admin/dashboard/orders", label: "Live Orders", icon: ShoppingCart },
   { href: "/admin/dashboard/menu", label: "Menu Availability", icon: List },
   { href: "/admin/dashboard/reports", label: "Sales Reports", icon: BarChart },
   { href: "/admin/dashboard/outlet", label: "Outlet Settings", icon: Store },
 ];
-
 
 export default function AdminDashboardLayout({
   children,
@@ -43,39 +41,60 @@ export default function AdminDashboardLayout({
   const router = useRouter();
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
+  const [mockUser, setMockUser] = useState<UserProfile | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   
-  // Use email as doc ID for admins as per the "Authorize" logic
-  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
-  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId);
-  const { data: outlet, loading: outletLoading } = useDoc<Outlet>('outlets', userProfile?.outletId || 'dummy');
+  useEffect(() => {
+    const saved = localStorage.getItem('zapizza-mock-session');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.role === 'outlet-admin') {
+          setMockUser(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse mock session", e);
+      }
+    }
+    setIsInitializing(false);
+  }, []);
 
+  const activeUser = user || mockUser;
+  const profileId = activeUser?.email?.toLowerCase().trim() || 'dummy';
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId);
+  
+  // Use userProfile's outletId, or fallback to the mockUser's outletId
+  const effectiveOutletId = userProfile?.outletId || mockUser?.outletId || 'dummy';
+  const { data: outlet, loading: outletLoading } = useDoc<Outlet>('outlets', effectiveOutletId);
 
   useEffect(() => {
-    if (!userLoading && !user) {
-      router.replace('/admin/login');
+    if (!userLoading && !isInitializing) {
+      if (!user && !mockUser) {
+        router.replace('/admin/login');
+      }
     }
+  }, [user, mockUser, userLoading, isInitializing, router]);
+
+  useEffect(() => {
     if (!profileLoading && userProfile && userProfile.role !== 'outlet-admin') {
-      // If the user has a profile but isn't an admin, sign them out
       auth?.signOut();
+      localStorage.removeItem('zapizza-mock-session');
       router.replace('/admin/login');
     }
-    // Redirect base dashboard path to Orders directly
     if (pathname === '/admin/dashboard') {
       router.replace('/admin/dashboard/orders');
     }
-  }, [user, userLoading, userProfile, profileLoading, auth, router, pathname]);
+  }, [userProfile, profileLoading, auth, router, pathname]);
 
   const handleLogout = async () => {
+    localStorage.removeItem('zapizza-mock-session');
     if (auth) {
         await signOut(auth);
-        router.push('/login');
-    } else {
-        localStorage.removeItem('zapizza-mock-session');
-        window.location.href = '/login';
     }
+    router.push('/admin/login');
   }
 
-  if (userLoading || profileLoading || outletLoading) {
+  if (userLoading || isInitializing || (activeUser && profileLoading)) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <div className="flex flex-col items-center gap-4">
@@ -136,10 +155,10 @@ export default function AdminDashboardLayout({
                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Kitchen Live</p>
                     </div>
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.photoURL || undefined} />
-                      <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'A'}</AvatarFallback>
+                      <AvatarImage src={activeUser?.photoURL || undefined} />
+                      <AvatarFallback>{(userProfile?.displayName || mockUser?.displayName || 'A').charAt(0)}</AvatarFallback>
                     </Avatar>
-                     <Button asChild variant="ghost" className="md:hidden" onClick={handleLogout}>
+                     <Button variant="ghost" className="md:hidden" onClick={handleLogout}>
                         <LogOut className="h-5 w-5"/>
                     </Button>
                 </div>
