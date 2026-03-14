@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Zapizza POS',
   webDir: 'out',
   server: {
-    url: "https://orders.zapizza.co.in/admin",
+    url: "https://orders.zapizza.co.in/",
     cleartext: false
   }
 };

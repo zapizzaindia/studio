@@ -42,10 +42,10 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-   /* ADD THIS */
    useEffect(() => {
     if (!userLoading && user) {
-      router.replace("/home");
+      // Redirect to onboarding first to check if profile is complete
+      router.replace("/home/onboarding");
     }
   }, [user, userLoading, router]);
 
@@ -145,7 +145,6 @@ export default function LoginPage() {
         description: "Welcome back to Zapizza!",
       });
   
-      // Redirect to onboarding to check for profile details
       router.push("/home/onboarding");
     } catch (error: any) {
       toast({
