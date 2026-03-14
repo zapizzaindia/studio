@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -182,7 +181,7 @@ export default function AdminOrdersPage() {
               <div className="p-5 flex justify-between items-start bg-white border-b border-gray-50">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-black text-primary text-sm tracking-widest">#{order.id.slice(-6).toUpperCase()}</span>
+                    <span className="font-black text-primary text-sm tracking-widest font-sans uppercase">#{order.id.slice(-6).toUpperCase()}</span>
                     {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
                   </div>
                   <p className="font-bold text-[13px] text-[#333] uppercase leading-none">{order.customerName}</p>
@@ -201,7 +200,7 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
                 <div className="text-right space-y-1">
-                  <p className="font-black text-sm">₹{order.total.toFixed(2)}</p>
+                  <p className="font-black text-sm font-sans tabular-nums">₹{order.total.toFixed(2)}</p>
                   <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0.5 border-primary/20 text-primary">{order.status}</Badge>
                 </div>
               </div>
@@ -277,7 +276,7 @@ export default function AdminOrdersPage() {
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Gourmet Command</p>
-                    <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none">#{selectedOrder.id.slice(-6).toUpperCase()}</DialogTitle>
+                    <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none font-sans">#{selectedOrder.id.slice(-6).toUpperCase()}</DialogTitle>
                   </div>
                   <Badge variant="outline" className="text-white border-white/20 bg-white/10 uppercase text-[10px] font-black px-4 py-1.5 rounded-full">{selectedOrder.status}</Badge>
                 </div>
@@ -309,7 +308,7 @@ export default function AdminOrdersPage() {
                             <div>
                                 <p className="text-[10px] font-black text-muted-foreground uppercase">Phone Line</p>
                                 <div className="flex items-center justify-between">
-                                    <p className="text-sm font-black tracking-widest text-[#333]">{selectedOrder.customerPhone || "N/A"}</p>
+                                    <p className="text-sm font-black tracking-widest text-[#333] font-sans tabular-nums">{selectedOrder.customerPhone || "N/A"}</p>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-white shadow-sm" onClick={() => window.open(`tel:${selectedOrder.customerPhone}`, '_self')}><Phone className="h-3.5 w-3.5" style={{ color: brandColor }} /></Button>
                                 </div>
                             </div>
@@ -343,7 +342,7 @@ export default function AdminOrdersPage() {
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-start bg-gray-50/50 p-4 rounded-3xl border border-gray-100/50 transition-all hover:shadow-inner">
                         <div className="flex gap-4">
-                          <span className="font-black h-9 w-9 rounded-2xl flex items-center justify-center text-sm shadow-sm" style={{ backgroundColor: brandColor + '15', color: brandColor }}>{item.quantity}x</span>
+                          <span className="font-black h-9 w-9 rounded-2xl flex items-center justify-center text-sm shadow-sm font-sans tabular-nums" style={{ backgroundColor: brandColor + '15', color: brandColor }}>{item.quantity}x</span>
                           <div className="flex flex-col gap-1.5">
                             <span className="font-black text-[15px] uppercase tracking-tighter text-[#333] italic">{item.name}</span>
                             <div className="flex flex-wrap gap-2">
@@ -353,8 +352,8 @@ export default function AdminOrdersPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                            <span className="font-black text-sm text-[#333]">₹{item.price * item.quantity}</span>
-                            <p className="text-[8px] font-bold text-muted-foreground uppercase">₹{item.price}/unit</p>
+                            <span className="font-black text-sm text-[#333] font-sans tabular-nums">₹{item.price * item.quantity}</span>
+                            <p className="text-[8px] font-bold text-muted-foreground uppercase font-sans tabular-nums">₹{item.price}/unit</p>
                         </div>
                       </div>
                     ))}
@@ -362,22 +361,22 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="bg-gray-50 p-8 rounded-[32px] border border-gray-100 space-y-4 shadow-inner">
-                  <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest"><span>Net Item Total</span><span>₹{selectedOrder.subtotal.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest font-sans tabular-nums"><span>Net Item Total</span><span>₹{selectedOrder.subtotal.toFixed(2)}</span></div>
                   
                   {/* Tax Breakdown */}
                   <div className="pt-1 space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 font-sans tabular-nums">
                         <span>CGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>
                         <span>₹{(selectedOrder.gst / 2).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 font-sans tabular-nums">
                         <span>SGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>
                         <span>₹{(selectedOrder.gst / 2).toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest"><span>Delivery Partner Fee</span><span>₹{selectedOrder.deliveryFee.toFixed(2)}</span></div>
-                  {selectedOrder.discount > 0 && <div className="flex justify-between text-[11px] font-black text-green-600 uppercase tracking-widest animate-pulse"><span>Promotional Discount</span><span>-₹{selectedOrder.discount.toFixed(2)}</span></div>}
+                  <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest font-sans tabular-nums"><span>Delivery Partner Fee</span><span>₹{selectedOrder.deliveryFee.toFixed(2)}</span></div>
+                  {selectedOrder.discount > 0 && <div className="flex justify-between text-[11px] font-black text-green-600 uppercase tracking-widest animate-pulse font-sans tabular-nums"><span>Promotional Discount</span><span>-₹{selectedOrder.discount.toFixed(2)}</span></div>}
                   <Separator className="bg-gray-200" />
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col">
@@ -387,7 +386,7 @@ export default function AdminOrdersPage() {
                             <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                     </div>
-                    <span className="text-3xl font-black tracking-tighter italic" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(2)}</span>
+                    <span className="text-3xl font-black tracking-tighter italic font-sans tabular-nums" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -401,7 +400,7 @@ export default function AdminOrdersPage() {
                             <span className="text-[10px] font-black text-muted-foreground">ACE TIER TARGET</span>
                         </div>
                         <p className="text-xs font-bold text-[#333] mt-1 leading-tight uppercase">
-                            This customer earned <span className="font-black" style={{ color: brandColor }}>{Math.floor(selectedOrder.subtotal / 100)} Coins</span> on this visit.
+                            This customer earned <span className="font-black font-sans tabular-nums" style={{ color: brandColor }}>{Math.floor(selectedOrder.subtotal / 100)} Coins</span> on this visit.
                         </p>
                     </div>
                 </div>

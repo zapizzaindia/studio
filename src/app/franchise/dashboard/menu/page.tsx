@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useRef } from "react";
@@ -35,7 +34,7 @@ export default function FranchiseMenuPage() {
 
   const [activeBrand, setActiveBrand] = useState<Brand>('zapizza');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isCategoryDialogOpen] = useState(false); // Fixed: missing state but used in JSX context
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -266,6 +265,8 @@ export default function FranchiseMenuPage() {
         });
   };
 
+  const [isCategoryDialogOpenState, setIsCategoryDialogOpenState] = useState(false);
+
   return (
     <div className="container mx-auto p-0 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-[24px] shadow-sm border border-gray-100">
@@ -299,7 +300,7 @@ export default function FranchiseMenuPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => { setIsCategoryDialogOpen(open); if (!open) { setEditingCategory(null); setNewCategoryName(""); setCategoryShowInHomepage(false); setCategoryTagline(""); } }}>
+        <Dialog open={isCategoryDialogOpenState} onOpenChange={(open) => { setIsCategoryDialogOpenState(open); if (!open) { setEditingCategory(null); setNewCategoryName(""); setCategoryShowInHomepage(false); setCategoryTagline(""); } }}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-2 shadow-sm font-headline">
                     <Layers className="mr-2 h-4 w-4" /> Manage {activeBrand === 'zapizza' ? 'Zapizza' : 'Zfry'} Categories
@@ -434,7 +435,7 @@ export default function FranchiseMenuPage() {
                                     <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Base Price (₹)</Label>
                                     <div className="relative">
                                         <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="pl-10 font-black h-12 rounded-xl font-roboto tabular-nums" style={{ color: brandColor }} />
+                                        <Input type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="pl-10 font-black h-12 rounded-xl font-sans tabular-nums" style={{ color: brandColor }} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -554,7 +555,7 @@ export default function FranchiseMenuPage() {
                                                 const updated = [...newItemVariations];
                                                 updated[i].price = Number(e.target.value);
                                                 setNewItemVariations(updated);
-                                            }} className="h-10 font-black text-xs font-roboto tabular-nums" style={{ color: brandColor }} />
+                                            }} className="h-10 font-black text-xs font-sans tabular-nums" style={{ color: brandColor }} />
                                         </div>
                                         <Button variant="ghost" size="icon" onClick={() => setNewItemVariations(newItemVariations.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                     </div>
@@ -579,7 +580,7 @@ export default function FranchiseMenuPage() {
                                                         const updated = [...newItemVariations];
                                                         updated[i].addons![aIdx].price = Number(e.target.value);
                                                         setNewItemVariations(updated);
-                                                    }} className="h-8 w-20 font-black text-[10px] font-roboto tabular-nums" />
+                                                    }} className="h-8 w-20 font-black text-[10px] font-sans tabular-nums" />
                                                     <Button variant="ghost" size="icon" onClick={() => {
                                                         const updated = [...newItemVariations];
                                                         updated[i].addons = updated[i].addons?.filter((_, idx) => idx !== aIdx);
@@ -619,7 +620,7 @@ export default function FranchiseMenuPage() {
                                             const updated = [...newItemAddons];
                                             updated[i].price = Number(e.target.value);
                                             setNewItemAddons(updated);
-                                        }} className="h-10 font-black text-xs font-roboto tabular-nums" style={{ color: brandColor }} />
+                                        }} className="h-10 font-black text-xs font-sans tabular-nums" style={{ color: brandColor }} />
                                     </div>
                                     <Button variant="ghost" size="icon" onClick={() => setNewItemAddons(newItemAddons.filter((_, idx) => idx !== i))} className="mt-5 text-red-400 hover:text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></Button>
                                 </div>
@@ -710,7 +711,7 @@ export default function FranchiseMenuPage() {
                                                   {item.variations && item.variations.length > 0 && (
                                                       <div className="flex gap-1.5 pt-1">
                                                           {item.variations.map((v, idx) => (
-                                                              <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200 font-roboto tabular-nums">
+                                                              <span key={idx} className="text-[8px] font-black uppercase px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200 font-sans tabular-nums">
                                                                   {v.name}: ₹{v.price} {v.addons && v.addons.length > 0 && `(+${v.addons.length} opts)`}
                                                               </span>
                                                           ))}
@@ -719,7 +720,7 @@ export default function FranchiseMenuPage() {
                                               </div>
                                           </TableCell>
                                           <TableCell>
-                                              <div className="flex items-center gap-1.5 font-black text-sm whitespace-nowrap font-roboto tabular-nums" style={{ color: brandColor }}>
+                                              <div className="flex items-center gap-1.5 font-black text-sm whitespace-nowrap font-sans tabular-nums" style={{ color: brandColor }}>
                                                   <IndianRupee className="h-3.5 w-3.5" />
                                                   <span>{priceDisplay.replace('₹', '')}</span>
                                               </div>

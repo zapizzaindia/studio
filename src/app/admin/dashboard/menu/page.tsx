@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -143,7 +142,7 @@ export default function AdminMenuPage() {
                                               <p className="text-[10px] text-muted-foreground hidden md:block mt-0.5">{item.description}</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-bold whitespace-nowrap">
+                                        <TableCell className="font-bold whitespace-nowrap font-sans tabular-nums">
                                             {priceDisplay}
                                         </TableCell>
                                         <TableCell className="text-right pr-8">
