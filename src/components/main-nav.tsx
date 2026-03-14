@@ -1,6 +1,7 @@
+
 "use client";
 import { useState, useEffect } from "react";
-import { ChevronDown, MapPin, User, LogOut, ShoppingCart, History, Settings } from "lucide-react";
+import { ChevronDown, MapPin, User, LogOut, ShoppingCart, History } from "lucide-react";
 import { Button } from "./ui/button";
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
@@ -14,7 +15,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import type { City, Outlet } from "@/lib/types";
 import { useCart } from "@/hooks/use-cart";
-import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
@@ -56,13 +56,11 @@ export function MainNav() {
 
   const auth = useAuth();
 
-const handleLogout = async () => {
-  if (!auth) return;
-
-  await signOut(auth);
-  localStorage.removeItem('zapizza-mock-session');
-  router.replace('/login');
-};
+  const handleLogout = async () => {
+    if (!auth) return;
+    await signOut(auth);
+    router.replace('/login');
+  };
 
   const handleChangeLocation = () => {
     localStorage.removeItem("zapizza-city");

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -46,53 +46,33 @@ export default function FranchiseDashboardLayout({
   const router = useRouter();
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
-  const [mockUser, setMockUser] = useState<UserProfile | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('zapizza-mock-session');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.role === 'franchise-owner') {
-          setMockUser(parsed);
-        }
-      } catch (e) {
-        console.error("Failed to restore mock session", e);
-      }
-    }
-    setIsInitializing(false);
-  }, []);
-
-  const activeUser = user || mockUser;
-  const profileId = activeUser?.email?.toLowerCase().trim() || 'dummy';
+  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId);
 
   useEffect(() => {
-    if (!userLoading && !isInitializing) {
-      if (!user && !mockUser) {
+    if (!userLoading) {
+      if (!user) {
         router.replace('/franchise/login');
       }
     }
-  }, [user, mockUser, userLoading, isInitializing, router]);
+  }, [user, userLoading, router]);
 
   useEffect(() => {
-    if (!profileLoading && userProfile && userProfile.role !== 'franchise-owner') {
-      auth?.signOut();
-      localStorage.removeItem('zapizza-mock-session');
+    if (!profileLoading && user && userProfile && userProfile.role !== 'franchise-owner') {
+      if (auth) signOut(auth);
       router.replace('/franchise/login');
     }
-  }, [userProfile, profileLoading, auth, router]);
+  }, [userProfile, profileLoading, auth, router, user]);
 
   const handleLogout = async () => {
-    localStorage.removeItem('zapizza-mock-session');
     if (auth) {
         await signOut(auth);
     }
     router.push('/login');
   }
   
-  if (userLoading || isInitializing || (activeUser && profileLoading)) {
+  if (userLoading || (user && profileLoading)) {
     return (
         <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
             <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />
@@ -147,12 +127,12 @@ export default function FranchiseDashboardLayout({
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="hidden md:flex flex-col items-end">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">{userProfile?.displayName || mockUser?.displayName || 'Master Owner'}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">{userProfile?.displayName || 'Master Owner'}</p>
                         <p className="text-[8px] font-bold text-muted-foreground uppercase">Global Jurisdiction</p>
                     </div>
                     <Avatar className="h-9 w-9 border-2 border-primary/10 shadow-sm">
-                       <AvatarImage src={activeUser?.photoURL || undefined} />
-                       <AvatarFallback className="bg-primary text-white font-black">{(userProfile?.displayName || mockUser?.displayName || 'S').charAt(0)}</AvatarFallback>
+                       <AvatarImage src={user?.photoURL || undefined} />
+                       <AvatarFallback className="bg-primary text-white font-black">{(userProfile?.displayName || 'S').charAt(0)}</AvatarFallback>
                     </Avatar>
                      <Button variant="ghost" size="icon" className="md:hidden" onClick={handleLogout}>
                         <LogOut className="h-5 w-5"/>

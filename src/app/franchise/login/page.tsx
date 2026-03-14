@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import { auth } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 
@@ -31,6 +31,7 @@ const loginSchema = z.object({
 export default function FranchiseLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
   
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,7 +43,6 @@ export default function FranchiseLoginPage() {
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     
-    // Check for real login first if Firebase is available
     if (auth) {
       try {
         await signInWithEmailAndPassword(auth, values.email, values.password);
@@ -50,43 +50,16 @@ export default function FranchiseLoginPage() {
           title: "Access Granted",
           description: "Authenticated with Firebase Security.",
         });
-        // Onboarding logic is handled in the dashboard layout
         router.push('/franchise/dashboard');
-        return;
       } catch (error: any) {
-        // If real auth fails, check if it was a demo attempt or a real error
-        if (values.email === 'franchise@zapizza.com' && values.password === 'password') {
-           // Fallback to mock session for demo convenience
-           const mockFranchise = {
-                uid: 'franchise-1',
-                email: values.email,
-                displayName: 'Demo Owner',
-                role: 'franchise-owner'
-            };
-            localStorage.setItem('zapizza-mock-session', JSON.stringify(mockFranchise));
-            toast({ title: "Login Successful (Demo Mode)" });
-            window.location.href = '/franchise/dashboard';
-            return;
-        }
-        
         toast({
           variant: 'destructive',
           title: "Authentication Failed",
-          description: error.message,
+          description: "Invalid credentials or account not authorized.",
         });
       } finally {
         setIsLoading(false);
       }
-    } else {
-      // Pure mock fallback
-      const mockFranchise = {
-          uid: 'franchise-1',
-          email: values.email,
-          displayName: 'Demo Owner',
-          role: 'franchise-owner'
-      };
-      localStorage.setItem('zapizza-mock-session', JSON.stringify(mockFranchise));
-      window.location.href = '/franchise/dashboard';
     }
   }
 

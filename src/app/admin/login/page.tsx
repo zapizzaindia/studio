@@ -53,25 +53,10 @@ export default function AdminLoginPage() {
       });
       router.push('/admin/dashboard/orders');
     } catch (error: any) {
-      // Fallback for Demo Accounts
-      if (values.password === 'password') {
-        const mockAdmin = {
-          uid: values.email,
-          email: values.email,
-          displayName: 'Demo Manager',
-          role: 'outlet-admin',
-          outletId: 'dummy' // Layout will handle fetching real profile if exists
-        };
-        localStorage.setItem('zapizza-mock-session', JSON.stringify(mockAdmin));
-        toast({ title: "Login Successful (Demo Mode)" });
-        window.location.href = '/admin/dashboard/orders';
-        return;
-      }
-
       console.error("Login Error:", error.code);
       let errorMessage = "Invalid email or password.";
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = "This admin account has not been created in the Auth tab yet.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        errorMessage = "Incorrect credentials or account not found.";
       }
 
       toast({

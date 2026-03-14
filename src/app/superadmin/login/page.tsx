@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import { auth } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 
@@ -31,6 +31,7 @@ const loginSchema = z.object({
 export default function SuperAdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -51,24 +52,10 @@ export default function SuperAdminLoginPage() {
       });
       router.push('/superadmin/dashboard');
     } catch (error: any) {
-      // Fallback for Demo Mode
-      if (values.password === 'password') {
-        const mockFranchise = {
-          uid: values.email,
-          email: values.email,
-          displayName: 'Demo Owner',
-          role: 'franchise-owner'
-        };
-        localStorage.setItem('zapizza-mock-session', JSON.stringify(mockFranchise));
-        toast({ title: "Login Successful (Demo Mode)" });
-        window.location.href = '/superadmin/dashboard';
-        return;
-      }
-
       toast({
         variant: 'destructive',
         title: "Authentication Failed",
-        description: error.message,
+        description: "Incorrect credentials or unauthorized access.",
       });
     } finally {
       setIsLoading(false);

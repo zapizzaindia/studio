@@ -84,7 +84,6 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     if (!auth) return;
     await signOut(auth);
-    localStorage.removeItem('zapizza-mock-session');
     router.replace('/login');
   };
 
@@ -98,7 +97,6 @@ export default function ProfilePage() {
       birthday: newBirthday,
     };
 
-    // Non-blocking mutation as per guidelines
     setDoc(userRef, updatedData, { merge: true })
       .then(() => {
         setIsEditDialogOpen(false);
