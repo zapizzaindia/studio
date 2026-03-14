@@ -26,8 +26,9 @@ export function MobileNav() {
 
                                                     const navItems = [
                                                         { href: "/home", label: brand === 'zfry' ? 'Zfry' : 'Zapizza', icon: Home },
+                                                        { href: "/home/menu", label: "Menu", icon: LayoutGrid },
                                                             { href: "/home/checkout", label: "Cart", icon: ShoppingBag, badge: totalItems },
-                                                                { href: "/home/menu", label: "Menu", icon: LayoutGrid },
+                                                                
                                                                     { href: "/home/rewards", label: "LP Rewards", icon: Crown },
                                                                       ];
 
