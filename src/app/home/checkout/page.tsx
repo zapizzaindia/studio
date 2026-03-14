@@ -84,7 +84,7 @@ export default function CheckoutPage() {
 
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
-    const gstRate = settings?.gstPercentage ?? 18;
+    const gstRate = settings?.gstPercentage ?? 5; // Default 5% for food
     const freeThreshold = settings?.minOrderForFreeDelivery ?? 500;
     const maxRadius = settings?.maxDeliveryRadius ?? 10;
     
@@ -116,6 +116,8 @@ export default function CheckoutPage() {
 
     const deliveryFee = subtotal >= freeThreshold ? 0 : computedDeliveryFee;
     const gstTotal = (subtotal * gstRate) / 100;
+    const cgst = gstTotal / 2;
+    const sgst = gstTotal / 2;
     
     let discount = 0;
     if (appliedCoupon) {
@@ -137,7 +139,7 @@ export default function CheckoutPage() {
 
     const finalTotal = subtotal + gstTotal + deliveryFee - discount - loyaltyDiscount;
 
-    return { subtotal, deliveryFee, gstTotal, discount, loyaltyDiscount, finalTotal, distanceKm, isOutOfRange };
+    return { subtotal, deliveryFee, gstTotal, cgst, sgst, gstRate, discount, loyaltyDiscount, finalTotal, distanceKm, isOutOfRange };
   }, [totalPrice, settings, appliedCoupon, selectedAddress, selectedOutlet, useLoyaltyPoints, userProfile]);
 
   const handleApplyCoupon = (couponOrCode: Coupon | string) => {
@@ -186,6 +188,9 @@ export default function CheckoutPage() {
       })),
       subtotal: calculations.subtotal,
       gst: calculations.gstTotal,
+      cgst: calculations.cgst,
+      sgst: calculations.sgst,
+      gstRate: calculations.gstRate,
       deliveryFee: calculations.deliveryFee,
       discount: calculations.discount,
       loyaltyPointsRedeemed: calculations.loyaltyDiscount,
@@ -499,10 +504,19 @@ export default function CheckoutPage() {
                 {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}
               </span>
             </div>
-            <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
-              <span>GST ({settings?.gstPercentage ?? 18}%)</span>
-              <span className="font-sans tabular-nums">₹{calculations.gstTotal.toFixed(2)}</span>
+            
+            {/* GST Breakdown */}
+            <div className="pt-1 space-y-1">
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+                    <span>CGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
+                    <span className="font-sans tabular-nums">₹{calculations.cgst.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+                    <span>SGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
+                    <span className="font-sans tabular-nums">₹{calculations.sgst.toFixed(2)}</span>
+                </div>
             </div>
+
             <div className="border-t border-dashed pt-3 flex justify-between items-center">
               <span className="text-lg font-black text-[#333333]">TO PAY</span>
               <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>

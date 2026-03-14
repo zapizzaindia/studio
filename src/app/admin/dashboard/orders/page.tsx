@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from 'react';
@@ -114,7 +115,6 @@ export default function AdminOrdersPage() {
     const updateData: any = { status };
     if (reason) updateData.cancellationReason = reason;
 
-    // SCENARIO: Reject or Timeout -> Trigger Refund
     if (status === 'Cancelled' && order.paymentMethod === 'Online' && order.paymentId) {
       toast({ title: "Initializing Refund", description: "Reversing online payment..." });
       
@@ -363,7 +363,19 @@ export default function AdminOrdersPage() {
 
                 <div className="bg-gray-50 p-8 rounded-[32px] border border-gray-100 space-y-4 shadow-inner">
                   <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest"><span>Net Item Total</span><span>₹{selectedOrder.subtotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest"><span>Applied Taxes (GST)</span><span>₹{selectedOrder.gst.toFixed(2)}</span></div>
+                  
+                  {/* Tax Breakdown */}
+                  <div className="pt-1 space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                        <span>CGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>
+                        <span>₹{(selectedOrder.gst / 2).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                        <span>SGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>
+                        <span>₹{(selectedOrder.gst / 2).toFixed(2)}</span>
+                    </div>
+                  </div>
+
                   <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest"><span>Delivery Partner Fee</span><span>₹{selectedOrder.deliveryFee.toFixed(2)}</span></div>
                   {selectedOrder.discount > 0 && <div className="flex justify-between text-[11px] font-black text-green-600 uppercase tracking-widest animate-pulse"><span>Promotional Discount</span><span>-₹{selectedOrder.discount.toFixed(2)}</span></div>}
                   <Separator className="bg-gray-200" />

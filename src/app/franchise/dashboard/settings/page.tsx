@@ -20,7 +20,7 @@ export default function GlobalSettingsPage() {
     const { toast } = useToast();
     const { data: settings, loading } = useDoc<GlobalSettings>('settings', 'global');
     
-    const [gst, setGst] = useState(18);
+    const [gst, setGst] = useState(5); // Default to 5% for food services
     const [deliveryFee, setDeliveryFee] = useState(40);
     const [freeThreshold, setFreeThreshold] = useState(500);
     const [loyaltyRatio, setLoyaltyRatio] = useState(1);
@@ -58,7 +58,6 @@ export default function GlobalSettingsPage() {
         if (!firestore) return;
         setIsSaving(true);
 
-        // Sort slabs by distance before saving for easier processing on checkout
         const sortedSlabs = [...slabs].sort((a, b) => a.upToKm - b.upToKm);
 
         const updatedData: GlobalSettings = {
@@ -114,17 +113,27 @@ export default function GlobalSettingsPage() {
                         <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight italic text-[#333] font-headline">
                             <Percent className="h-5 w-5 text-primary" /> Tax Configuration
                         </CardTitle>
-                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest font-headline">Set applicable GST for all menu orders</CardDescription>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest font-headline">Set total GST. This will be automatically split into CGST & SGST (50/50).</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 space-y-4">
                         <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] font-headline">Current GST Rate (%)</Label>
+                            <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] font-headline">Total GST Rate (%)</Label>
                             <Input 
                                 type="number" 
                                 value={gst} 
                                 onChange={e => setGst(Number(e.target.value))} 
                                 className="h-12 rounded-xl font-black text-lg font-roboto tabular-nums"
                             />
+                            <div className="flex gap-4 pt-2">
+                                <div className="bg-gray-50 px-4 py-2 rounded-lg border border-dashed">
+                                    <p className="text-[8px] font-black text-muted-foreground uppercase">CGST (Central)</p>
+                                    <p className="text-sm font-black font-roboto">{(gst / 2).toFixed(1)}%</p>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-2 rounded-lg border border-dashed">
+                                    <p className="text-[8px] font-black text-muted-foreground uppercase">SGST (State)</p>
+                                    <p className="text-sm font-black font-roboto">{(gst / 2).toFixed(1)}%</p>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

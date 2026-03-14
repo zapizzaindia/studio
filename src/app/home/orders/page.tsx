@@ -292,6 +292,19 @@ export default function OrdersPage() {
                       <span className="font-sans tabular-nums">-₹{selectedOrder.discount.toFixed(2)}</span>
                     </div>
                   )}
+                  
+                  {/* GST Breakdown */}
+                  <div className="pt-1 space-y-1">
+                    <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+                        <span>CGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>
+                        <span className="font-sans tabular-nums">₹{(selectedOrder.gst / 2).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+                        <span>SGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>
+                        <span className="font-sans tabular-nums">₹{(selectedOrder.gst / 2).toFixed(2)}</span>
+                    </div>
+                  </div>
+
                   <div className="pt-2 border-t border-dashed flex justify-between items-center">
                     <span className="text-sm font-black text-[#333] uppercase">Grand Total</span>
                     <span className="text-xl font-black text-[#14532d] italic font-sans tabular-nums">₹{selectedOrder.total.toFixed(2)}</span>
