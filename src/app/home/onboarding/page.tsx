@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ArrowRight, PartyPopper, BellRing, ShieldCheck, MapPin } from "lucide-react";
 import { requestForToken } from "@/firebase/messaging";
 
-type OnboardingStep = "permissions" | "info";
+type OnboardingStep = "notifications" | "location" | "info";
 
 export default function OnboardingPage() {
   const { user, loading: userLoading } = useUser();
@@ -22,13 +22,13 @@ export default function OnboardingPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const [step, setStep] = useState<OnboardingStep>("permissions");
+  const [step, setStep] = useState<OnboardingStep>("notifications");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [birthday, setBirthday] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
 
   useEffect(() => {
     if (!userLoading) {
@@ -63,22 +63,18 @@ export default function OnboardingPage() {
     }
   }, [user, userLoading, router, db]);
 
-  const handleGrantPermissions = async () => {
-    setIsRequestingPermission(true);
-    
-    // 1️⃣ Ask notification permission FIRST
+  const handleNotificationPermission = async () => {
+    setIsRequesting(true);
     try {
+      // Direct call to trigger browser popup immediately
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         const token = await requestForToken();
         if (token && db && user) {
-          // Use setDoc with merge to ensure the record exists
           await setDoc(doc(db, "users", user.uid), {
             fcmToken: token,
             uid: user.uid,
-            phoneNumber: user.phoneNumber || "",
-            role: "customer",
-            loyaltyPoints: 0
+            role: "customer"
           }, { merge: true });
           toast({ title: "Notifications enabled!" });
         }
@@ -86,20 +82,26 @@ export default function OnboardingPage() {
         toast({ title: "Notifications skipped" });
       }
     } catch (e) {
-      console.error("Notification permission error", e);
+      console.error("Notification sequence error", e);
+    } finally {
+      setIsRequesting(false);
+      setStep("location");
     }
+  };
 
-    // 2. Request Location Second
+  const handleLocationPermission = async () => {
+    setIsRequesting(true);
     try {
       if (navigator.geolocation) {
         await new Promise((resolve) => {
           navigator.geolocation.getCurrentPosition(
             (pos) => {
-              toast({ title: "Location access granted" });
+              toast({ title: "Location captured!" });
               resolve(pos);
             },
             (err) => {
               console.warn("Location denied", err);
+              toast({ title: "Location skipped", variant: "destructive" });
               resolve(null); 
             },
             { timeout: 5000, enableHighAccuracy: true }
@@ -107,12 +109,11 @@ export default function OnboardingPage() {
         });
       }
     } catch (e) {
-      console.warn("Geolocation sequence skipped or failed");
+      console.warn("Geolocation skipped");
+    } finally {
+      setIsRequesting(false);
+      setStep("info");
     }
-
-    // Proceed to personal info
-    setStep("info");
-    setIsRequestingPermission(false);
   };
 
   const handleFinish = async () => {
@@ -158,48 +159,92 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6">
       <AnimatePresence mode="wait">
-        {step === "permissions" ? (
+        {step === "notifications" && (
           <motion.div 
-            key="permissions"
+            key="notifications"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
+            exit={{ opacity: 0, x: -50 }}
             className="w-full max-w-sm space-y-8 bg-white p-8 rounded-[40px] shadow-xl border border-gray-100"
           >
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="h-20 w-20 rounded-full bg-[#14532d]/10 flex items-center justify-center">
-                <BellRing className="h-10 w-10 text-[#14532d]" />
+              <div className="h-20 w-20 rounded-full bg-indigo-50 flex items-center justify-center">
+                <BellRing className="h-10 w-10 text-indigo-600" />
               </div>
-              <div className="space-y-1">
-                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline">Setup Access</h1>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Enable location & notifications for the best experience</p>
+              <div className="space-y-1 text-left w-full">
+                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline">Stay Updated</h1>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Get real-time order alerts & rewards</p>
               </div>
             </div>
 
             <div className="space-y-3 text-left">
               <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                <MapPin className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                <ShieldCheck className="h-5 w-5 text-indigo-600 flex-shrink-0" />
                 <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed font-headline">
-                  Location is used to find your nearest outlet and track your delivery in real-time.
-                </p>
-              </div>
-              <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                <ShieldCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed font-headline">
-                  Notifications keep you updated on order status and exclusive member rewards.
+                  We'll notify you when your pizza is in the oven and when the rider is near your door.
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
               <Button 
-                onClick={handleGrantPermissions}
-                disabled={isRequestingPermission}
-                className="w-full h-14 bg-[#14532d] text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-green-900/20 gap-2 text-sm font-headline"
+                onClick={handleNotificationPermission}
+                disabled={isRequesting}
+                className="w-full h-14 bg-indigo-600 text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-indigo-900/20 gap-2 text-sm font-headline"
               >
-                {isRequestingPermission ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                {isRequesting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                   <>
-                    CONTINUE SETUP <ArrowRight className="h-5 w-5" />
+                    ENABLE NOTIFICATIONS <ArrowRight className="h-5 w-5" />
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setStep("location")}
+                className="w-full h-12 text-muted-foreground font-black uppercase text-[10px] tracking-widest font-headline"
+              >
+                NOT NOW, MAYBE LATER
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === "location" && (
+          <motion.div 
+            key="location"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            className="w-full max-w-sm space-y-8 bg-white p-8 rounded-[40px] shadow-xl border border-gray-100"
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="h-20 w-20 rounded-full bg-emerald-50 flex items-center justify-center">
+                <MapPin className="h-10 w-10 text-emerald-600" />
+              </div>
+              <div className="space-y-1 text-left w-full">
+                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline">Nearby Feasts</h1>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Find your nearest Zapizza outlet</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-left">
+              <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                <MapPin className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed font-headline">
+                  Your location helps us calculate accurate delivery times and show the menu for your specific area.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Button 
+                onClick={handleLocationPermission}
+                disabled={isRequesting}
+                className="w-full h-14 bg-emerald-600 text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/20 gap-2 text-sm font-headline"
+              >
+                {isRequesting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                  <>
+                    SHARE LOCATION <ArrowRight className="h-5 w-5" />
                   </>
                 )}
               </Button>
@@ -208,25 +253,27 @@ export default function OnboardingPage() {
                 onClick={() => setStep("info")}
                 className="w-full h-12 text-muted-foreground font-black uppercase text-[10px] tracking-widest font-headline"
               >
-                SKIP FOR NOW
+                SET MANUALLY LATER
               </Button>
             </div>
           </motion.div>
-        ) : (
+        )}
+
+        {step === "info" && (
           <motion.div 
             key="info"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            exit={{ opacity: 0, scale: 1.05 }}
             className="w-full max-w-sm space-y-8 bg-white p-8 rounded-[40px] shadow-xl border border-gray-100"
           >
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="h-20 w-20 rounded-full bg-[#14532d]/10 flex items-center justify-center">
                 <ZapizzaLogo className="h-12 w-12 text-[#14532d]" />
               </div>
-              <div className="space-y-1">
-                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline text-left w-full">Personalize</h1>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline text-left w-full">Complete your profile for special treats</p>
+              <div className="space-y-1 text-left w-full">
+                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline">Personalize</h1>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Complete your profile for special treats</p>
               </div>
             </div>
 
