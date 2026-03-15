@@ -1,3 +1,4 @@
+
 'use client';
 
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
@@ -23,16 +24,20 @@ export const requestForToken = async () => {
       return null;
     }
 
+    // Ensure the service worker is registered and ready before getting token
+    const registration = await navigator.serviceWorker.ready;
     const messaging = getMessaging(app);
+    
     const currentToken = await getToken(messaging, { 
-      vapidKey: VAPID_KEY 
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration
     });
 
     if (currentToken) {
       console.log('FCM Token generated successfully:', currentToken);
       return currentToken;
     } else {
-      console.warn('No registration token available. Check VAPID key or Service Worker.');
+      console.warn('No registration token available. Check VAPID key.');
       return null;
     }
   } catch (err) {

@@ -66,28 +66,7 @@ export default function OnboardingPage() {
   const handleGrantPermissions = async () => {
     setIsRequestingPermission(true);
     
-    // 1. Request Location First
-    try {
-      if (navigator.geolocation) {
-        await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              toast({ title: "Location access granted" });
-              resolve(pos);
-            },
-            (err) => {
-              console.warn("Location denied", err);
-              resolve(null); // Resolve anyway to move to next permission
-            },
-            { timeout: 5000 }
-          );
-        });
-      }
-    } catch (e) {
-      console.warn("Geolocation sequence skipped or failed");
-    }
-
-    // 2. Request Notifications Immediately After
+    // 1. Request Notifications FIRST (CRITICAL: Needs direct user gesture to show prompt)
     try {
       const token = await requestForToken();
       if (token && db && user) {
@@ -102,7 +81,28 @@ export default function OnboardingPage() {
       console.error("FCM Error during onboarding:", e);
     }
 
-    // Proceed to personal info regardless of permission results
+    // 2. Request Location Second
+    try {
+      if (navigator.geolocation) {
+        await new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              toast({ title: "Location access granted" });
+              resolve(pos);
+            },
+            (err) => {
+              console.warn("Location denied", err);
+              resolve(null); 
+            },
+            { timeout: 5000, enableHighAccuracy: true }
+          );
+        });
+      }
+    } catch (e) {
+      console.warn("Geolocation sequence skipped or failed");
+    }
+
+    // Proceed to personal info
     setStep("info");
     setIsRequestingPermission(false);
   };
