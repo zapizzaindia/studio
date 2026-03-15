@@ -1,0 +1,14 @@
+{
+    "type": "service_account",
+    "project_id": "zapizza-backend",
+    "private_key_id": "fbcc72167efc81fc5febda623ba423494e0d6774",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDr2ip4JLpdjDZV\ngvZoDifk8U5ngx2eZ89XYmuhirX7C3rWBNEJv07QVam+L8bLX2CQ0QTAwY2/TB6s\nfMWcsRe2l/hsx+th2KpKN+MTnoUsUcMsYZAIInRIU1hnlJsJ82knkminkxXQVf2F\naelDM04n3j5cQmti+kqmW4551j+/BD5iaZo5M+0M2QMZIEDyuOYaP8dRTpR3AQwv\nnnQhac2uKKzCQ/rYkMggm6mnBawBHWSDZBOLeashUKtQfRy7c4i3PJiKqqRHpxxH\n921ZHxY5ighdxHvG7TM339NYd/BmR4+IM+dUimGnf8jZJbPMdO3J1vIHDRZde4pW\nKddyVJ4rAgMBAAECggEAOV8akZstkm/3D5oJ4on+/lwMnHVykQPjlfglAmjBl83V\nFZaaWuqke107Kz5n9zS+Qrv1kgYDOxODKqY3U8RoZkxVa/C9u1F/KwqpPC6FaqCA\n/5zD8pae/rD3gkrN4//IBo5A0vKejc09HGUFDwm960jOlpa5lJwZ6JnA8LZDT217\nS7ZqFnJneEButxphk58TOwmC4X/gsAvz9qfMsplELnDWzsCmmxBQfx49MYu9iQrv\nQ5Eo80V82x17fAnXo8mBOuWDL9Wi7cjwrpUCg3v4HpBngI40XS3kR1brLuJNARdd\n3/mSIcgfX0GF2jQRMI20L81ORSGht0NBzbxzH42YQQKBgQD2RzXAdEvdQi0Y+qKu\npZYh7SCQIiEtUORRm65LBLftCr1ufuUd3OW1f5R4AtJJL4fGbVWz42UYi848DjHq\nAI5etF27hjwPEtu26WCAssP1dyiOEOjIkNmcZo3yJsE+ayGDH7duFs+NxIUi3k/7\n5h3MwQFiO6QwT4AT09GF7o2tWwKBgQD1KZhpDw4vanPKpwgs0Dl9tgW3aK+JIRd+\nYcatM1Zlu8dltWy3OAAPVIPVLoLbVsu6kLvsKLMY4p2YcJ3OiGPIZyiBRWwhNgRc\n7jgZYUxDsYLgtD7klYW9VmxVz+UznNlOi+MuIZd7KLCBf/2mGOjMGDGroeq7U05W\nmgK/GI+bcQKBgASZf9+ATIptWfpFdBRe81be3uTSPlxiTmFXzwGHrQe4U6FkrVLJ\ndWDWaSd0pgjH4nlKQXeCn7i9o7Rrb3M3X3FVXQrLjwOZDpFz+mFs9Uv4VcGRf0d/\nrRDGuY/0OVe5GH8icIKV2nqDWRk1nbjOq2/Piv8SrhZY5cN5CUi/E9ZRAoGBANl5\nD2jKYSPwg0yWBKtz/jukdseuhl/XSfbjFxFXA+H0w7lWSVzxwSPYLaWyv4OAJ/KU\nJw8jP1Po2jF6XJHz7Me9snGRuoxvVUl2S68/3x4BXf6kBVJRzLQa8LjiVQgGr8F8\nV4b5Z11px8DoX4GygPdi0tTUKdwH1ur9bUhEqkcRAoGAA8iU1DCF4B7QXA/GGAXu\nEUvhRcve3Lh2C3zho56gTcGdoVnoYMBTcWKLnATLkGZ5LryXPAv9+dFS1EAty36h\noM0VqS5WYC1Am+Q2mD2h/VgB5T7ORkwTZxMS473EVU6X9he8EQj1hDaKQlVXjEoF\n0/M/E0YxWPYVY60nmBu2AJg=\n-----END PRIVATE KEY-----\n",
+    "client_email": "firebase-adminsdk-fbsvc@zapizza-backend.iam.gserviceaccount.com",
+    "client_id": "105895691422424489649",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40zapizza-backend.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+  }
+  
