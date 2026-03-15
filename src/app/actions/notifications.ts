@@ -25,25 +25,31 @@ export async function broadcastPushNotification(payload: {
 
   try {
 
+    console.log("Sending push to tokens:", payload.tokens)
+  
     const response = await admin.messaging().sendEachForMulticast({
       tokens: payload.tokens,
-      notification:{
+      notification: {
         title: payload.title,
         body: payload.body,
         imageUrl: payload.imageUrl
       },
-      data:{
+      data: {
         url: payload.deepLink || "/home"
       }
     })
-
+  
+    console.log("FCM response:", response)
+  
     return {
-      success:true,
-      sent:response.successCount
+      success: true,
+      sent: response.successCount
     }
-
-  } catch(err:any){
-    console.error(err)
-    return {success:false,message:err.message}
+  
+  } catch (err:any) {
+  
+    console.error("FCM ERROR:", err)
+  
+    return { success:false, message:err.message }
   }
 }
