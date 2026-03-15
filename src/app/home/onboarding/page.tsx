@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { ZapizzaLogo } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowRight, PartyPopper, BellRing, ShieldCheck, Check } from "lucide-react";
+import { Loader2, ArrowRight, PartyPopper, BellRing, ShieldCheck, MapPin } from "lucide-react";
 import { requestForToken } from "@/firebase/messaging";
 
 type OnboardingStep = "permissions" | "info";
@@ -62,27 +63,48 @@ export default function OnboardingPage() {
     }
   }, [user, userLoading, router, db]);
 
-  const handleRequestNotifications = async () => {
+  const handleGrantPermissions = async () => {
     setIsRequestingPermission(true);
+    
+    // 1. Request Location First
     try {
-      // requestForToken handles Notification.requestPermission internally
+      if (navigator.geolocation) {
+        await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              toast({ title: "Location access granted" });
+              resolve(pos);
+            },
+            (err) => {
+              console.warn("Location denied", err);
+              resolve(null); // Resolve anyway to move to next permission
+            },
+            { timeout: 5000 }
+          );
+        });
+      }
+    } catch (e) {
+      console.warn("Geolocation sequence skipped or failed");
+    }
+
+    // 2. Request Notifications Immediately After
+    try {
       const token = await requestForToken();
       if (token && db && user) {
         await updateDoc(doc(db, "users", user.uid), {
           fcmToken: token
         });
-        toast({ title: "Notifications Enabled!", description: "You'll now receive order updates." });
+        toast({ title: "Notifications enabled!" });
       } else if (!token) {
-        toast({ title: "Notifications Skipped", description: "You can enable these later in your settings." });
+        toast({ title: "Notifications skipped" });
       }
-      // Proceed to personal info
-      setStep("info");
     } catch (e) {
-      console.error(e);
-      setStep("info");
-    } finally {
-      setIsRequestingPermission(false);
+      console.error("FCM Error during onboarding:", e);
     }
+
+    // Proceed to personal info regardless of permission results
+    setStep("info");
+    setIsRequestingPermission(false);
   };
 
   const handleFinish = async () => {
@@ -141,29 +163,35 @@ export default function OnboardingPage() {
                 <BellRing className="h-10 w-10 text-[#14532d]" />
               </div>
               <div className="space-y-1">
-                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline">Stay Updated!</h1>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">We need permissions to track your orders in real-time</p>
+                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline">Setup Access</h1>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Enable location & notifications for the best experience</p>
               </div>
             </div>
 
-            <div className="space-y-4 text-left">
+            <div className="space-y-3 text-left">
+              <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                <MapPin className="h-5 w-5 text-indigo-600 flex-shrink-0" />
+                <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed font-headline">
+                  Location is used to find your nearest outlet and track your delivery in real-time.
+                </p>
+              </div>
               <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
                 <ShieldCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
                 <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed font-headline">
-                  Order status tracking, delivery partner alerts, and exclusive rewards announcements.
+                  Notifications keep you updated on order status and exclusive member rewards.
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
               <Button 
-                onClick={handleRequestNotifications}
+                onClick={handleGrantPermissions}
                 disabled={isRequestingPermission}
                 className="w-full h-14 bg-[#14532d] text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-green-900/20 gap-2 text-sm font-headline"
               >
                 {isRequestingPermission ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                   <>
-                    ENABLE NOTIFICATIONS <ArrowRight className="h-5 w-5" />
+                    CONTINUE SETUP <ArrowRight className="h-5 w-5" />
                   </>
                 )}
               </Button>
@@ -189,8 +217,8 @@ export default function OnboardingPage() {
                 <ZapizzaLogo className="h-12 w-12 text-[#14532d]" />
               </div>
               <div className="space-y-1">
-                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline text-left w-full">Almost There!</h1>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline text-left w-full">Help us know you better for special treats</p>
+                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline text-left w-full">Personalize</h1>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline text-left w-full">Complete your profile for special treats</p>
               </div>
             </div>
 
