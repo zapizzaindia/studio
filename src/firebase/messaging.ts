@@ -1,26 +1,42 @@
-
 'use client';
 
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
 import { app } from './config';
 
-// NOTE: Replace with your actual VAPID key from Firebase Console
-// Project Settings -> Cloud Messaging -> Web Configuration -> Web Push certificates
+// VAPID key from Firebase Console
 const VAPID_KEY = "BDs-DwZsERc8ry_rgUfTn_P6kQJeu-6P6GHFUkJGbAFGnNaoi0wAnbSoO89D9XOhPIOmuubhqHruzZ6lX3cxIYo";
 
+/**
+ * Requests notification permission and returns an FCM token.
+ * Triggers the browser's native permission prompt if not already granted.
+ */
 export const requestForToken = async () => {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    console.warn('Notifications not supported in this browser environment.');
+    return null;
+  }
+
   try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.log('Notification permission denied by user.');
+      return null;
+    }
+
     const messaging = getMessaging(app);
-    const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+    const currentToken = await getToken(messaging, { 
+      vapidKey: VAPID_KEY 
+    });
+
     if (currentToken) {
-      console.log('FCM Token generated:', currentToken);
+      console.log('FCM Token generated successfully:', currentToken);
       return currentToken;
     } else {
-      console.log('No registration token available. Request permission to generate one.');
+      console.warn('No registration token available. Check VAPID key or Service Worker.');
       return null;
     }
   } catch (err) {
-    console.log('An error occurred while retrieving token. ', err);
+    console.error('An error occurred while retrieving FCM token:', err);
     return null;
   }
 };

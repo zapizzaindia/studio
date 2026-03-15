@@ -1,8 +1,7 @@
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
-
-// These config values are public and safe to include
+// This is the background service worker for Firebase Cloud Messaging
 firebase.initializeApp({
   apiKey: "AIzaSyDIkIO0RI3nfKPkcR33rDyqs_12TK4jw2M",
   authDomain: "zapizza-backend.firebaseapp.com",
@@ -16,14 +15,11 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: payload.notification.image || '/logo.png',
-    data: {
-      url: payload.data?.link || '/'
-    }
+    icon: '/icon-192.png',
+    data: payload.data
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
@@ -31,8 +27,7 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data.url;
-
+  const urlToOpen = event.notification.data?.url || '/home';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       for (var i = 0; i < windowClients.length; i++) {

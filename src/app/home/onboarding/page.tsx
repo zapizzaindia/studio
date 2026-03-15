@@ -42,14 +42,14 @@ export default function OnboardingPage() {
             if (docSnap.exists()) {
               const data = docSnap.data();
         
-              // If the user has a display name and a role, they are onboarded
+              // User is onboarded if they have a role and display name
               if (data.displayName && data.role === "customer") {
                 router.replace("/home");
                 return;
               }
             }
         
-            // If we're here, user is missing info. Start onboarding.
+            // User is missing info, start sequence
             setIsChecking(false);
         
           } catch (e) {
@@ -65,14 +65,17 @@ export default function OnboardingPage() {
   const handleRequestNotifications = async () => {
     setIsRequestingPermission(true);
     try {
+      // requestForToken handles Notification.requestPermission internally
       const token = await requestForToken();
       if (token && db && user) {
         await updateDoc(doc(db, "users", user.uid), {
           fcmToken: token
         });
         toast({ title: "Notifications Enabled!", description: "You'll now receive order updates." });
+      } else if (!token) {
+        toast({ title: "Notifications Skipped", description: "You can enable these later in your settings." });
       }
-      // Move to next step regardless of token success (might be blocked)
+      // Proceed to personal info
       setStep("info");
     } catch (e) {
       console.error(e);
@@ -128,9 +131,9 @@ export default function OnboardingPage() {
         {step === "permissions" ? (
           <motion.div 
             key="permissions"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
             className="w-full max-w-sm space-y-8 bg-white p-8 rounded-[40px] shadow-xl border border-gray-100"
           >
             <div className="flex flex-col items-center text-center space-y-4">
