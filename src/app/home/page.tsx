@@ -576,16 +576,22 @@ export default function HomePage() {
 
         return (
           <div key={cat.id} className="mt-8">
-            <div className="px-6 flex items-center gap-2 mb-4 font-headline text-black">
-              <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
-                <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
+            <div 
+              className="px-6 flex items-center justify-between mb-4 font-headline text-black cursor-pointer active:scale-[0.98] transition-transform"
+              onClick={() => router.push(`/home/menu?category=${cat.id}`)}
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
+                  <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none">{cat.name}</h2>
+                  {cat.homepageTagline && (
+                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">{cat.homepageTagline}</p>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col text-left">
-                <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none">{cat.name}</h2>
-                {cat.homepageTagline && (
-                  <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-[0.1em] mt-0.5">{cat.homepageTagline}</p>
-                )}
-              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex overflow-x-auto px-6 space-x-4 scrollbar-hide pb-8">
               {catItems.map((item) => (

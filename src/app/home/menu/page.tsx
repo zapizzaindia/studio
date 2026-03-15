@@ -88,14 +88,21 @@ export default function MenuPage() {
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
+  // Deep-linking scroll effect
   useEffect(() => {
-    if (initialCategory && !categoriesLoading) {
-        const el = document.getElementById(`cat-${initialCategory}`);
-        if (el) {
-            setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-        }
+    if (initialCategory && !categoriesLoading && !menuItemsLoading) {
+        const scrollToTarget = () => {
+          const el = document.getElementById(`cat-${initialCategory}`);
+          if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        };
+
+        // Delay slightly to ensure browser has painted the stable layout
+        const timeout = setTimeout(scrollToTarget, 300);
+        return () => clearTimeout(timeout);
     }
-  }, [initialCategory, categoriesLoading]);
+  }, [initialCategory, categoriesLoading, menuItemsLoading]);
 
   const scrollToCategory = (id: string) => {
     const el = document.getElementById(`cat-${id}`);
