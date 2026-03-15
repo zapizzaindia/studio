@@ -66,20 +66,30 @@ export default function OnboardingPage() {
   const handleGrantPermissions = async () => {
     setIsRequestingPermission(true);
     
-    // 1. Request Notifications FIRST (CRITICAL: Needs direct user gesture to show prompt)
-    try {
-      const token = await requestForToken();
-      if (token && db && user) {
-        await updateDoc(doc(db, "users", user.uid), {
-          fcmToken: token
-        });
-        toast({ title: "Notifications enabled!" });
-      } else if (!token) {
-        toast({ title: "Notifications skipped" });
-      }
-    } catch (e) {
-      console.error("FCM Error during onboarding:", e);
+    // 1️⃣ Ask notification permission FIRST
+try {
+
+  const permission = await Notification.requestPermission()
+
+  if (permission === "granted") {
+
+    const token = await requestForToken()
+
+    if (token && db && user) {
+      await updateDoc(doc(db, "users", user.uid), {
+        fcmToken: token
+      })
+
+      toast({ title: "Notifications enabled!" })
     }
+
+  } else {
+    toast({ title: "Notifications blocked" })
+  }
+
+} catch (e) {
+  console.error("Notification permission error", e)
+}
 
     // 2. Request Location Second
     try {
