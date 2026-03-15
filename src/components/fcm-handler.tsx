@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { getMessaging, onMessage } from 'firebase/messaging';
 import { app } from '@/firebase/config';
 import { requestForToken } from '@/firebase/messaging';
@@ -26,11 +27,12 @@ export function FCMHandler() {
         if ('Notification' in window && Notification.permission === 'granted') {
           const token = await requestForToken();
           if (token) {
-            // Silently sync token to Firestore
-            await updateDoc(doc(db, 'users', user.uid), {
+            // Silently sync token to Firestore using setDoc with merge
+            // to ensure it works even if the profile doc hasn't been created
+            await setDoc(doc(db, 'users', user.uid), {
               fcmToken: token,
               lastTokenSync: new Date().toISOString()
-            });
+            }, { merge: true });
           }
         }
 

@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore } from "@/firebase";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,29 +67,27 @@ export default function OnboardingPage() {
     setIsRequestingPermission(true);
     
     // 1️⃣ Ask notification permission FIRST
-try {
-
-  const permission = await Notification.requestPermission()
-
-  if (permission === "granted") {
-
-    const token = await requestForToken()
-
-    if (token && db && user) {
-      await updateDoc(doc(db, "users", user.uid), {
-        fcmToken: token
-      })
-
-      toast({ title: "Notifications enabled!" })
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        const token = await requestForToken();
+        if (token && db && user) {
+          // Use setDoc with merge to ensure the record exists
+          await setDoc(doc(db, "users", user.uid), {
+            fcmToken: token,
+            uid: user.uid,
+            phoneNumber: user.phoneNumber || "",
+            role: "customer",
+            loyaltyPoints: 0
+          }, { merge: true });
+          toast({ title: "Notifications enabled!" });
+        }
+      } else {
+        toast({ title: "Notifications skipped" });
+      }
+    } catch (e) {
+      console.error("Notification permission error", e);
     }
-
-  } else {
-    toast({ title: "Notifications blocked" })
-  }
-
-} catch (e) {
-  console.error("Notification permission error", e)
-}
 
     // 2. Request Location Second
     try {
