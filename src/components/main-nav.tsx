@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import { ChevronDown, MapPin, User, LogOut, ShoppingCart, History } from "lucide-react";
@@ -72,16 +71,16 @@ export function MainNav() {
 
   return (
     <header className={cn("fixed top-0 left-0 right-0 z-30 text-white transition-colors duration-500 pt-safe", brandBg)}>
-      <div className="container mx-auto flex h-16 max-w-full items-center justify-between px-4">
+      <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-1 overflow-hidden cursor-pointer" onClick={handleChangeLocation}>
-          <MapPin className="h-5 w-5 text-white flex-shrink-0" />
+          <MapPin className="h-4 w-4 text-white flex-shrink-0" />
           <div className="flex flex-col">
-            <div className="flex items-center font-bold text-sm font-headline">
+            <div className="flex items-center font-bold text-xs font-headline">
               <span className="truncate max-w-[150px] sm:max-w-[180px]">{locationLabel}</span>
-              <ChevronDown className="ml-1 h-4 w-4" />
+              <ChevronDown className="ml-0.5 h-3 w-3" />
             </div>
-            <span className="text-[10px] text-white/70 whitespace-nowrap font-headline">
-              {cityName || "Tap to change location"}
+            <span className="text-[9px] text-white/70 whitespace-nowrap font-headline">
+              {cityName || "Change Location"}
             </span>
           </div>
         </div>
@@ -90,26 +89,26 @@ export function MainNav() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="relative rounded-full h-9 w-9 border border-white/20 mr-1"
+            className="relative rounded-full h-8 w-8 border border-white/20"
             onClick={() => router.push('/home/checkout')}
           >
-            <ShoppingCart className="h-5 w-5" />
+            <ShoppingCart className="h-4 w-4" />
             {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white font-body tabular-nums">
+              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white font-body tabular-nums">
                 {totalItems}
               </span>
             )}
           </Button>
 
           {loading ? (
-             <Avatar className="h-8 w-8"><AvatarFallback>?</AvatarFallback></Avatar>
+             <Avatar className="h-7 w-7"><AvatarFallback>?</AvatarFallback></Avatar>
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 border border-white/20">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 border border-white/20">
+                  <Avatar className="h-7 w-7">
                     <AvatarImage src={user.photoURL || undefined} />
-                    <AvatarFallback className="bg-black/20 text-white font-headline">{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback className="bg-black/20 text-white text-[10px] font-headline">{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -148,8 +147,8 @@ export function MainNav() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 border border-white/20" onClick={() => router.push('/login')}>
-              <User className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 border border-white/20" onClick={() => router.push('/login')}>
+              <User className="h-4 w-4" />
             </Button>
           )}
         </div>
