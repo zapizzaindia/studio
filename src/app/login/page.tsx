@@ -167,7 +167,6 @@ export default function LoginPage() {
     <div className="w-full max-w-sm p-4">
       <div className="mb-8 flex flex-col items-center text-center">
         <ZapizzaLogo className="mb-4 h-12 w-12 text-primary" />
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Sign in to feed your hunger</p>
       </div>
 
       <AnimatePresence mode="wait">
