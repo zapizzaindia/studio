@@ -164,6 +164,7 @@ export default function CheckoutPage() {
     }
     
     setAppliedCoupon(found);
+    setCouponInput("");
     toast({ title: "Coupon Applied!" });
   };
 
@@ -304,6 +305,7 @@ export default function CheckoutPage() {
   }
 
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
+  const brandCoupons = allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [];
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-48">
@@ -458,14 +460,40 @@ export default function CheckoutPage() {
                 <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600">REMOVE</Button>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <Input 
-                  placeholder="ENTER PROMO CODE" 
-                  value={couponInput}
-                  onChange={e => setCouponInput(e.target.value)}
-                  className="h-10 text-xs font-black uppercase"
-                />
-                <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="ENTER PROMO CODE" 
+                    value={couponInput}
+                    onChange={e => setCouponInput(e.target.value)}
+                    className="h-10 text-xs font-black uppercase"
+                  />
+                  <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
+                </div>
+
+                {brandCoupons.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Available Coupons</p>
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                      {brandCoupons.map((coupon) => (
+                        <button
+                          key={coupon.id}
+                          onClick={() => handleApplyCoupon(coupon)}
+                          className="flex-shrink-0 text-left p-2.5 rounded-xl border border-dashed transition-all active:scale-95 bg-gray-50 hover:bg-white"
+                          style={{ borderColor: brandColor + '30' }}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-[#333] tracking-widest uppercase">{coupon.code}</span>
+                            <Plus className="h-2.5 w-2.5" style={{ color: brandColor }} />
+                          </div>
+                          <p className="text-[8px] font-bold text-muted-foreground uppercase line-clamp-1">
+                            {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
