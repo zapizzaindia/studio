@@ -42,6 +42,19 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Request notification permission immediately on page load
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            console.log("Notification permission granted at login");
+          }
+        });
+      }
+    }
+  }, []);
+
    useEffect(() => {
     if (!userLoading && user) {
       // Redirect to onboarding first to check if profile is complete

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,9 +11,8 @@ import { ZapizzaLogo } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ArrowRight, PartyPopper, BellRing, ShieldCheck, MapPin } from "lucide-react";
-import { requestForToken } from "@/firebase/messaging";
 
-type OnboardingStep = "notifications" | "location" | "info";
+type OnboardingStep = "location" | "info";
 
 export default function OnboardingPage() {
   const { user, loading: userLoading } = useUser();
@@ -22,7 +20,7 @@ export default function OnboardingPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const [step, setStep] = useState<OnboardingStep>("notifications");
+  const [step, setStep] = useState<OnboardingStep>("location");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [birthday, setBirthday] = useState("");
@@ -62,32 +60,6 @@ export default function OnboardingPage() {
       }
     }
   }, [user, userLoading, router, db]);
-
-  const handleNotificationPermission = async () => {
-    setIsRequesting(true);
-    try {
-      // Direct call to trigger browser popup immediately
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        const token = await requestForToken();
-        if (token && db && user) {
-          await setDoc(doc(db, "users", user.uid), {
-            fcmToken: token,
-            uid: user.uid,
-            role: "customer"
-          }, { merge: true });
-          toast({ title: "Notifications enabled!" });
-        }
-      } else {
-        toast({ title: "Notifications skipped" });
-      }
-    } catch (e) {
-      console.error("Notification sequence error", e);
-    } finally {
-      setIsRequesting(false);
-      setStep("location");
-    }
-  };
 
   const handleLocationPermission = async () => {
     setIsRequesting(true);
@@ -159,61 +131,11 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6">
       <AnimatePresence mode="wait">
-        {step === "notifications" && (
-          <motion.div 
-            key="notifications"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="w-full max-w-sm space-y-8 bg-white p-8 rounded-[40px] shadow-xl border border-gray-100"
-          >
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="h-20 w-20 rounded-full bg-indigo-50 flex items-center justify-center">
-                <BellRing className="h-10 w-10 text-indigo-600" />
-              </div>
-              <div className="space-y-1 text-left w-full">
-                <h1 className="text-3xl font-black italic uppercase tracking-tighter text-[#333] font-headline">Stay Updated</h1>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest font-headline">Get real-time order alerts & rewards</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-left">
-              <div className="flex gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                <ShieldCheck className="h-5 w-5 text-indigo-600 flex-shrink-0" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase leading-relaxed font-headline">
-                  We'll notify you when your pizza is in the oven and when the rider is near your door.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Button 
-                onClick={handleNotificationPermission}
-                disabled={isRequesting}
-                className="w-full h-14 bg-indigo-600 text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-indigo-900/20 gap-2 text-sm font-headline"
-              >
-                {isRequesting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                  <>
-                    ENABLE NOTIFICATIONS <ArrowRight className="h-5 w-5" />
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setStep("location")}
-                className="w-full h-12 text-muted-foreground font-black uppercase text-[10px] tracking-widest font-headline"
-              >
-                NOT NOW, MAYBE LATER
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
         {step === "location" && (
           <motion.div 
             key="location"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, x: -50 }}
             className="w-full max-w-sm space-y-8 bg-white p-8 rounded-[40px] shadow-xl border border-gray-100"
           >
