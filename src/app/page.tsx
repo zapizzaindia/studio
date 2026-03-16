@@ -16,7 +16,8 @@ import { Loader2 } from "lucide-react";
  * Features:
  * 1. Universal Entry: Handles redirection for both Mobile and PC.
  * 2. Auth Gatekeeper: Ensures users are logged in before entering home.
- * 3. Priority Rendering: High-priority image loading for optimal LCP.
+ * 3. Fallback Layer: Uses splash-fallback.jpg for immediate branding.
+ * 4. Priority Rendering: High-priority image loading for optimal LCP.
  */
 export default function SplashPage() {
   const router = useRouter();
@@ -102,11 +103,23 @@ export default function SplashPage() {
 
   return (
     <main className="fixed inset-0 bg-white overflow-hidden flex flex-col items-center justify-center">
-      {bannerImage ? (
+      {/* 1. Static Fallback (Always present at base) */}
+      <div className="absolute inset-0">
+        <Image
+          src="/splash-fallback.jpg"
+          alt="Zapizza Background"
+          fill
+          priority
+          className="object-cover"
+        />
+      </div>
+
+      {/* 2. Dynamic Promo Banner (Fades in over fallback) */}
+      {bannerImage && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0"
+          className="absolute inset-0 z-10"
         >
           <Image
             src={bannerImage}
@@ -116,19 +129,24 @@ export default function SplashPage() {
             unoptimized
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40 pointer-events-none" />
         </motion.div>
-      ) : (
-        <div className="flex flex-col items-center gap-6">
-          <ZapizzaLogo className="h-24 w-24 text-primary" />
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+      )}
+
+      {/* 3. Global Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 pointer-events-none z-20" />
+
+      {/* 4. Loader & Branding (Shown if dynamic banners are missing or loading) */}
+      {!isDataLoaded && (
+        <div className="relative z-30 flex flex-col items-center gap-6">
+          <ZapizzaLogo className="h-24 w-24 text-white drop-shadow-2xl" />
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white animate-pulse">
             <Loader2 className="h-3 w-3 animate-spin" /> Finalizing Connection...
           </div>
         </div>
       )}
 
-      {/* Persistence indicator for all users */}
-      <div className="absolute bottom-12 left-0 right-0 flex justify-center px-6">
+      {/* 5. Persistence Indicator */}
+      <div className="absolute bottom-12 left-0 right-0 flex justify-center px-6 z-30">
         <div className="bg-black/40 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10 text-[10px] text-white font-black uppercase tracking-[0.2em] shadow-2xl text-center">
           Secure Terminal Ready
         </div>
