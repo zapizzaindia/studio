@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { ZapizzaLogo } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowRight, PartyPopper, BellRing, ShieldCheck, MapPin } from "lucide-react";
+import { Loader2, ArrowRight, PartyPopper, MapPin } from "lucide-react";
 
 type OnboardingStep = "location" | "info";
 
