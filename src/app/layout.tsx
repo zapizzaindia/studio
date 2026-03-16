@@ -1,3 +1,4 @@
+
 export const dynamic = "force-dynamic";
 
 import type { Metadata, Viewport } from 'next';
@@ -40,7 +41,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover',
+  viewportFit: 'cover', // Critical for notched iPhones and full-screen Androids
 };
 
 export default function RootLayout({
@@ -49,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="h-full overflow-x-hidden">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -59,12 +60,14 @@ export default function RootLayout({
         />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossOrigin="" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased min-h-full flex flex-col bg-background selection:bg-primary/10">
         <FirebaseClientProvider>
           <CartProvider>
             <FCMHandler />
             <OfflineDetector />
-            {children}
+            <div className="flex-1 flex flex-col">
+              {children}
+            </div>
           </CartProvider>
         </FirebaseClientProvider>
         <Toaster />

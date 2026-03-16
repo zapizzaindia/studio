@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -226,13 +227,11 @@ export default function HomePage() {
           
           handleCitySelect(nearestCity!);
           
-          // Get outlets for that city
           const outletSnap = await getDocs(collection(db, "outlets"));
           const outletsInCity = outletSnap.docs
             .map(d => ({ id: d.id, ...d.data() } as Outlet))
             .filter(o => o.cityId === nearestCity!.id && o.isOpen);
           
-          // If only ONE outlet → auto open
           if (outletsInCity.length === 1) {
             handleOutletSelect(outletsInCity[0]);
             toast({
@@ -240,9 +239,6 @@ export default function HomePage() {
               description: `Welcome to ${outletsInCity[0].name}!`
             });
           }
-          
-          // If multiple outlets → do NOTHING
-          // OutletSelector will automatically render
         } catch (e) {
           console.error("Auto-location failed", e);
         } finally {
@@ -251,7 +247,6 @@ export default function HomePage() {
       },
       () => {
         setIsDetecting(false);
-        // Silently fail auto-detection if denied
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
@@ -273,7 +268,7 @@ export default function HomePage() {
           setSelectedOutletState(outlet);
         }
   
-        return; // stop detection
+        return; 
       }
     } catch (e) {
       console.warn("Failed to restore location", e);
@@ -291,7 +286,6 @@ export default function HomePage() {
   }, [api]);
 
   useEffect(() => {
-    // Show modal if outlet is closed and user hasn't dismissed it this session
     if (selectedOutlet && selectedOutlet.isOpen === false && !hasDismissedClosedModal) {
       setShowClosedModal(true);
     }
@@ -381,7 +375,7 @@ export default function HomePage() {
 
   if (!isHydrated || userLoading || isDetecting) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-white">
+      <div className="flex flex-col justify-center items-center h-viewport bg-white">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <ZapizzaLogo className="h-16 w-16 text-primary" />
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground font-headline">
@@ -396,11 +390,9 @@ export default function HomePage() {
   if (!selectedOutlet) return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32">
+    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden">
   
-      <div
-        className="bg-white text-[#333] px-6 py-5 relative transition-all duration-700 border-b"
-      >
+      <div className="bg-white text-[#333] px-6 py-5 relative transition-all duration-700 border-b flex-shrink-0">
         <div className="flex justify-between items-center">
           <div className="flex flex-col text-left">
             <p className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 font-headline">
@@ -448,7 +440,7 @@ export default function HomePage() {
       </div>
 
       {heroBanner && (
-        <div className="relative w-full h-[300px] overflow-hidden md:hidden">
+        <div className="relative w-full aspect-video md:aspect-[21/9] overflow-hidden">
           {heroBanner.mediaType === "video" ? (
             <video
               src={heroBanner.imageId}
@@ -474,7 +466,7 @@ export default function HomePage() {
         <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
           <CarouselContent>
             {bannersLoading ? (
-              <CarouselItem><Skeleton className="w-full h-48 rounded-[32px]" /></CarouselItem>
+              <CarouselItem><Skeleton className="w-full aspect-[21/9] rounded-[32px]" /></CarouselItem>
             ) : banners?.filter(b => b.active && !b.isHero).map((banner, index) => (
               <CarouselItem key={index}>
                 <div className="relative w-full aspect-[21/9] rounded-[32px] overflow-hidden shadow-lg group">
@@ -491,7 +483,7 @@ export default function HomePage() {
         </Carousel>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 flex-shrink-0">
         <div className="px-6 flex items-center gap-2 mb-4 font-headline text-black">
           <div className="p-1.5 rounded-lg shadow-sm bg-indigo-500">
             <Layers className="h-4 w-4 text-white" />
@@ -510,7 +502,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 flex-shrink-0">
         <div className="px-6 flex items-center gap-2 mb-4 font-headline text-black">
           <div className="p-1.5 rounded-lg shadow-sm bg-rose-500">
             <TrendingUp className="h-4 w-4 text-white" />
@@ -528,7 +520,7 @@ export default function HomePage() {
       </div>
 
       {coupons.length > 0 && (
-        <div className="mt-2 mb-4">
+        <div className="mt-2 mb-4 flex-shrink-0">
           <div className="px-6 mb-4 flex items-center gap-2 font-headline text-black">
             <div className="p-1.5 rounded-lg shadow-sm bg-amber-500">
               <Ticket className="h-4 w-4 text-white" />
@@ -575,7 +567,7 @@ export default function HomePage() {
         if (catItems.length === 0) return null;
 
         return (
-          <div key={cat.id} className="mt-8">
+          <div key={cat.id} className="mt-8 flex-shrink-0">
             <div 
               className="px-6 flex items-center justify-between mb-4 font-headline text-black cursor-pointer active:scale-[0.98] transition-transform"
               onClick={() => router.push(`/home/menu?category=${cat.id}`)}
@@ -602,7 +594,7 @@ export default function HomePage() {
         );
       })}
 
-      <div className="mt-8 px-6 pb-12">
+      <div className="mt-8 px-6 pb-12 flex-shrink-0">
         <div className="flex items-center gap-2 mb-6 font-headline text-black">
           <div className="p-1.5 rounded-lg shadow-sm bg-emerald-500">
             <Pizza className="h-4 w-4 text-white" />
@@ -624,7 +616,7 @@ export default function HomePage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                      <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                      <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                     </div>
                     <div className="flex gap-1">
                       <Badge className="bg-green-100 text-green-800 text-[7px] font-black uppercase px-1.5 py-0 rounded-sm border-none font-headline">Bestseller</Badge>
@@ -661,10 +653,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mt-4 relative overflow-hidden">
-        <div 
-          className="w-full px-6 py-12 text-center text-white relative bg-[#111827]"
-        >
+      <div className="mt-4 relative overflow-hidden flex-shrink-0">
+        <div className="w-full px-6 py-12 text-center text-white relative bg-[#111827]">
           <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_center,_white_0%,_transparent_70%)]" />
           
           <div className="relative z-10 space-y-2 font-headline">
@@ -718,7 +708,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mt-12 px-6">
+      <div className="mt-12 px-6 flex-shrink-0">
         <h2 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-4 font-headline">
           ENQUIRE ABOUT {selectedOutlet?.brand?.toUpperCase() || 'ZAPIZZA'} FRANCHISE
         </h2>
@@ -746,7 +736,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mt-8 px-6">
+      <div className="mt-8 px-6 flex-shrink-0">
         <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white text-left">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="h-14 w-14 rounded-full border-2 border-gray-100 flex items-center justify-center p-2 bg-[#f8f9fa]">
@@ -781,7 +771,7 @@ export default function HomePage() {
         </Card>
       </div>
 
-      <div className="mt-8 px-6">
+      <div className="mt-8 px-6 flex-shrink-0">
         <Card className="rounded-[24px] border-none shadow-sm overflow-hidden bg-white relative font-headline text-left">
           <CardContent className="p-8 flex items-center justify-between">
             <div className="space-y-2 max-w-[200px]">
@@ -797,7 +787,7 @@ export default function HomePage() {
         </Card>
       </div>
 
-      <div className="mt-12">
+      <div className="mt-12 flex-shrink-0">
         <h2 className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mb-6 font-headline">
           AWARDS AND MEDIA
         </h2>
@@ -823,7 +813,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mt-16 px-10 text-center space-y-6 pb-12">
+      <div className="mt-16 px-10 text-center space-y-6 pb-12 flex-shrink-0">
         <p className="text-muted-foreground font-medium italic text-lg leading-relaxed opacity-60 font-body">
           "The secret of success in life is to eat what you like and let the food fight it out inside." - Mark Twain
         </p>
