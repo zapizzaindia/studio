@@ -135,16 +135,6 @@ export default function SplashPage() {
       {/* 3. Global Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 pointer-events-none z-20" />
 
-      {/* 4. Loader & Branding (Shown if dynamic banners are missing or loading) */}
-      {!isDataLoaded && (
-        <div className="relative z-30 flex flex-col items-center gap-6">
-          <ZapizzaLogo className="h-24 w-24 text-white drop-shadow-2xl" />
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white animate-pulse">
-            <Loader2 className="h-3 w-3 animate-spin" /> Finalizing Connection...
-          </div>
-        </div>
-      )}
-
       {/* 5. Persistence Indicator */}
       <div className="absolute bottom-12 left-0 right-0 flex justify-center px-6 z-30">
         <div className="bg-black/40 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10 text-[10px] text-white font-black uppercase tracking-[0.2em] shadow-2xl text-center">
