@@ -64,29 +64,36 @@ export default function OnboardingPage() {
 
   const handleLocationPermission = async () => {
     setIsRequesting(true);
+  
     try {
-      if (navigator.geolocation) {
-        await new Promise((resolve) => {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              toast({ title: "Location captured!" });
-              resolve(pos);
-            },
-            (err) => {
-              console.warn("Location denied", err);
-              toast({ title: "Location skipped", variant: "destructive" });
-              resolve(null); 
-            },
-            { timeout: 5000, enableHighAccuracy: true }
-          );
-        });
+      const isNative = typeof window !== "undefined" && (window as any).Capacitor;
+  
+      if (isNative) {
+        // 🔥 SAFE dynamic import
+        const { Geolocation } = await import('@capacitor/geolocation');
+  
+        const perm = await Geolocation.requestPermissions();
+  
+        if (perm.location === 'granted') {
+          const pos = await Geolocation.getCurrentPosition();
+          console.log("Native location:", pos);
+          toast({ title: "Location captured!" });
+        }
+  
+      } else {
+        // ✅ WEB
+        navigator.geolocation.getCurrentPosition(
+          () => toast({ title: "Location captured!" }),
+          () => toast({ title: "Location skipped" })
+        );
       }
+  
     } catch (e) {
-      console.warn("Geolocation skipped");
-    } finally {
-      setIsRequesting(false);
-      setStep("info");
+      console.error("Location error:", e);
     }
+  
+    setIsRequesting(false);
+    setStep("info");
   };
 
   const handleFinish = async () => {

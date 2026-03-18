@@ -24,6 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
+import { requestForToken } from '@/firebase/messaging';
 
 const phoneSchema = z.object({
   phone: z.string().min(10, { message: 'Please enter a valid 10-digit phone number.' }).max(10),
@@ -44,16 +45,43 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Request notification permission immediately on page load
-    if (typeof window !== "undefined" && "Notification" in window) {
-      if (Notification.permission === "default") {
-        Notification.requestPermission().then(permission => {
-          if (permission === "granted") {
-            console.log("Notification permission granted at login");
+    const setupNotifications = async () => {
+      try {
+        // 👇 Detect if running inside Capacitor (SAFE)
+        const isNative = typeof window !== "undefined" && (window as any).Capacitor;
+  
+        if (isNative) {
+          // 🔥 DYNAMIC IMPORT (CRITICAL FIX)
+          const { PushNotifications } = await import('@capacitor/push-notifications');
+  
+          const perm = await PushNotifications.requestPermissions();
+  
+          if (perm.receive === 'granted') {
+            await PushNotifications.register();
+  
+            PushNotifications.addListener('registration', async (token) => {
+              console.log("Native token:", token.value);
+            });
           }
-        });
+  
+        } else {
+          // ✅ WEB (Firebase Studio safe)
+          if ("Notification" in window && Notification.permission === "default") {
+            const permission = await Notification.requestPermission();
+  
+            if (permission === "granted") {
+              const token = await requestForToken();
+              console.log("Web token:", token);
+            }
+          }
+        }
+  
+      } catch (e) {
+        console.error("Notification setup error:", e);
       }
-    }
+    };
+  
+    setupNotifications();
   }, []);
 
    useEffect(() => {
