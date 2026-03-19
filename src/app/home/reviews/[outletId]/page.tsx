@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -96,16 +95,15 @@ export default function ReviewsPage() {
 
   if (outletLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-white items-center justify-center p-6">
+      <div className="flex flex-col min-h-screen bg-white items-center justify-center p-6 pt-[calc(64px+env(safe-area-inset-top))]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4 shadow-sm">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24 pt-[calc(56px+env(safe-area-inset-top))]">
+      <div className="sticky top-[calc(56px+env(safe-area-inset-top))] z-30 bg-white border-b px-4 py-4 flex items-center gap-4 shadow-sm">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-6 w-6" />
         </Button>
@@ -118,8 +116,6 @@ export default function ReviewsPage() {
       </div>
 
       <div className="p-4 space-y-6 container max-w-lg mx-auto text-left">
-        
-        {/* Review Form */}
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardHeader className="bg-gray-50/50 py-6">
             <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
@@ -171,7 +167,6 @@ export default function ReviewsPage() {
           </CardContent>
         </Card>
 
-        {/* Reviews List */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-[#333]">All Reviews</h2>

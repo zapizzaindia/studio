@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -39,8 +38,8 @@ export default function OffersPage() {
   const brandColor = selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24">
-      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex flex-col gap-4 shadow-sm">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24 pt-[calc(56px+env(safe-area-inset-top))]">
+      <div className="sticky top-[calc(56px+env(safe-area-inset-top))] z-30 bg-white border-b px-4 py-4 flex flex-col gap-4 shadow-sm">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-6 w-6" />
@@ -75,12 +74,10 @@ export default function OffersPage() {
               key={coupon.id} 
               className="bg-white rounded-2xl shadow-md border border-gray-100 flex overflow-hidden group active:scale-[0.98] transition-transform h-auto min-h-[112px]"
             >
-              {/* Left Part - Value */}
               <div 
                 style={{ backgroundColor: brandColor + '08' }} 
                 className="w-24 flex flex-col items-center justify-center relative border-r border-dashed"
               >
-                {/* Scalloped notches between sections */}
                 <div className="absolute -top-2 -right-2 w-4 h-4 bg-[#f1f2f6] rounded-full" />
                 <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-[#f1f2f6] rounded-full" />
                 
@@ -92,7 +89,6 @@ export default function OffersPage() {
                 </div>
               </div>
               
-              {/* Right Part - Info */}
               <div className="flex-1 p-4 flex flex-col justify-center bg-white">
                 <div className="flex justify-between items-start mb-1">
                   <Badge variant="outline" className="font-black text-[11px] border-dashed py-1 px-3 uppercase tracking-wider" style={{ color: brandColor, borderColor: brandColor + '40' }}>

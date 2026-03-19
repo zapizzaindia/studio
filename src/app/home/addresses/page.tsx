@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -21,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import type { Address } from "@/lib/types";
 
-// Dynamically import Map component to prevent SSR issues with Leaflet
 const LocationPicker = dynamic(() => import('@/components/location-picker'), { 
   ssr: false,
   loading: () => <div className="h-[450px] w-full bg-muted animate-pulse rounded-2xl flex flex-col items-center justify-center gap-4">
@@ -50,7 +48,6 @@ export default function AddressesPage() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
-  // Form State
   const [label, setLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
   const [flatNo, setFlatNo] = useState("");
   const [area, setArea] = useState("");
@@ -186,11 +183,11 @@ export default function AddressesPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Loading Addresses...</div>;
+  if (loading) return <div className="p-8 text-center pt-[calc(64px+env(safe-area-inset-top))]">Loading Addresses...</div>;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24">
-      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24 pt-[calc(56px+env(safe-area-inset-top))]">
+      <div className="sticky top-[calc(56px+env(safe-area-inset-top))] z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-6 w-6" />
         </Button>
@@ -348,7 +345,6 @@ export default function AddressesPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Location Picker Map Modal */}
         <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
             <DialogContent className="max-w-[95vw] rounded-[32px] p-0 overflow-hidden border-none shadow-2xl">
                 <DialogHeader className="p-6 bg-white border-b">

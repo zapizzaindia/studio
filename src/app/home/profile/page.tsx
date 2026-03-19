@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -52,7 +51,9 @@ export default function ProfilePage() {
   const { user, loading: userLoading } = useUser();
   const db = useFirestore();
   const { data: profile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
-  const { data: outlet } = useDoc<Outlet>('outlets', profile?.outletId || 'andheri');
+  
+  const savedOutletId = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('zapizza-outlet') || '{"id":"dummy"}').id : 'dummy';
+  const { data: outlet } = useDoc<Outlet>('outlets', savedOutletId);
 
   const [isHydrated, setIsHydrated] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -136,8 +137,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-12">
-      {/* Header Section */}
-      <div className="bg-[#14532d] text-white px-6 pt-12 pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
+      <div className="bg-[#14532d] text-white px-6 pt-[calc(64px+env(safe-area-inset-top))] pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button 
@@ -227,13 +227,10 @@ export default function ProfilePage() {
           </div>
         </div>
         
-        {/* Decorative element */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
       </div>
 
       <div className="px-4 -mt-6 space-y-4 relative z-20">
-        
-        {/* Loyalty Snapshot Card */}
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -256,7 +253,6 @@ export default function ProfilePage() {
             </CardContent>
         </Card>
 
-        {/* Action Menu Card */}
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardContent className="p-0">
             <div className="divide-y divide-gray-50">
@@ -279,7 +275,6 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Outlet Card */}
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardContent className="p-6">
             <div className="mb-4">
@@ -302,7 +297,6 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Social Card */}
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardContent className="p-0 flex divide-x divide-gray-100">
             <button className="flex-1 p-6 flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors">
@@ -326,7 +320,6 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
         <div className="py-10 text-center space-y-4 font-headline">
           <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] font-roboto tabular-nums">v2.8.5 (Gold Edition)</p>
           <div className="flex flex-col items-center gap-1 opacity-40">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -172,7 +171,6 @@ export default function HomePage() {
   const { data: allBanners, loading: bannersLoading } = useCollection<Banner>('banners');
   const { data: allCoupons } = useCollection<Coupon>('coupons', { where: ['active', '==', true] });
   
-  // Sort categories by order descending to always show newest first
   const categories = useMemo(() => {
     if (!allCategories) return [];
     return allCategories
@@ -222,7 +220,7 @@ export default function HomePage() {
 
           if (!nearestCity || minCityDist > 50) {
             setIsDetecting(false);
-            return; // Too far → show CitySelector
+            return; 
           }
           
           handleCitySelect(nearestCity!);
@@ -390,7 +388,7 @@ export default function HomePage() {
   if (!selectedOutlet) return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden">
+    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
   
       <div className="bg-white text-[#333] px-6 py-5 relative transition-all duration-700 border-b flex-shrink-0">
         <div className="flex justify-between items-center">
@@ -828,7 +826,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Closed Outlet Modal */}
       <Dialog open={showClosedModal} onOpenChange={(open) => {
         setShowClosedModal(open);
         if (!open) setHasDismissedClosedModal(true);

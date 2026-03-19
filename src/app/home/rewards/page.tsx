@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -70,10 +69,9 @@ export default function RewardsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24">
-      {/* Immersive Brand Header */}
       <div 
         style={{ backgroundColor: brandColor }} 
-        className="text-white px-6 pt-12 pb-16 rounded-b-[40px] relative overflow-hidden shadow-xl"
+        className="text-white px-6 pb-16 rounded-b-[40px] relative overflow-hidden shadow-xl pt-[calc(64px+env(safe-area-inset-top))]"
       >
         <div className="relative z-10 font-headline">
           <div className="bg-white/20 backdrop-blur-md border border-white/10 rounded-2xl p-4 w-fit mb-8">
@@ -85,14 +83,12 @@ export default function RewardsPage() {
           <p className="text-xs font-bold text-white/70 uppercase tracking-widest">Get LP Coins on Every Order</p>
         </div>
 
-        {/* Decorative Gift Box Icon */}
         <div className="absolute top-12 right-4 w-32 h-32 opacity-20 rotate-12 pointer-events-none">
           <Gift className="w-full h-full text-white" strokeWidth={1} />
         </div>
       </div>
 
       <div className="px-4 -mt-10 relative z-20 space-y-4">
-        {/* Quick Action Icons */}
         <div className="grid grid-cols-4 gap-3 font-headline">
           <button className="flex flex-col items-center gap-2" onClick={() => router.push('/home/offers')}>
             <div className="w-full aspect-square bg-white rounded-2xl shadow-md flex items-center justify-center border border-gray-100">
@@ -128,7 +124,6 @@ export default function RewardsPage() {
           </button>
         </div>
 
-        {/* Main Coin Card */}
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardContent className="p-0">
             <div className="p-6 flex justify-between items-center">
@@ -141,17 +136,14 @@ export default function RewardsPage() {
               </Button>
             </div>
 
-            {/* Eligibility Banner */}
             <div className="bg-[#fff3e0] py-2 px-6 border-y border-[#ffe0b2]">
               <button className="text-[10px] font-black text-[#e65100] uppercase tracking-widest underline decoration-2 underline-offset-4 flex items-center gap-1 font-headline">
                 Eligibility Criteria <Info className="h-3 w-3" />
               </button>
             </div>
 
-            {/* Progress Stepper */}
             <div className="p-8">
               <div className="relative flex justify-between items-center px-4 mb-8">
-                {/* Connector Line */}
                 <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-gray-100 z-0" />
                 
                 {[
@@ -184,7 +176,6 @@ export default function RewardsPage() {
           </CardContent>
         </Card>
 
-        {/* Profile Completion Banner */}
         {completionPercentage < 100 && (
           <div 
             onClick={() => router.push('/home/profile')}
@@ -197,7 +188,6 @@ export default function RewardsPage() {
           </div>
         )}
 
-        {/* Redeemed Rewards Link */}
         <Card className="border-none shadow-sm rounded-2xl bg-white active:scale-[0.98] transition-all">
           <CardContent className="p-5 flex justify-between items-center">
             <span className="text-[13px] font-bold text-[#333] uppercase tracking-tight font-headline">Expired/Redeemed Rewards</span>
@@ -205,7 +195,6 @@ export default function RewardsPage() {
           </CardContent>
         </Card>
 
-        {/* How it works Footer */}
         <div className="pt-8 pb-12 font-headline">
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="h-px flex-1 bg-gray-200" />

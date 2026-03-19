@@ -1,7 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import { Suspense } from 'react';
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -26,13 +25,12 @@ import { useRouter } from "next/navigation";
 
 import type { Category, MenuItem, MenuItemVariation, MenuItemAddon, Outlet, Coupon } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useCollection, useDoc } from "@/firebase";
 import { getImageUrl } from "@/lib/placeholder-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/use-cart";
 import { AnimatePresence, motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,7 +38,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export default function MenuPage() {
+function MenuContent() {
   const router = useRouter();
   const { addItem, totalItems, totalPrice } = useCart();
   const searchParams = useSearchParams();
@@ -60,7 +58,6 @@ export default function MenuPage() {
     }
   }, []);
 
-  // Real-time subscription to the selected outlet
   const { data: selectedOutlet, loading: outletLoading } = useDoc<Outlet>('outlets', savedOutletId || 'dummy');
 
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories', {
@@ -69,7 +66,6 @@ export default function MenuPage() {
 
   const sortedCategories = useMemo(() => {
     if (!categories) return [];
-    // Sort categories by order descending to show newest first
     return [...categories].sort((a, b) => (b.order || 0) - (a.order || 0));
   }, [categories]);
 
@@ -83,12 +79,10 @@ export default function MenuPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Customization State
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<MenuItemVariation | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<MenuItemAddon[]>([]);
 
-  // Deep-linking scroll effect
   useEffect(() => {
     if (initialCategory && !categoriesLoading && !menuItemsLoading) {
         const scrollToTarget = () => {
@@ -97,8 +91,6 @@ export default function MenuPage() {
               el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         };
-
-        // Delay slightly to ensure browser has painted the stable layout
         const timeout = setTimeout(scrollToTarget, 300);
         return () => clearTimeout(timeout);
     }
@@ -187,7 +179,7 @@ export default function MenuPage() {
 
   if (outletLoading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-4 pt-[calc(56px+env(safe-area-inset-top))]">
         <Skeleton className="h-12 w-3/4 rounded-xl" />
         <Skeleton className="h-20 w-full rounded-2xl" />
       </div>
@@ -195,8 +187,7 @@ export default function MenuPage() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white relative">
-      {/* 1. Header with Real-Time Outlet Info */}
+    <div className="flex flex-col w-full min-h-screen bg-white relative pt-[calc(56px+env(safe-area-inset-top))]">
       <div className="bg-white px-4 pt-4 pb-2 border-b">
         <div className="flex justify-between items-start">
           <div className="space-y-1 flex-1">
@@ -240,7 +231,6 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* 2. Offers Banner */}
       <div className="bg-white border-b px-4 py-3 flex items-center justify-between cursor-pointer group" onClick={() => router.push('/home/offers')}>
         <div className="flex items-center gap-3">
           <div className="p-1.5 rounded-lg transition-transform group-hover:scale-110" style={{ backgroundColor: brandColor }}>
@@ -260,8 +250,7 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* 3. Filters Sticky Row */}
-      <div className="sticky top-16 z-30 bg-white border-b overflow-x-auto px-4 py-3 flex items-center gap-3 scrollbar-hide">
+      <div className="sticky top-[calc(56px+env(safe-area-inset-top))] z-30 bg-white border-b overflow-x-auto px-4 py-3 flex items-center gap-3 scrollbar-hide">
         <Button variant="outline" className="h-9 px-4 rounded-xl border-gray-200 text-[10px] font-black uppercase gap-2 flex-shrink-0 font-headline">
           <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
         </Button>
@@ -298,7 +287,6 @@ export default function MenuPage() {
       </div>
 
       <div className="flex-1 pb-32">
-        {/* 4. Featured Items (Horizontal Carousel) */}
         {!searchQuery && menuItems && (
           <div className="py-8 border-b">
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-6 text-[#333] font-headline">Featured Items</h2>
@@ -333,7 +321,6 @@ export default function MenuPage() {
           </div>
         )}
 
-        {/* 5. Main Menu List */}
         <div className="flex flex-col">
           {categoriesLoading || menuItemsLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
@@ -393,7 +380,6 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* Floating Action Buttons */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -457,7 +443,6 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* Customization Dialog */}
       <Dialog open={!!customizingItem} onOpenChange={(open) => !open && setCustomizingItem(null)}>
         <DialogContent className="max-w-[90vw] rounded-[32px] p-0 overflow-hidden border-none max-h-[85vh] flex flex-col shadow-2xl">
           {customizingItem && (
@@ -528,5 +513,13 @@ export default function MenuPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function MenuPage() {
+  return (
+    <Suspense fallback={<div className="p-6 pt-[calc(56px+env(safe-area-inset-top))]"><Skeleton className="h-12 w-3/4 rounded-xl" /><Skeleton className="h-20 w-full rounded-2xl mt-4" /></div>}>
+      <MenuContent />
+    </Suspense>
   );
 }

@@ -45,7 +45,6 @@ const StatusTracker = ({ status }: { status: OrderStatus }) => {
   return (
     <div className="py-4 px-2 font-headline">
       <div className="relative flex justify-between">
-        {/* Progress Line */}
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-100 z-0" />
         
         {steps.map((step, idx) => {
@@ -87,7 +86,7 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#f1f2f6]">
+      <div className="flex flex-col min-h-screen bg-[#f1f2f6] pt-[calc(56px+env(safe-area-inset-top))]">
         <div className="bg-white border-b p-4 flex items-center gap-4">
           <Skeleton className="h-10 w-10 rounded-full" />
           <Skeleton className="h-6 w-32" />
@@ -104,8 +103,8 @@ export default function OrdersPage() {
   const sortedOrders = orders ? [...orders].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24">
-      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4 shadow-sm">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-24 pt-[calc(56px+env(safe-area-inset-top))]">
+      <div className="sticky top-[calc(56px+env(safe-area-inset-top))] z-30 bg-white border-b px-4 py-4 flex items-center gap-4 shadow-sm">
         <Button variant="ghost" size="icon" onClick={() => router.push('/home')}>
           <ArrowLeft className="h-6 w-6" />
         </Button>
@@ -190,7 +189,6 @@ export default function OrdersPage() {
               </DialogHeader>
 
               <div className="px-5 py-4 sm:p-8 space-y-6 overflow-y-auto scrollbar-hide font-headline flex-1">
-                {/* 1. Enhanced Map View with Road Routing */}
                 {selectedOrder.deliveryAddress.latitude && selectedOutlet?.latitude && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -216,7 +214,6 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {/* 2. Tracker Component */}
                 <div className="bg-gray-50/50 p-4 rounded-[24px] border border-gray-100">
                   <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Journey Progress</h4>
                   <StatusTracker status={selectedOrder.status} />
@@ -247,7 +244,6 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {/* 3. Manifest */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Kitchen Manifest</h4>
@@ -273,7 +269,6 @@ export default function OrdersPage() {
 
                 <Separator className="opacity-50" />
 
-                {/* 4. Financial Breakdown */}
                 <div className="space-y-2 bg-gray-50 p-5 rounded-[24px] font-headline">
                   <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     <span>Item Total</span>
@@ -292,7 +287,6 @@ export default function OrdersPage() {
                     </div>
                   )}
                   
-                  {/* GST Breakdown */}
                   <div className="pt-1 space-y-1">
                     <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
                         <span>CGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>

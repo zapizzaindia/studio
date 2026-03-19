@@ -9,7 +9,7 @@ export default function HomeLayout({
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-white">
       <MainNav />
-      <main className="flex-1 pt-[calc(64px+env(safe-area-inset-top))] pb-16">{children}</main>
+      <main className="flex-1 pb-16">{children}</main>
       <MobileNav />
     </div>
   );
