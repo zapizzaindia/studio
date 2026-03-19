@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
@@ -69,7 +68,7 @@ export default function SuperAdminDashboardLayout({
     if (auth) {
         await signOut(auth);
     }
-    router.push('/login');
+    router.push('/superadmin/login');
   }
   
   if (userLoading || (user && profileLoading)) {
@@ -79,6 +78,11 @@ export default function SuperAdminDashboardLayout({
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Admin Mesh...</p>
         </div>
     )
+  }
+
+  // Guard against flash of dashboard if redirect is pending
+  if (!user) {
+    return null;
   }
 
   return (

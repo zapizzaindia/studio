@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
@@ -69,7 +68,7 @@ export default function FranchiseDashboardLayout({
     if (auth) {
         await signOut(auth);
     }
-    router.push('/login');
+    router.push('/franchise/login');
   }
   
   if (userLoading || (user && profileLoading)) {
@@ -79,6 +78,11 @@ export default function FranchiseDashboardLayout({
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Franchise Mesh...</p>
         </div>
     )
+  }
+
+  // Prevent flash of content if not logged in
+  if (!user) {
+    return null;
   }
 
   return (

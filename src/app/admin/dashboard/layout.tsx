@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
@@ -73,15 +72,21 @@ export default function AdminDashboardLayout({
     router.push('/admin/login');
   }
 
+  // Immersive loading state while verifying identity
   if (userLoading || (user && profileLoading)) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Initialising Terminal...</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Verifying Terminal Access...</p>
             </div>
         </div>
     )
+  }
+
+  // Prevent flash of dashboard if redirect is pending
+  if (!user) {
+    return null;
   }
 
   return (

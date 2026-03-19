@@ -9,8 +9,9 @@ export const useUser = () => {
   const auth = useAuth();
 
   useEffect(() => {
+    // If auth instance isn't available yet (initializing), stay in loading state.
+    // This prevents premature redirection to login pages on refresh.
     if (!auth) {
-      setLoading(false);
       return;
     }
 
