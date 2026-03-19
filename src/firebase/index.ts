@@ -1,11 +1,10 @@
 'use client';
 
-import { auth, firestore } from './config';
-import app from './config';
+import app, { auth, firestore } from './config';
+import { getFirestore } from "firebase/firestore";
 
 /**
  * Initializes the Firebase instances for the client.
- * This function is used by the FirebaseClientProvider.
  */
 export async function initializeFirebase() {
   return {
@@ -15,9 +14,15 @@ export async function initializeFirebase() {
   };
 }
 
+// ✅ Export db (THIS FIXES YOUR ORIGINAL ERROR)
+export const db = getFirestore(app);
+
+// existing exports
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export * from './auth/use-user';
+
+// named exports
 export { app, auth, firestore };

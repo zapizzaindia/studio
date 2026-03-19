@@ -1,5 +1,10 @@
 
 "use client";
+declare global {
+  interface Window {
+    fcmToken?: string;
+  }
+}
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,6 +15,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useUser, useAuth } from '@/firebase';
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/firebase"; // make sure you export db
 
 
 import { Button } from '@/components/ui/button';
@@ -23,6 +30,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
+
 import { useToast } from '@/hooks/use-toast';
 import { requestForToken } from '@/firebase/messaging';
 
@@ -44,45 +52,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const setupNotifications = async () => {
-      try {
-        // 👇 Detect if running inside Capacitor (SAFE)
-        const isNative = typeof window !== "undefined" && (window as any).Capacitor;
   
-        if (isNative) {
-          // 🔥 DYNAMIC IMPORT (CRITICAL FIX)
-          const { PushNotifications } = await import('@capacitor/push-notifications');
-  
-          const perm = await PushNotifications.requestPermissions();
-  
-          if (perm.receive === 'granted') {
-            await PushNotifications.register();
-  
-            PushNotifications.addListener('registration', async (token) => {
-              console.log("Native token:", token.value);
-            });
-          }
-  
-        } else {
-          // ✅ WEB (Firebase Studio safe)
-          if ("Notification" in window && Notification.permission === "default") {
-            const permission = await Notification.requestPermission();
-  
-            if (permission === "granted") {
-              const token = await requestForToken();
-              console.log("Web token:", token);
-            }
-          }
-        }
-  
-      } catch (e) {
-        console.error("Notification setup error:", e);
-      }
-    };
-  
-    setupNotifications();
-  }, []);
 
    useEffect(() => {
     if (!userLoading && user) {
@@ -128,6 +98,44 @@ export default function LoginPage() {
     defaultValues: { otp: '' },
   });
 
+  async function handleNotificationPermission() {
+    try {
+      const isNative = (window as any).Capacitor;
+  
+      if (isNative) {
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+  
+        const perm = await PushNotifications.requestPermissions();
+  
+        if (perm.receive === 'granted') {
+          await PushNotifications.register();
+  
+          PushNotifications.addListener('registration', (token: any) => {
+            console.log("Token:", token.value);
+  
+            // store temporarily
+            window.fcmToken = token.value;
+          });
+        }
+  
+      } else {
+        if ("Notification" in window) {
+          const permission = await Notification.requestPermission();
+  
+          if (permission === "granted") {
+            const token = await requestForToken();
+  
+            if (token) {
+              window.fcmToken = token;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Notification error:", e);
+    }
+  }
+
   async function onPhoneSubmit(values: z.infer<typeof phoneSchema>) {
     if (!auth) {
       toast({
@@ -141,6 +149,7 @@ export default function LoginPage() {
     try {
       const phone = `+91${values.phone}`;
       setPhoneNumber(phone);
+      handleNotificationPermission(); // 🔥 THIS LINE
   
       if (!window.recaptchaVerifier) {
         toast({
@@ -181,6 +190,14 @@ export default function LoginPage() {
         throw new Error("Confirmation result not found. Please try sending OTP again.");
       }
       const result = await window.confirmationResult.confirm(values.otp);
+      // 🔥 SAVE TOKEN AFTER LOGIN
+if (window.fcmToken) {
+  await setDoc(
+    doc(db, "users", result.user.uid),
+    { fcmToken: window.fcmToken },
+    { merge: true }
+  );
+}
       
       toast({
         title: "Login Successful",
@@ -210,6 +227,7 @@ export default function LoginPage() {
       <div className="mb-12 flex flex-col items-center text-center">
         <ZapizzaLogo className="h-24 w-24 text-primary" />
       </div>
+      
 
       <AnimatePresence mode="wait">
         {step === 'phone' && (
