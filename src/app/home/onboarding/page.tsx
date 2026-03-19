@@ -11,7 +11,6 @@ import { ZapizzaLogo } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ArrowRight, PartyPopper, MapPin } from "lucide-react";
-import { Capacitor } from '@capacitor/core';
 
 type OnboardingStep = "location" | "info";
 
@@ -27,7 +26,6 @@ export default function OnboardingPage() {
   const [birthday, setBirthday] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [isRequesting, setIsRequesting] = useState(false);
 
   useEffect(() => {
     if (!userLoading) {
@@ -62,34 +60,13 @@ export default function OnboardingPage() {
     }
   }, [user, userLoading, router, db]);
 
-  const handleLocationPermission = async () => {
-    setIsRequesting(true);
-  
-    try {
-      if (Capacitor.isNativePlatform()) {
-        const { Geolocation } = await import('@capacitor/geolocation');
-  
-        const perm = await Geolocation.requestPermissions();
-  
-        if (perm.location === 'granted') {
-          const pos = await Geolocation.getCurrentPosition();
-          console.log("Native location:", pos);
-          toast({ title: "Location captured!" });
-        }
-  
-      } else {
-        // ✅ WEB
-        navigator.geolocation.getCurrentPosition(
-          () => toast({ title: "Location captured!" }),
-          () => toast({ title: "Location skipped" })
-        );
-      }
-  
-    } catch (e) {
-      console.error("Location error:", e);
+  const handleLocationPermission = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => toast({ title: "Location captured!" }),
+        () => toast({ title: "Location skipped" })
+      );
     }
-  
-    setIsRequesting(false);
     setStep("info");
   };
 
@@ -166,14 +143,9 @@ export default function OnboardingPage() {
             <div className="space-y-3">
               <Button 
                 onClick={handleLocationPermission}
-                disabled={isRequesting}
                 className="w-full h-14 bg-emerald-600 text-white rounded-[20px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/20 gap-2 text-sm font-headline"
               >
-                {isRequesting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                  <>
-                    SHARE LOCATION <ArrowRight className="h-5 w-5" />
-                  </>
-                )}
+                SHARE LOCATION <ArrowRight className="h-5 w-5" />
               </Button>
               <Button 
                 variant="ghost" 

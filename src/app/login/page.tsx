@@ -14,7 +14,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useUser, useAuth, db } from '@/firebase';
 import { doc, setDoc } from "firebase/firestore";
-import { Capacitor } from '@capacitor/core';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -84,32 +83,11 @@ export default function LoginPage() {
   async function handleNotificationPermission() {
     try {
       if (typeof window === "undefined") return;
-
-      if (Capacitor.isNativePlatform()) {
-        const { PushNotifications } = await import('@capacitor/push-notifications');
-  
-        const perm = await PushNotifications.requestPermissions();
-  
-        if (perm.receive === 'granted') {
-          await PushNotifications.register();
-  
-          PushNotifications.addListener('registration', (token: any) => {
-            console.log("Native Token Captured:", token.value);
-            window.fcmToken = token.value;
-          });
-
-          PushNotifications.addListener('registrationError', (error: any) => {
-            console.error('Registration error: ' + JSON.stringify(error));
-          });
-        }
-  
-      } else {
-        if ("Notification" in window) {
-          const permission = await Notification.requestPermission();
-          if (permission === "granted") {
-            const token = await requestForToken();
-            if (token) window.fcmToken = token;
-          }
+      if ("Notification" in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          const token = await requestForToken();
+          if (token) window.fcmToken = token;
         }
       }
     } catch (e) {
@@ -133,9 +111,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Trigger permission on user action
-    handleNotificationPermission();
-
     try {
       const phone = `+91${values.phone}`;
       setPhoneNumber(phone);
@@ -149,6 +124,7 @@ export default function LoginPage() {
       window.confirmationResult = confirmationResult;
       toast({ title: "OTP Sent" });
       setStep("otp");
+      handleNotificationPermission();
     } catch (error: any) {
       toast({ title: "OTP Failed", description: error.message, variant: "destructive" });
     }
