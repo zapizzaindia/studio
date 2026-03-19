@@ -1,9 +1,11 @@
-import { RedirectToReviews } from "./redirect-component";
+import { redirect } from "next/navigation";
 
 export function generateStaticParams() {
   return [{ outletId: 'id' }];
 }
 
 export default function Page() {
-  return <RedirectToReviews />;
+  // Static export placeholder - redirects to the main search-param based reviews page
+  redirect("/home/reviews");
+  return null;
 }

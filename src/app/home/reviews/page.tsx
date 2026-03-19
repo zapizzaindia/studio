@@ -20,12 +20,11 @@ import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
 import type { Review, Outlet, UserProfile } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
 import { collection, addDoc, serverTimestamp, deleteDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 function ReviewsContent() {
   const searchParams = useSearchParams();

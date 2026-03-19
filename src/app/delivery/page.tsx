@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDoc, useFirestore } from "@/firebase";
 import { doc, updateDoc } from "firebase/firestore";
@@ -8,7 +8,6 @@ import type { Order, Outlet } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, MapPin, Phone, Package, Navigation, Loader2, IndianRupee, ShieldCheck, RefreshCcw, AlertTriangle } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
