@@ -100,7 +100,8 @@ export default function LoginPage() {
 
   async function handleNotificationPermission() {
     try {
-      const isNative = (window as any).Capacitor;
+      const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.();
+      console.log("Is Native:", isNative);
   
       if (isNative) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
