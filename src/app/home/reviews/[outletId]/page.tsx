@@ -1,15 +1,9 @@
-"use client";
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { RedirectToReviews } from "./redirect-component";
 
 export function generateStaticParams() {
   return [{ outletId: 'id' }];
 }
 
-export default function RedirectPage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/home/reviews');
-  }, [router]);
-  return null;
+export default function Page() {
+  return <RedirectToReviews />;
 }
