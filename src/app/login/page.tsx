@@ -1,23 +1,20 @@
-
 "use client";
 declare global {
   interface Window {
     fcmToken?: string;
-    confirmationResult: any;
-    recaptchaVerifier: any;
   }
 }
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useUser, useAuth, db } from '@/firebase';
 import { doc, setDoc } from "firebase/firestore";
+import { Capacitor } from '@capacitor/core';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -59,10 +56,6 @@ export default function LoginPage() {
   }, [user, userLoading, router]);
 
   useEffect(() => {
-    handleNotificationPermission();
-  }, []);
-
-  useEffect(() => {
     if (typeof window === "undefined") return;
     if (!auth) return;
   
@@ -90,9 +83,9 @@ export default function LoginPage() {
     
   async function handleNotificationPermission() {
     try {
-      const isNative = typeof window !== "undefined" && !!(window as any).Capacitor;
-  
-      if (isNative) {
+      if (typeof window === "undefined") return;
+
+      if (Capacitor.isNativePlatform()) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
   
         const perm = await PushNotifications.requestPermissions();
@@ -139,6 +132,9 @@ export default function LoginPage() {
       toast({ title: "Auth Error", variant: "destructive" });
       return;
     }
+
+    // Trigger permission on user action
+    handleNotificationPermission();
 
     try {
       const phone = `+91${values.phone}`;

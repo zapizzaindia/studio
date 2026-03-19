@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,6 +11,7 @@ import { ZapizzaLogo } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ArrowRight, PartyPopper, MapPin } from "lucide-react";
+import { Capacitor } from '@capacitor/core';
 
 type OnboardingStep = "location" | "info";
 
@@ -66,10 +66,7 @@ export default function OnboardingPage() {
     setIsRequesting(true);
   
     try {
-      const isNative = typeof window !== "undefined" && (window as any).Capacitor;
-  
-      if (isNative) {
-        // 🔥 SAFE dynamic import
+      if (Capacitor.isNativePlatform()) {
         const { Geolocation } = await import('@capacitor/geolocation');
   
         const perm = await Geolocation.requestPermissions();

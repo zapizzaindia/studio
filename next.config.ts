@@ -12,15 +12,9 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  
-
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  output: "export",
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -39,6 +33,12 @@ const nextConfig: NextConfig = {
         hostname: 'firebasestorage.googleapis.com',
       },
     ],
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
