@@ -8,7 +8,7 @@ import { OfflineDetector } from '@/components/offline-detector';
 
 /**
  * Root Layout - Pure static shell for the PWA.
- * Note: force-dynamic is forbidden in output: "export" builds.
+ * Built for static export compatibility.
  */
 export const metadata: Metadata = {
   title: 'Zapizza',

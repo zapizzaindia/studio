@@ -40,7 +40,6 @@ import { cn } from "@/lib/utils";
 
 /**
  * MenuContent handles the logic requiring useSearchParams.
- * This must be wrapped in Suspense for static exports.
  */
 function MenuContent() {
   const router = useRouter();
@@ -191,10 +190,10 @@ function MenuContent() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white relative pt-[calc(56px+env(safe-area-inset-top))]">
+    <div className="flex flex-col w-full min-h-screen bg-white relative pt-4">
       <div className="bg-white px-4 pt-4 pb-2 border-b">
         <div className="flex justify-between items-start">
-          <div className="space-y-1 flex-1">
+          <div className="space-y-1 flex-1 text-left">
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-black text-[#333] uppercase italic flex items-center gap-1.5 font-headline">
                 {selectedOutlet?.name || "Zapizza"} <Info className="h-4 w-4 text-muted-foreground" />
@@ -238,7 +237,7 @@ function MenuContent() {
       <div 
         className="border-b px-4 py-3 flex items-center justify-between cursor-pointer group relative overflow-hidden transition-all hover:brightness-95" 
         style={{ 
-          background: `linear-gradient(135deg, ${brandColor}10 0%, ${brandColor}05 100%)`,
+          background: `linear-gradient(135deg, ${brandColor}15 0%, ${brandColor}05 100%)`,
           borderLeft: `4px solid ${brandColor}`
         }}
         onClick={() => router.push('/home/offers')}
@@ -247,7 +246,7 @@ function MenuContent() {
           <div className="p-1.5 rounded-lg transition-transform group-hover:scale-110 shadow-sm" style={{ backgroundColor: brandColor }}>
             <Zap className="h-4 w-4 text-white fill-current" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col text-left">
             <p className="text-[11px] font-black uppercase tracking-tight font-headline" style={{ color: brandColor }}>
               {topCoupon ? `Get Flat Discount of ₹${topCoupon.discountValue}...` : "Exclusive Offers Available"}
             </p>
@@ -261,7 +260,7 @@ function MenuContent() {
         </div>
       </div>
 
-      <div className="sticky top-[calc(56px+env(safe-area-inset-top))] z-30 bg-white border-b overflow-x-auto px-4 py-3 flex items-center gap-3 scrollbar-hide">
+      <div className="sticky top-0 z-30 bg-white border-b overflow-x-auto px-4 py-3 flex items-center gap-3 scrollbar-hide">
         <Button variant="outline" className="h-9 px-4 rounded-xl border-gray-200 text-[10px] font-black uppercase gap-2 flex-shrink-0 font-headline">
           <SlidersHorizontal className="h-3.5 w-3.5" /> Filters
         </Button>
@@ -307,7 +306,7 @@ function MenuContent() {
                   <div className="relative h-48 w-full">
                     <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                   </div>
-                  <div className="p-5 flex-1 flex flex-col gap-1">
+                  <div className="p-5 flex-1 flex flex-col gap-1 text-left">
                     <div className="flex items-center gap-2">
                       <div className={`h-3 w-3 border flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                         <div className={`h-1 w-1 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
@@ -359,7 +358,7 @@ function MenuContent() {
                 <div className="px-4 space-y-4">
                   {categoryItems.map((item) => (
                     <div key={item.id} className="bg-white px-6 py-8 flex gap-6 hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer rounded-3xl shadow-sm border border-gray-50" onClick={() => handleAddClick(item)}>
-                      <div className="flex-1 flex flex-col">
+                      <div className="flex-1 flex flex-col text-left">
                         <div className="flex items-center gap-2 mb-2">
                           <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                             <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
@@ -470,7 +469,7 @@ function MenuContent() {
               <div className="p-6 overflow-y-auto space-y-8 flex-1 bg-white scrollbar-hide">
                 {customizingItem.variations && customizingItem.variations.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between"><h3 className="text-xs font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm font-headline">Required</Badge></div>
+                    <div className="flex items-center justify-between text-left"><h3 className="text-xs font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Select Size</h3><Badge variant="secondary" className="text-[9px] uppercase font-black px-2 py-0.5 rounded-sm font-headline">Required</Badge></div>
                     <RadioGroup value={selectedVariation?.name} onValueChange={(val) => {
                       const newVar = customizingItem.variations?.find(v => v.name === val) || null;
                       setSelectedVariation(newVar);
@@ -478,7 +477,7 @@ function MenuContent() {
                     }} className="space-y-3">
                       {customizingItem.variations.map((v) => (
                         <div key={v.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
-                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer"><span className="text-sm font-bold text-[#333] uppercase font-headline">{v.name}</span></Label>
+                          <Label htmlFor={`v-${v.name}`} className="flex-1 cursor-pointer text-left"><span className="text-sm font-bold text-[#333] uppercase font-headline">{v.name}</span></Label>
                           <div className="flex items-center gap-3"><span className="text-xs font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{v.price}</span><RadioGroupItem value={v.name} id={`v-${v.name}`} /></div>
                         </div>
                       ))}
@@ -488,11 +487,11 @@ function MenuContent() {
                 <Separator />
                 {availableAddons.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-xs font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Extra Toppings</h3>
+                    <h3 className="text-xs font-black uppercase tracking-widest font-headline text-left" style={{ color: brandColor }}>Extra Toppings</h3>
                     <div className="space-y-3">
                       {availableAddons.map((addon) => (
                         <div key={addon.name} className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-current transition-all">
-                          <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer">
+                          <Label htmlFor={`a-${addon.name}`} className="flex-1 cursor-pointer text-left">
                             <span className="text-sm font-bold text-[#333] uppercase font-headline">{addon.name}</span>
                           </Label>
                           <div className="flex items-center gap-3">
@@ -513,7 +512,7 @@ function MenuContent() {
                 )}
               </div>
               <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4 font-headline">
-                <div className="flex flex-col">
+                <div className="flex flex-col text-left">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Price</span>
                   <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{currentCustomPrice}</span>
                 </div>
