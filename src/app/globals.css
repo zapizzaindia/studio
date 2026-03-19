@@ -33,8 +33,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: #14532d; /* your green */
     min-height: 100dvh;
+    margin: 0;
   }
 }
 
