@@ -222,3 +222,4 @@ export default function RiderGatewayPage() {
     </div>
   );
 }
+export const dynamic = 'force-dynamic';
