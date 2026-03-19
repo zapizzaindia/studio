@@ -52,8 +52,16 @@ export default function ProfilePage() {
   const db = useFirestore();
   const { data: profile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   
-  const savedOutletId = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('zapizza-outlet') || '{"id":"dummy"}').id : 'dummy';
-  const { data: outlet } = useDoc<Outlet>('outlets', savedOutletId);
+  const [savedOutletId, setSavedOutletId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('zapizza-outlet');
+    if (saved) {
+      try { setSavedOutletId(JSON.parse(saved).id); } catch(e) {}
+    }
+  }, []);
+
+  const { data: outlet } = useDoc<Outlet>('outlets', savedOutletId || 'dummy');
 
   const [isHydrated, setIsHydrated] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -137,7 +145,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-12">
-      <div className="bg-[#14532d] text-white px-6 pt-[calc(64px+env(safe-area-inset-top))] pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
+      <div className="bg-[#14532d] text-white px-6 pt-4 pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button 
@@ -164,9 +172,9 @@ export default function ProfilePage() {
               </DialogTrigger>
               <DialogContent className="max-w-[90vw] rounded-2xl p-6 font-headline">
                 <DialogHeader>
-                  <DialogTitle className="text-[#14532d] font-black uppercase tracking-widest">Edit Profile</DialogTitle>
+                  <DialogTitle className="text-[#14532d] font-black uppercase tracking-widest text-left">Edit Profile</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+                <div className="space-y-4 py-4 text-left">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Full Name</Label>
                     <Input 
@@ -204,7 +212,7 @@ export default function ProfilePage() {
             </Dialog>
           </div>
 
-          <div className="flex justify-between items-end">
+          <div className="flex justify-between items-end text-left">
             <div className="space-y-1">
               <h1 className="text-3xl font-black tracking-tight italic uppercase leading-none">{profile?.displayName || 'Gourmet'}</h1>
               <p className="text-xs font-bold text-white/70 tracking-widest font-roboto tabular-nums">+91-{user?.phoneNumber?.slice(-10) || profile?.phoneNumber?.slice(-10) || '0000000000'}</p>
@@ -237,7 +245,7 @@ export default function ProfilePage() {
                     <div className="h-14 w-14 rounded-2xl bg-[#14532d] flex items-center justify-center text-white shadow-lg shadow-green-900/20">
                         <Crown className="h-7 w-7" />
                     </div>
-                    <div>
+                    <div className="text-left">
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#14532d] font-headline">Loyalty Balance</p>
                         <h3 className="text-2xl font-black text-[#333] italic tracking-tighter font-headline"><span className="font-roboto tabular-nums">{profile?.loyaltyPoints || 0}</span> LP COINS</h3>
                     </div>
@@ -277,7 +285,7 @@ export default function ProfilePage() {
 
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
           <CardContent className="p-6">
-            <div className="mb-4">
+            <div className="mb-4 text-left">
               <h3 className="text-lg font-black text-[#14532d] uppercase italic tracking-tighter font-headline">
                 {outlet?.name || 'Zapizza Rudrapur'}
               </h3>
@@ -294,29 +302,6 @@ export default function ProfilePage() {
                 <Navigation className="h-3.5 w-3.5" /> Get Directions
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
-          <CardContent className="p-0 flex divide-x divide-gray-100">
-            <button className="flex-1 p-6 flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors">
-              <div className="h-12 w-12 rounded-2xl bg-[#1877F2]/10 flex items-center justify-center text-[#1877F2]">
-                <Facebook className="h-6 w-6 fill-current" />
-              </div>
-              <div className="text-center font-headline">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Like Us on</p>
-                <p className="text-sm font-black text-[#333333] uppercase">Facebook</p>
-              </div>
-            </button>
-            <button className="flex-1 p-6 flex flex-col items-center gap-3 hover:bg-gray-50 transition-colors">
-              <div className="h-12 w-12 rounded-2xl bg-[#E4405F]/10 flex items-center justify-center text-[#E4405F]">
-                <Instagram className="h-6 w-6" />
-              </div>
-              <div className="text-center font-headline">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Follow Us on</p>
-                <p className="text-sm font-black text-[#333333] uppercase">Instagram</p>
-              </div>
-            </button>
           </CardContent>
         </Card>
 

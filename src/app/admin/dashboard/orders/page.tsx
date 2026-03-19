@@ -161,7 +161,8 @@ export default function AdminOrdersPage() {
     const payNote = `\n\n✅ *PRE-PAID ORDER*`;
     
     const host = window.location.origin.replace(/\/$/, "");
-    const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery/${order.id}`;
+    // UPDATED MAGIC LINK TO USE SEARCH PARAMS
+    const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery?orderId=${order.id}`;
 
     const text = `🍕 *${outlet?.brand === 'zfry' ? 'ZFRY' : 'ZAPIZZA'} ORDER* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${payNote}${magicLink}`;
     
@@ -179,7 +180,7 @@ export default function AdminOrdersPage() {
           <Card key={order.id} className="border-none shadow-sm overflow-hidden group active:scale-[0.99] transition-all rounded-2xl">
             <CardContent className="p-0">
               <div className="p-5 flex justify-between items-start bg-white border-b border-gray-50">
-                <div className="space-y-1">
+                <div className="space-y-1 text-left">
                   <div className="flex items-center gap-2">
                     <span className="font-black text-primary text-sm tracking-widest font-sans uppercase">#{order.id.slice(-6).toUpperCase()}</span>
                     {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
@@ -237,7 +238,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="container mx-auto p-0 max-w-4xl">
       <div className="mb-8 flex items-center justify-between bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
-        <div>
+        <div className="text-left">
             <h1 className="font-headline text-3xl font-black uppercase tracking-tighter italic" style={{ color: brandColor }}>Kitchen Pipeline</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="relative flex h-2 w-2">
@@ -274,7 +275,7 @@ export default function AdminOrdersPage() {
             <>
               <DialogHeader className="p-8 text-white space-y-4" style={{ backgroundColor: brandColor }}>
                 <div className="flex justify-between items-center">
-                  <div className="space-y-1">
+                  <div className="space-y-1 text-left">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Gourmet Command</p>
                     <DialogTitle className="text-3xl font-black uppercase tracking-tighter italic leading-none font-sans">#{selectedOrder.id.slice(-6).toUpperCase()}</DialogTitle>
                   </div>
@@ -284,7 +285,7 @@ export default function AdminOrdersPage() {
               
               <div className="p-8 space-y-8 overflow-y-auto scrollbar-hide flex-1 bg-white">
                 {selectedOrder.specialNote && (
-                  <div className="space-y-3">
+                  <div className="space-y-3 text-left">
                     <h4 className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] flex items-center gap-2">
                       <MessageSquareText className="h-3.5 w-3.5" /> Customer's Cooking Note
                     </h4>
@@ -297,7 +298,7 @@ export default function AdminOrdersPage() {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
+                    <div className="space-y-4 text-left">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2"><UserCheck className="h-3 w-3" /> Customer Profile</h4>
                         <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100 space-y-3">
                             <div>
@@ -315,11 +316,11 @@ export default function AdminOrdersPage() {
                         </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 text-left">
                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2"><MapPin className="h-3 w-3" /> Rider Hub</h4>
                         <div className="bg-gray-50 p-5 rounded-3xl border border-gray-100 space-y-3">
                             <div className="flex justify-between items-start">
-                                <div>
+                                <div className="text-left">
                                     <Badge className="text-[8px] font-black uppercase mb-1 bg-white border-gray-200 text-gray-500">{selectedOrder.deliveryAddress?.label || "HOME"}</Badge>
                                     <p className="text-[11px] font-medium text-muted-foreground leading-tight">{selectedOrder.deliveryAddress?.flatNo}, {selectedOrder.deliveryAddress?.area}, {selectedOrder.deliveryAddress?.city}</p>
                                     {selectedOrder.deliveryAddress?.landmark && <p className="text-[9px] font-black mt-1 uppercase text-primary italic">Near: {selectedOrder.deliveryAddress.landmark}</p>}
@@ -333,7 +334,7 @@ export default function AdminOrdersPage() {
                     </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 text-left">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Kitchen Preparation List</h4>
                     <Badge variant="secondary" className="text-[8px] font-black uppercase">{selectedOrder.items.length} SKUs</Badge>
@@ -343,7 +344,7 @@ export default function AdminOrdersPage() {
                       <div key={idx} className="flex justify-between items-start bg-gray-50/50 p-4 rounded-3xl border border-gray-100/50 transition-all hover:shadow-inner">
                         <div className="flex gap-4">
                           <span className="font-black h-9 w-9 rounded-2xl flex items-center justify-center text-sm shadow-sm font-sans tabular-nums" style={{ backgroundColor: brandColor + '15', color: brandColor }}>{item.quantity}x</span>
-                          <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-col gap-1.5 text-left">
                             <span className="font-black text-[15px] uppercase tracking-tighter text-[#333] italic">{item.name}</span>
                             <div className="flex flex-wrap gap-2">
                                 {item.variation && <Badge className="text-[9px] font-black uppercase px-2 py-0.5 bg-[#333] text-white rounded-lg border-none">{item.variation}</Badge>}
@@ -363,7 +364,6 @@ export default function AdminOrdersPage() {
                 <div className="bg-gray-50 p-8 rounded-[32px] border border-gray-100 space-y-4 shadow-inner">
                   <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-widest font-sans tabular-nums"><span>Net Item Total</span><span>₹{selectedOrder.subtotal.toFixed(2)}</span></div>
                   
-                  {/* Tax Breakdown */}
                   <div className="pt-1 space-y-1">
                     <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 font-sans tabular-nums">
                         <span>CGST ({( (selectedOrder as any).gstRate || 5 ) / 2}%)</span>
@@ -379,7 +379,7 @@ export default function AdminOrdersPage() {
                   {selectedOrder.discount > 0 && <div className="flex justify-between text-[11px] font-black text-green-600 uppercase tracking-widest animate-pulse font-sans tabular-nums"><span>Promotional Discount</span><span>-₹{selectedOrder.discount.toFixed(2)}</span></div>}
                   <Separator className="bg-gray-200" />
                   <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col text-left">
                         <span className="text-[14px] font-black uppercase text-[#333] tracking-tighter italic">Total Amount to Settle</span>
                         <div className="flex items-center gap-1.5 mt-1">
                             <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black uppercase px-2 rounded-sm">PAID ONLINE</Badge>
@@ -394,7 +394,7 @@ export default function AdminOrdersPage() {
                     <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-white shadow-xl rotate-[-5deg]" style={{ backgroundColor: brandColor }}>
                         <Crown className="h-6 w-6" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 text-left">
                         <div className="flex items-center justify-between">
                             <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Loyalty Impact</span>
                             <span className="text-[10px] font-black text-muted-foreground">ACE TIER TARGET</span>

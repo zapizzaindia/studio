@@ -388,7 +388,7 @@ export default function HomePage() {
   if (!selectedOutlet) return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
+    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden pt-4">
   
       <div className="bg-white text-[#333] px-6 py-5 relative transition-all duration-700 border-b flex-shrink-0">
         <div className="flex justify-between items-center">
@@ -746,7 +746,7 @@ export default function HomePage() {
                 <MapPin className="h-2.5 w-2.5" /> {selectedOutlet?.address || 'Location Not Specified'}
               </p>
               <button 
-                onClick={() => router.push(`/home/reviews/${selectedOutlet?.id}`)}
+                onClick={() => router.push(`/home/reviews?outletId=${selectedOutlet?.id}`)}
                 className="text-[9px] font-black uppercase mt-1 flex items-center gap-1" 
                 style={{ color: brandColor }}
               >
@@ -754,7 +754,7 @@ export default function HomePage() {
               </button>
             </div>
             <div 
-              onClick={() => router.push(`/home/reviews/${selectedOutlet?.id}`)}
+              onClick={() => router.push(`/home/reviews?outletId=${selectedOutlet?.id}`)}
               className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px] cursor-pointer active:scale-95 transition-all"
             >
                <div className="flex items-center gap-1 text-white px-1.5 py-0.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
@@ -931,7 +931,7 @@ export default function HomePage() {
                       value={enquiryCity}
                       onChange={e => setEnquiryCity(e.target.value)}
                       placeholder="e.g. Noida" 
-                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 rounded-xl font-bold" 
+                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 rounded-xl font-bold" 
                     />
                   </div>
                 </div>
@@ -944,7 +944,7 @@ export default function HomePage() {
                       value={enquiryInvestment}
                       onChange={e => setEnquiryInvestment(e.target.value)}
                       placeholder="e.g. 25" 
-                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 pr-12 rounded-xl font-bold font-sans tabular-nums" 
+                      className="flex h-12 w-full border border-gray-100 bg-gray-50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 pr-12 rounded-xl font-bold font-sans tabular-nums" 
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase">Lakhs</span>
                   </div>
