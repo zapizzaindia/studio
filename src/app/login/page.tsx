@@ -14,9 +14,8 @@ import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { useUser, useAuth } from '@/firebase';
+import { useUser, useAuth, db } from '@/firebase';
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/firebase"; // make sure you export db
 
 
 import { Button } from '@/components/ui/button';
@@ -52,15 +51,17 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  
-
-   useEffect(() => {
+  useEffect(() => {
     if (!userLoading && user) {
       // Redirect to onboarding first to check if profile is complete
       router.replace("/home/onboarding");
     }
   }, [user, userLoading, router]);
 
+  // 🔥 Trigger Notification Permission immediately on load
+  useEffect(() => {
+    handleNotificationPermission();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -150,7 +151,6 @@ export default function LoginPage() {
     try {
       const phone = `+91${values.phone}`;
       setPhoneNumber(phone);
-      handleNotificationPermission(); // 🔥 THIS LINE
   
       if (!window.recaptchaVerifier) {
         toast({
@@ -191,14 +191,15 @@ export default function LoginPage() {
         throw new Error("Confirmation result not found. Please try sending OTP again.");
       }
       const result = await window.confirmationResult.confirm(values.otp);
+      
       // 🔥 SAVE TOKEN AFTER LOGIN
-if (window.fcmToken) {
-  await setDoc(
-    doc(db, "users", result.user.uid),
-    { fcmToken: window.fcmToken },
-    { merge: true }
-  );
-}
+      if (window.fcmToken && db) {
+        await setDoc(
+          doc(db, "users", result.user.uid),
+          { fcmToken: window.fcmToken },
+          { merge: true }
+        );
+      }
       
       toast({
         title: "Login Successful",
