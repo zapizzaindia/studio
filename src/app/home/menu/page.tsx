@@ -38,6 +38,10 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+/**
+ * MenuContent handles the logic requiring useSearchParams.
+ * This must be wrapped in Suspense for static exports.
+ */
 function MenuContent() {
   const router = useRouter();
   const { addItem, totalItems, totalPrice } = useCart();
@@ -523,9 +527,18 @@ function MenuContent() {
   );
 }
 
+/**
+ * Root MenuPage wrapper with Suspense.
+ * Essential for useSearchParams compatibility in static Next.js exports.
+ */
 export default function MenuPage() {
   return (
-    <Suspense fallback={<div className="p-6 pt-[calc(56px+env(safe-area-inset-top))]"><Skeleton className="h-12 w-3/4 rounded-xl" /><Skeleton className="h-20 w-full rounded-2xl mt-4" /></div>}>
+    <Suspense fallback={
+      <div className="p-6 pt-[calc(56px+env(safe-area-inset-top))]">
+        <Skeleton className="h-12 w-3/4 rounded-xl" />
+        <Skeleton className="h-20 w-full rounded-2xl mt-4" />
+      </div>
+    }>
       <MenuContent />
     </Suspense>
   );

@@ -6,6 +6,10 @@ import { CartProvider } from '@/hooks/use-cart';
 import { FCMHandler } from '@/components/fcm-handler';
 import { OfflineDetector } from '@/components/offline-detector';
 
+/**
+ * Root Layout - Pure static shell for the PWA.
+ * Note: force-dynamic is forbidden in output: "export" builds.
+ */
 export const metadata: Metadata = {
   title: 'Zapizza',
   description: 'Fastest Pizza Delivery in India',
