@@ -231,21 +231,28 @@ function MenuContent() {
         </div>
       </div>
 
-      <div className="bg-white border-b px-4 py-3 flex items-center justify-between cursor-pointer group" onClick={() => router.push('/home/offers')}>
+      <div 
+        className="border-b px-4 py-3 flex items-center justify-between cursor-pointer group relative overflow-hidden transition-all hover:brightness-95" 
+        style={{ 
+          background: `linear-gradient(135deg, ${brandColor}10 0%, ${brandColor}05 100%)`,
+          borderLeft: `4px solid ${brandColor}`
+        }}
+        onClick={() => router.push('/home/offers')}
+      >
         <div className="flex items-center gap-3">
-          <div className="p-1.5 rounded-lg transition-transform group-hover:scale-110" style={{ backgroundColor: brandColor }}>
+          <div className="p-1.5 rounded-lg transition-transform group-hover:scale-110 shadow-sm" style={{ backgroundColor: brandColor }}>
             <Zap className="h-4 w-4 text-white fill-current" />
           </div>
           <div className="flex flex-col">
-            <p className="text-[11px] font-black uppercase text-[#333] tracking-tight font-headline">
+            <p className="text-[11px] font-black uppercase tracking-tight font-headline" style={{ color: brandColor }}>
               {topCoupon ? `Get Flat Discount of ₹${topCoupon.discountValue}...` : "Exclusive Offers Available"}
             </p>
-            <p className="text-[9px] font-bold text-muted-foreground uppercase font-headline">
-              Use Code <span className="text-[#333] font-headline">{topCoupon?.code || "WELCOME"}</span>
+            <p className="text-[9px] font-bold uppercase font-headline opacity-70" style={{ color: brandColor }}>
+              Use Code <span className="font-black" style={{ color: brandColor }}>{topCoupon?.code || "WELCOME"}</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[9px] font-black text-muted-foreground uppercase font-headline">
+        <div className="flex items-center gap-1 text-[9px] font-black uppercase font-headline" style={{ color: brandColor }}>
           <span className="font-body tabular-nums">{coupons?.length || 0}</span> OFFERS <ChevronDown className="h-3 w-3" />
         </div>
       </div>
