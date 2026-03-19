@@ -9,10 +9,6 @@ import { app } from '@/firebase/config';
 import { requestForToken } from '@/firebase/messaging';
 import { useToast } from '@/hooks/use-toast';
 
-/**
- * FCMHandler - Handles token generation, foreground message listening,
- * and syncing the FCM token to the user's Firestore document.
- */
 export function FCMHandler() {
   const { user } = useUser();
   const db = useFirestore();
@@ -23,48 +19,56 @@ export function FCMHandler() {
 
     const setupFCM = async () => {
       try {
-        // 1. Check current permission
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const token = await requestForToken();
-          if (token) {
-            // Silently sync token to Firestore using setDoc with merge
-            // to ensure it works even if the profile doc hasn't been created
-            await setDoc(doc(db, 'users', user.uid), {
-              fcmToken: token,
+        const isNative = typeof window !== "undefined" && !!(window as any).Capacitor;
+
+        if (isNative) {
+          const { PushNotifications } = await import('@capacitor/push-notifications');
+          
+          const syncNativeToken = (token: any) => {
+            setDoc(doc(db, 'users', user.uid), {
+              fcmToken: token.value,
               lastTokenSync: new Date().toISOString()
             }, { merge: true });
-          }
-        }
+          };
 
-        // 2. Setup Foreground Listener
-        const messaging = getMessaging(app);
-        onMessage(messaging, (payload) => {
-          console.log('Foreground Message received: ', payload);
-          toast({
-            title: payload.notification?.title || "Notification",
-            description: payload.notification?.body,
+          PushNotifications.addListener('registration', syncNativeToken);
+          
+          PushNotifications.addListener('pushNotificationReceived', (notification) => {
+            toast({
+              title: notification.title || "Alert",
+              description: notification.body,
+            });
           });
-        });
+
+          // Re-trigger registration to ensure we have the token
+          await PushNotifications.register();
+
+        } else {
+          // Web Flow
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const token = await requestForToken();
+            if (token) {
+              await setDoc(doc(db, 'users', user.uid), {
+                fcmToken: token,
+                lastTokenSync: new Date().toISOString()
+              }, { merge: true });
+            }
+          }
+
+          const messaging = getMessaging(app);
+          onMessage(messaging, (payload) => {
+            toast({
+              title: payload.notification?.title || "Notification",
+              description: payload.notification?.body,
+            });
+          });
+        }
       } catch (e) {
-        console.warn("FCM Setup failed silently:", e);
+        console.warn("FCM Handler Error:", e);
       }
     };
 
-    // Register Service Worker and then setup FCM
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
-        .then((registration) => {
-          console.log('FCM SW registered with scope:', registration.scope);
-          setupFCM();
-        })
-        .catch((err) => {
-          console.error('FCM SW registration failed:', err);
-          // Fallback setup even without SW (foreground only)
-          setupFCM();
-        });
-    } else {
-      setupFCM();
-    }
+    setupFCM();
   }, [user, db, toast]);
 
   return null;

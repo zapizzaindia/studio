@@ -3,6 +3,8 @@
 declare global {
   interface Window {
     fcmToken?: string;
+    confirmationResult: any;
+    recaptchaVerifier: any;
   }
 }
 
@@ -16,7 +18,6 @@ import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useUser, useAuth, db } from '@/firebase';
 import { doc, setDoc } from "firebase/firestore";
-
 
 import { Button } from '@/components/ui/button';
 import {
@@ -53,12 +54,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!userLoading && user) {
-      // Redirect to onboarding first to check if profile is complete
       router.replace("/home/onboarding");
     }
   }, [user, userLoading, router]);
 
-  // 🔥 Trigger Notification Permission immediately on load
   useEffect(() => {
     handleNotificationPermission();
   }, []);
@@ -84,25 +83,14 @@ export default function LoginPage() {
           console.error("Recaptcha init failed:", err);
         }
       }
-    }, 500); // small delay fixes auth race condition
+    }, 500);
   
     return () => clearTimeout(timer);
   }, [auth]);
     
-  const phoneForm = useForm<z.infer<typeof phoneSchema>>({
-    resolver: zodResolver(phoneSchema),
-    defaultValues: { phone: '' },
-  });
-
-  const otpForm = useForm<z.infer<typeof otpSchema>>({
-    resolver: zodResolver(otpSchema),
-    defaultValues: { otp: '' },
-  });
-
   async function handleNotificationPermission() {
     try {
-      const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.();
-      console.log("Is Native:", isNative);
+      const isNative = typeof window !== "undefined" && !!(window as any).Capacitor;
   
       if (isNative) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
@@ -113,38 +101,42 @@ export default function LoginPage() {
           await PushNotifications.register();
   
           PushNotifications.addListener('registration', (token: any) => {
-            console.log("Token:", token.value);
-  
-            // store temporarily
+            console.log("Native Token Captured:", token.value);
             window.fcmToken = token.value;
+          });
+
+          PushNotifications.addListener('registrationError', (error: any) => {
+            console.error('Registration error: ' + JSON.stringify(error));
           });
         }
   
       } else {
         if ("Notification" in window) {
           const permission = await Notification.requestPermission();
-  
           if (permission === "granted") {
             const token = await requestForToken();
-  
-            if (token) {
-              window.fcmToken = token;
-            }
+            if (token) window.fcmToken = token;
           }
         }
       }
     } catch (e) {
-      console.error("Notification error:", e);
+      console.error("Notification setup error:", e);
     }
   }
 
+  const phoneForm = useForm<z.infer<typeof phoneSchema>>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: { phone: '' },
+  });
+
+  const otpForm = useForm<z.infer<typeof otpSchema>>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: { otp: '' },
+  });
+
   async function onPhoneSubmit(values: z.infer<typeof phoneSchema>) {
     if (!auth) {
-      toast({
-        title: "Auth Error",
-        description: "Authentication service not ready.",
-        variant: "destructive",
-      });
+      toast({ title: "Auth Error", variant: "destructive" });
       return;
     }
 
@@ -153,66 +145,32 @@ export default function LoginPage() {
       setPhoneNumber(phone);
   
       if (!window.recaptchaVerifier) {
-        toast({
-          title: "Initializing security check...",
-          description: "Please wait 1 second and try again."
-        });
+        toast({ title: "Initializing security check...", description: "Please wait 1 second." });
         return;
       }
       
-      const appVerifier = window.recaptchaVerifier;
-  
-      const confirmationResult = await signInWithPhoneNumber(
-        auth,
-        phone,
-        appVerifier
-      );
-  
+      const confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
       window.confirmationResult = confirmationResult;
-  
-      toast({
-        title: "OTP Sent",
-        description: "Please enter the OTP sent to your phone",
-      });
-  
+      toast({ title: "OTP Sent" });
       setStep("otp");
     } catch (error: any) {
-      toast({
-        title: "OTP Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "OTP Failed", description: error.message, variant: "destructive" });
     }
   }  
 
   async function onOtpSubmit(values: z.infer<typeof otpSchema>) {
     try {
-      if (!window.confirmationResult) {
-        throw new Error("Confirmation result not found. Please try sending OTP again.");
-      }
+      if (!window.confirmationResult) throw new Error("Retry OTP");
       const result = await window.confirmationResult.confirm(values.otp);
       
-      // 🔥 SAVE TOKEN AFTER LOGIN
       if (window.fcmToken && db) {
-        await setDoc(
-          doc(db, "users", result.user.uid),
-          { fcmToken: window.fcmToken },
-          { merge: true }
-        );
+        await setDoc(doc(db, "users", result.user.uid), { fcmToken: window.fcmToken }, { merge: true });
       }
       
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to Zapizza!",
-      });
-  
+      toast({ title: "Login Successful" });
       router.push("/home/onboarding");
     } catch (error: any) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please try again",
-        variant: "destructive",
-      });
+      toast({ title: "Invalid OTP", variant: "destructive" });
     }
   }  
 
@@ -229,7 +187,6 @@ export default function LoginPage() {
       <div className="mb-12 flex flex-col items-center text-center">
         <ZapizzaLogo className="h-24 w-24 text-primary" />
       </div>
-      
 
       <AnimatePresence mode="wait">
         {step === 'phone' && (
@@ -252,7 +209,7 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-12 bg-[#14532d] text-white hover:bg-[#0f4023] font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
+                <Button type="submit" className="w-full h-12 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
                   Send OTP
                 </Button>
                 
