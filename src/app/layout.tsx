@@ -1,6 +1,3 @@
-
-export const dynamic = "force-dynamic";
-
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -41,7 +38,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover', // Critical for notched iPhones and full-screen Androids
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
