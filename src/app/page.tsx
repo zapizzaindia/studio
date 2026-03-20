@@ -135,29 +135,7 @@ export default function SplashPage() {
         )}
       </AnimatePresence>
 
-      {/* 4. Animated Central Logo */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.8, type: "spring" }}
-        className="relative z-30 flex flex-col items-center"
-      >
-        <motion.div
-          animate={{ 
-            scale: [1, 1.05, 1],
-            opacity: [0.8, 1, 0.8]
-          }}
-          transition={{ 
-            repeat: Infinity, 
-            duration: 3, 
-            ease: "easeInOut" 
-          }}
-        >
-          <ZapizzaLogo className="h-24 w-24 text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]" />
-        </motion.div>
-      </motion.div>
-
-      {/* 5. Terminal Status Indicator */}
+      {/* 3. Terminal Status Indicator */}
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -169,7 +147,7 @@ export default function SplashPage() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
           </div>
-          <span className="text-[10px] text-white font-black uppercase tracking-[0.3em] text-center">
+          <span className="text-[10px] text-white font-black uppercase tracking-[0.3em] text-center font-headline">
             Uplink Established
           </span>
         </div>
