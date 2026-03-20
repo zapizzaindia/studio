@@ -59,14 +59,14 @@ export default function SuperAdminDashboardLayout({
       return;
     }
 
-    if (!profileId) return;
+    if (profileId && profileLoading) return;
 
-    if (profileLoading) return;
-
-    if (!userProfile || userProfile.role !== 'franchise-owner') {
-      console.warn("Super Admin Guard: Unauthorized access attempt or missing profile record.");
-      if (auth) signOut(auth);
-      router.replace('/superadmin/login');
+    if (!profileId || !userProfile || userProfile.role !== 'franchise-owner') {
+      if (!profileLoading) {
+        console.warn("Super Admin Guard: Unauthorized access or missing profile record.");
+        if (auth) signOut(auth);
+        router.replace('/superadmin/login');
+      }
     } else {
       setIsVerifying(false);
     }
@@ -79,7 +79,7 @@ export default function SuperAdminDashboardLayout({
     router.push('/superadmin/login');
   }
   
-  if (userLoading || profileLoading || isVerifying) {
+  if (userLoading || isVerifying) {
     return (
         <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
             <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />

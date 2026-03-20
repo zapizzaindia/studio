@@ -53,23 +53,23 @@ export default function AdminDashboardLayout({
     // 1. Wait for Auth state to stabilize
     if (userLoading) return;
 
+    // 2. If definitely no user, go to login
     if (!user) {
-      // No user session found, move to login
       router.replace('/admin/login');
       return;
     }
 
-    // 2. We have a user, wait for the email/profile ID to be ready
-    if (!profileId) return;
-
-    // 3. Wait for Firestore profile lookup to finish
-    if (profileLoading) return;
+    // 3. Wait for profile lookup to finish (if email is present)
+    if (profileId && profileLoading) return;
 
     // 4. Verify Identity & Role
-    if (!userProfile || userProfile.role !== 'outlet-admin') {
-      console.warn("Admin Guard: Unauthorized access attempt or missing profile record.");
-      if (auth) signOut(auth);
-      router.replace('/admin/login');
+    if (!profileId || !userProfile || userProfile.role !== 'outlet-admin') {
+      // If we have a user but no valid admin profile, sign them out and reject
+      if (!profileLoading) {
+        console.warn("Admin Guard: Unauthorized access or missing profile record.");
+        if (auth) signOut(auth);
+        router.replace('/admin/login');
+      }
     } else {
       // All checks passed
       setIsVerifying(false);
@@ -89,7 +89,7 @@ export default function AdminDashboardLayout({
     router.push('/admin/login');
   }
 
-  if (userLoading || profileLoading || isVerifying) {
+  if (userLoading || isVerifying) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
