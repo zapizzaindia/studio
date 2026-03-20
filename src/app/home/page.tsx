@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -100,7 +99,7 @@ const BoxedItemCard = ({ item, brandColor, onAdd }: { item: MenuItem, brandColor
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent flex flex-col justify-end p-4 text-left">
           <div className="flex items-center gap-1.5 mb-1">
             <div className={cn("h-2.5 w-2.5 border flex items-center justify-center rounded-sm bg-white", item.isVeg ? 'border-green-600' : 'border-red-600')}>
-              <div className={cn("h-1 w-1 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
+              <div className={cn("h-1.5 w-1.5 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
             </div>
             <h3 className="text-white text-sm font-black uppercase italic leading-tight font-headline line-clamp-1">{item.name}</h3>
           </div>
@@ -389,7 +388,7 @@ export default function HomePage() {
   if (!selectedOutlet) return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
+    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-48 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
   
       <div className="bg-white text-[#333] px-6 py-4 relative transition-all duration-700 border-b flex-shrink-0">
         <div className="flex justify-between items-center">
@@ -1058,7 +1057,7 @@ export default function HomePage() {
       </Dialog>
 
       {totalItems > 0 && (
-        <div className="fixed bottom-20 left-4 right-4 z-40">
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40">
           <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none transition-all duration-500 font-headline">
             <div className="flex flex-col items-start font-sans tabular-nums"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
             <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">VIEW CART <ShoppingBag className="h-5 w-5" /></div>

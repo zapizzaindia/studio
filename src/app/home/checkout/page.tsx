@@ -559,7 +559,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-8 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
         <Button 
           onClick={handlePlaceOrder}
           disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed}

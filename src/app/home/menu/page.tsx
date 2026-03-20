@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Suspense } from 'react';
@@ -297,7 +296,7 @@ function MenuContent() {
         </Button>
       </div>
 
-      <div className="flex-1 pb-32">
+      <div className="flex-1 pb-48">
         {!searchQuery && menuItems && (
           <div className="py-10 border-b relative" style={{ backgroundColor: `${brandColor}05` }}>
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-8 font-headline" style={{ color: brandColor }}>Featured Items</h2>
@@ -405,7 +404,7 @@ function MenuContent() {
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="fixed bottom-36 left-4 right-4 md:left-auto md:right-6 md:w-80 bg-white rounded-2xl z-[52] shadow-2xl p-6 border border-gray-100 flex flex-col max-h-[60vh]"
+              className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] left-4 right-4 md:left-auto md:right-6 md:w-80 bg-white rounded-2xl z-[52] shadow-2xl p-6 border border-gray-100 flex flex-col max-h-[60vh]"
             >
               <h3 className="text-sm font-black uppercase tracking-widest mb-4 font-headline shrink-0" style={{ color: brandColor }}>Choose Category</h3>
               <div className="grid grid-cols-1 gap-1 overflow-y-auto scrollbar-hide pr-1">
@@ -427,7 +426,7 @@ function MenuContent() {
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-36 right-6 z-50">
+      <div className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] right-6 z-50">
         <Button 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="bg-[#333333] hover:bg-black text-white h-12 w-12 rounded-full shadow-2xl flex items-center justify-center p-0"
@@ -437,7 +436,7 @@ function MenuContent() {
       </div>
 
       {totalItems > 0 && (
-        <div className="fixed bottom-20 left-4 right-4 z-40">
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40">
           <Button 
             onClick={() => router.push('/home/checkout')}
             style={{ backgroundColor: brandColor }}
