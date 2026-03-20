@@ -1,9 +1,4 @@
 "use client";
-declare global {
-  interface Window {
-    fcmToken?: string;
-  }
-}
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,8 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { useUser, useAuth, useFirestore } from '@/firebase';
-import { doc, setDoc } from "firebase/firestore";
+import { useUser, useAuth } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -26,8 +20,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
-
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const phoneSchema = z.object({
   phone: z.string().min(10, { message: 'Please enter a valid 10-digit phone number.' }).max(10),
@@ -41,10 +35,9 @@ type Step = 'phone' | 'otp';
 
 export default function LoginPage() {
   const [step, setStep] = useState<Step>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -58,19 +51,18 @@ export default function LoginPage() {
     if (typeof window === "undefined") return;
     if (!auth) return;
   
+    // Initialize Recaptcha
     const timer = setTimeout(() => {
-      if (!window.recaptchaVerifier) {
+      if (!(window as any).recaptchaVerifier) {
         try {
-          window.recaptchaVerifier = new RecaptchaVerifier(
+          (window as any).recaptchaVerifier = new RecaptchaVerifier(
             auth,
             "recaptcha-container",
             {
               size: "invisible"
             }
           );
-  
-          window.recaptchaVerifier.render();
-          console.log("Recaptcha initialized");
+          (window as any).recaptchaVerifier.render();
         } catch (err) {
           console.error("Recaptcha init failed:", err);
         }
@@ -91,59 +83,63 @@ export default function LoginPage() {
   });
 
   async function onPhoneSubmit(values: z.infer<typeof phoneSchema>) {
-    if (!auth) {
-      toast({ title: "Auth Error", variant: "destructive" });
-      return;
-    }
+    if (!auth || isProcessing) return;
 
+    setIsProcessing(true);
     try {
       const phone = `+91${values.phone}`;
-      setPhoneNumber(phone);
   
-      if (!window.recaptchaVerifier) {
-        toast({ title: "Initializing security check...", description: "Please wait 1 second." });
+      if (!(window as any).recaptchaVerifier) {
+        toast({ title: "Initializing security check...", description: "Please try again in a moment." });
+        setIsProcessing(false);
         return;
       }
       
-      const confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
-      window.confirmationResult = confirmationResult;
-      toast({ title: "OTP Sent" });
+      const confirmationResult = await signInWithPhoneNumber(auth, phone, (window as any).recaptchaVerifier);
+      (window as any).confirmationResult = confirmationResult;
+      toast({ title: "OTP Sent", description: `Verify your number +91-${values.phone}` });
       setStep("otp");
     } catch (error: any) {
-      toast({ title: "OTP Failed", description: error.message, variant: "destructive" });
+      console.error("OTP Error:", error);
+      toast({ title: "OTP Failed", description: "Too many attempts or invalid number. Please try later.", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
     }
   }  
 
   async function onOtpSubmit(values: z.infer<typeof otpSchema>) {
+    if (!(window as any).confirmationResult || isProcessing) return;
+
+    setIsProcessing(true);
     try {
-      if (!window.confirmationResult) throw new Error("Retry OTP");
-      await window.confirmationResult.confirm(values.otp);
-      
-      toast({ title: "Login Successful" });
-      // The redirection will be handled by the useEffect watching 'user'
+      await (window as any).confirmationResult.confirm(values.otp);
+      toast({ title: "Login Successful", description: "Welcome to Zapizza!" });
+      // Redirection is handled by the useEffect above
     } catch (error: any) {
-      toast({ title: "Invalid OTP", variant: "destructive" });
+      setIsProcessing(false);
+      toast({ title: "Invalid OTP", description: "Please check the code and try again.", variant: "destructive" });
     }
   }  
 
   const variants = {
-    hidden: { opacity: 0, x: -50 },
+    hidden: { opacity: 0, x: -20 },
     visible: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 50 },
+    exit: { opacity: 0, x: 20 },
   };
 
   if (userLoading || !auth) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-white">
         <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-sm p-4">
+    <div className="w-full max-w-sm p-6">
       <div className="mb-12 flex flex-col items-center text-center">
         <ZapizzaLogo className="h-24 w-24 text-primary" />
+        <h1 className="font-headline text-2xl font-black uppercase italic tracking-tighter text-primary mt-4">Zapizza</h1>
       </div>
 
       <AnimatePresence mode="wait">
@@ -167,8 +163,8 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-12 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
-                  Send OTP
+                <Button type="submit" disabled={isProcessing} className="w-full h-12 bg-[#14532d] text-white font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
+                  {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Send OTP"}
                 </Button>
                 
                 <div className="relative my-6">
@@ -210,8 +206,8 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
-                  Verify & Login
+                <Button type="submit" disabled={isProcessing} className="w-full h-12 bg-accent text-accent-foreground hover:bg-accent/90 font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 font-headline">
+                  {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify & Login"}
                 </Button>
                 <Button variant="link" size="sm" onClick={() => setStep('phone')} className="w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground font-headline">
                   Change number
@@ -221,7 +217,7 @@ export default function LoginPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div id="recaptcha-container"></div>
+      <div id="recaptcha-container" className="hidden"></div>
     </div>
   );
 }
