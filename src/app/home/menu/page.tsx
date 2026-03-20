@@ -296,7 +296,7 @@ function MenuContent() {
         </Button>
       </div>
 
-      <div className="flex-1 pb-48">
+      <div className="flex-1 pb-64">
         {!searchQuery && menuItems && (
           <div className="py-10 border-b relative" style={{ backgroundColor: `${brandColor}05` }}>
             <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] mb-8 font-headline" style={{ color: brandColor }}>Featured Items</h2>
@@ -426,7 +426,7 @@ function MenuContent() {
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] right-6 z-50">
+      <div className="fixed bottom-[calc(9.5rem+env(safe-area-inset-bottom,0px))] right-6 z-50">
         <Button 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="bg-[#333333] hover:bg-black text-white h-12 w-12 rounded-full shadow-2xl flex items-center justify-center p-0"
@@ -436,7 +436,7 @@ function MenuContent() {
       </div>
 
       {totalItems > 0 && (
-        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40">
+        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40">
           <Button 
             onClick={() => router.push('/home/checkout')}
             style={{ backgroundColor: brandColor }}

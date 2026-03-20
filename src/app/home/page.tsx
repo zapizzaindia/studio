@@ -388,7 +388,7 @@ export default function HomePage() {
   if (!selectedOutlet) return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-48 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
+    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-64 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
   
       <div className="bg-white text-[#333] px-6 py-4 relative transition-all duration-700 border-b flex-shrink-0">
         <div className="flex justify-between items-center">
@@ -1057,7 +1057,7 @@ export default function HomePage() {
       </Dialog>
 
       {totalItems > 0 && (
-        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40">
+        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40">
           <Button onClick={() => router.push('/home/checkout')} style={{ backgroundColor: brandColor }} className="w-full h-16 text-white flex items-center justify-between px-8 rounded-[24px] shadow-2xl animate-in slide-in-from-bottom-10 border-none transition-all duration-500 font-headline">
             <div className="flex flex-col items-start font-sans tabular-nums"><span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{totalItems} ITEMS</span><span className="text-xl font-black tracking-tight">₹{totalPrice}</span></div>
             <div className="flex items-center gap-2 font-black uppercase tracking-widest text-[13px]">VIEW CART <ShoppingBag className="h-5 w-5" /></div>

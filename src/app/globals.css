@@ -37,6 +37,11 @@
     background-color: #14532d; /* your green */
     min-height: 100dvh;
     margin: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html {
+    height: 100%;
+    overflow-x: hidden;
   }
 }
 

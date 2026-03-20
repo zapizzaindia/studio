@@ -308,14 +308,14 @@ export default function CheckoutPage() {
   const brandCoupons = allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-48">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-64">
       <Script 
         id="razorpay-checkout" 
         src="https://checkout.razorpay.com/v1/checkout.js" 
         onLoad={() => console.log("Razorpay SDK Loaded")}
       />
 
-      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4">
+      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4 pt-safe">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-6 w-6" />
         </Button>
@@ -559,7 +559,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
         <Button 
           onClick={handlePlaceOrder}
           disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed}
