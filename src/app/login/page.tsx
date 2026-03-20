@@ -47,11 +47,11 @@ export default function LoginPage() {
     }
   }, [user, userLoading, router]);
 
+  // Restore Recaptcha Initialization
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!auth) return;
   
-    // Initialize Recaptcha
     const timer = setTimeout(() => {
       if (!(window as any).recaptchaVerifier) {
         try {
@@ -59,7 +59,10 @@ export default function LoginPage() {
             auth,
             "recaptcha-container",
             {
-              size: "invisible"
+              size: "invisible",
+              callback: () => {
+                console.log("reCAPTCHA solved");
+              }
             }
           );
           (window as any).recaptchaVerifier.render();
@@ -69,7 +72,13 @@ export default function LoginPage() {
       }
     }, 500);
   
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.clear();
+        (window as any).recaptchaVerifier = null;
+      }
+    };
   }, [auth]);
 
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
@@ -95,13 +104,25 @@ export default function LoginPage() {
         return;
       }
       
-      const confirmationResult = await signInWithPhoneNumber(auth, phone, (window as any).recaptchaVerifier);
+      const appVerifier = (window as any).recaptchaVerifier;
+      const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
       (window as any).confirmationResult = confirmationResult;
+      
       toast({ title: "OTP Sent", description: `Verify your number +91-${values.phone}` });
       setStep("otp");
     } catch (error: any) {
       console.error("OTP Error:", error);
-      toast({ title: "OTP Failed", description: "Too many attempts or invalid number. Please try later.", variant: "destructive" });
+      toast({ 
+        title: "OTP Failed", 
+        description: error.message || "Too many attempts or invalid number. Please try later.", 
+        variant: "destructive" 
+      });
+      // Reset reCAPTCHA on error so it can be used again
+      if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.render().then((widgetId: any) => {
+          (window as any).grecaptcha.reset(widgetId);
+        });
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -113,9 +134,9 @@ export default function LoginPage() {
     setIsProcessing(true);
     try {
       await (window as any).confirmationResult.confirm(values.otp);
-      toast({ title: "Login Successful", description: "Welcome to Zapizza!" });
-      // Redirection is handled by the useEffect above
+      toast({ title: "Login Successful", description: "Welcome back!" });
     } catch (error: any) {
+      console.error("Verification Error:", error);
       setIsProcessing(false);
       toast({ title: "Invalid OTP", description: "Please check the code and try again.", variant: "destructive" });
     }
@@ -217,7 +238,9 @@ export default function LoginPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div id="recaptcha-container" className="hidden"></div>
+      
+      {/* Hidden container for reCAPTCHA challenge */}
+      <div id="recaptcha-container"></div>
     </div>
   );
 }
