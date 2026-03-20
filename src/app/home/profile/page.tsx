@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -17,8 +18,6 @@ import {
   Truck,
   Phone,
   Navigation,
-  Facebook,
-  Instagram,
   ChevronRight,
   Cake,
   Crown,

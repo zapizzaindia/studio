@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -161,7 +162,7 @@ export default function AdminOrdersPage() {
     const payNote = `\n\n✅ *PRE-PAID ORDER*`;
     
     const host = window.location.origin.replace(/\/$/, "");
-    const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery?orderId=${order.id}`;
+    const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery/${order.id}`;
 
     const text = `🍕 *${outlet?.brand === 'zfry' ? 'ZFRY' : 'ZAPIZZA'} ORDER* 🍕\n\n*ID:* #${order.id.slice(-6).toUpperCase()}\n*Customer:* ${order.customerName}\n*Phone:* ${order.customerPhone || 'N/A'}\n*Address:* ${addr?.flatNo}, ${addr?.area}, ${addr?.city}${mapLink}${note}${payNote}${magicLink}`;
     

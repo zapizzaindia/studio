@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -746,7 +747,7 @@ export default function HomePage() {
                 <MapPin className="h-2.5 w-2.5" /> {selectedOutlet?.address || 'Location Not Specified'}
               </p>
               <button 
-                onClick={() => router.push(`/home/reviews?outletId=${selectedOutlet?.id}`)}
+                onClick={() => router.push(`/home/reviews/${selectedOutlet?.id}`)}
                 className="text-[9px] font-black uppercase mt-1 flex items-center gap-1" 
                 style={{ color: brandColor }}
               >
@@ -754,7 +755,7 @@ export default function HomePage() {
               </button>
             </div>
             <div 
-              onClick={() => router.push(`/home/reviews?outletId=${selectedOutlet?.id}`)}
+              onClick={() => router.push(`/home/reviews/${selectedOutlet?.id}`)}
               className="bg-gray-50 border border-gray-100 rounded-xl p-2 flex flex-col items-center gap-0.5 min-w-[60px] cursor-pointer active:scale-95 transition-all"
             >
                <div className="flex items-center gap-1 text-white px-1.5 py-0.5 rounded-lg shadow-sm" style={{ backgroundColor: brandColor }}>
@@ -851,7 +852,7 @@ export default function HomePage() {
             </div>
 
             <div className="w-full space-y-4 pt-4">
-              <Button 
+              <button 
                 onClick={() => {
                   localStorage.removeItem("zapizza-city");
                   localStorage.removeItem("zapizza-outlet");
@@ -860,7 +861,7 @@ export default function HomePage() {
                 className="w-full h-14 bg-[#14532d] hover:bg-[#0f4023] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all active:scale-95"
               >
                 Explore Other Outlets
-              </Button>
+              </button>
               <button 
                 onClick={() => {
                   setShowClosedModal(false);
