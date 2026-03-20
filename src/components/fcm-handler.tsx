@@ -8,25 +8,31 @@ import { app } from '@/firebase/config';
 import { requestForToken } from '@/firebase/messaging';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * FCMHandler - Manages Firebase Cloud Messaging for both Web and Native (Capacitor).
+ * It waits for a stable session before requesting permissions to avoid crashing 
+ * during the high-load authentication/redirection phase on Android.
+ */
 export function FCMHandler() {
-  const { user } = useUser();
+  const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    // Only attempt setup if we have a user and haven't initialized in this session cycle
-    if (!user || !db || hasInitialized.current) return;
+    // 1. Wait for a definite authenticated user and an initialized DB
+    // 2. Ensure we don't try to re-initialize if we're already set up
+    if (!user || authLoading || !db || hasInitialized.current) return;
 
     const setupFCM = async () => {
       try {
-        const isNative = typeof window !== "undefined" && !!(window as any).Capacitor;
+        // Detect if we are running inside a Capacitor native shell
+        const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
 
         if (isNative) {
-          // Dynamic import to avoid SSR/Web environment issues with native-only plugins
+          console.log("FCM: Initializing Native Push Notifications...");
           const { PushNotifications } = await import('@capacitor/push-notifications');
           
-          // Request permission and register for push notifications
           let permStatus = await PushNotifications.checkPermissions();
           
           if (permStatus.receive !== 'granted') {
@@ -34,57 +40,63 @@ export function FCMHandler() {
           }
 
           if (permStatus.receive === 'granted') {
-            const syncNativeToken = (token: any) => {
+            // Register listener for token generation
+            await PushNotifications.addListener('registration', (token) => {
+              console.log('FCM: Native token received');
               setDoc(doc(db, 'users', user.uid), {
                 fcmToken: token.value,
                 lastTokenSync: new Date().toISOString()
               }, { merge: true }).catch(err => console.error("FCM Token Sync Error:", err));
-            };
+            });
 
-            PushNotifications.addListener('registration', syncNativeToken);
-            
-            PushNotifications.addListener('pushNotificationReceived', (notification) => {
+            // Register listener for incoming notifications while app is open
+            await PushNotifications.addListener('pushNotificationReceived', (notification) => {
               toast({
                 title: notification.title || "Zapizza Update",
                 description: notification.body,
               });
             });
 
+            // Trigger the native registration process
             await PushNotifications.register();
             hasInitialized.current = true;
           }
 
         } else {
-          // Web/PWA Flow
-          if ('Notification' in window) {
-            // We request token which internally handles Notification.requestPermission()
+          // Web/PWA Standard Flow
+          if (typeof window !== 'undefined' && 'Notification' in window) {
+            console.log("FCM: Initializing Web Push Notifications...");
             const token = await requestForToken();
             if (token) {
               await setDoc(doc(db, 'users', user.uid), {
                 fcmToken: token,
                 lastTokenSync: new Date().toISOString()
               }, { merge: true });
+              
+              const messaging = getMessaging(app);
+              onMessage(messaging, (payload) => {
+                toast({
+                  title: payload.notification?.title || "Notification",
+                  description: payload.notification?.body,
+                });
+              });
+              
               hasInitialized.current = true;
             }
           }
-
-          const messaging = getMessaging(app);
-          onMessage(messaging, (payload) => {
-            toast({
-              title: payload.notification?.title || "Notification",
-              description: payload.notification?.body,
-            });
-          });
         }
       } catch (e) {
-        console.warn("FCM Handler Exception (Non-Critical):", e);
+        // Log but don't crash the app if FCM fails (e.g. missing google-services.json)
+        console.warn("FCM Handler Exception (Check native config):", e);
       }
     };
 
-    // Adding a small delay to ensure the UI transition from login is complete
-    const timer = setTimeout(setupFCM, 2000);
+    // DEFER INITIALIZATION: 
+    // We wait 3 seconds after the user lands on Home/Dashboard.
+    // This ensures the device has finished CPU-intensive tasks like auth-sync and page rendering.
+    const timer = setTimeout(setupFCM, 3000);
     return () => clearTimeout(timer);
-  }, [user, db, toast]);
+  }, [user, authLoading, db, toast]);
 
   return null;
 }
