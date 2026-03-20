@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Suspense } from 'react';
@@ -190,7 +191,7 @@ function MenuContent() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white relative pt-4">
+    <div className="flex flex-col w-full min-h-screen bg-white relative pt-[calc(56px+env(safe-area-inset-top))]">
       <div className="bg-white px-4 pt-4 pb-2 border-b">
         <div className="flex justify-between items-start">
           <div className="space-y-1 flex-1 text-left">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -388,7 +389,7 @@ export default function HomePage() {
   if (!selectedOutlet) return <OutletSelector cityId={selectedCity.id} onOutletSelect={handleOutletSelect} onBack={() => setSelectedCity(null)} />;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden pt-4">
+    <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
   
       <div className="bg-white text-[#333] px-6 py-6 relative transition-all duration-700 border-b flex-shrink-0">
         <div className="flex justify-between items-center">
