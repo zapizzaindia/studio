@@ -391,17 +391,17 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-[#f8f9fa] pb-32 overflow-x-hidden pt-[calc(56px+env(safe-area-inset-top))]">
   
-      <div className="bg-white text-[#333] px-6 py-6 relative transition-all duration-700 border-b flex-shrink-0">
+      <div className="bg-white text-[#333] px-6 py-4 relative transition-all duration-700 border-b flex-shrink-0">
         <div className="flex justify-between items-center">
-          <div className="flex flex-col text-left gap-1">
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.2em] font-headline">
+          <div className="flex flex-col text-left">
+            <div className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+              <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest font-headline">
                 Welcome back
               </p>
             </div>
   
-            <h1 className="text-3xl font-black italic tracking-tighter leading-none font-headline">
+            <h1 className="text-xl font-black italic tracking-tighter leading-tight font-headline">
               {userProfile?.displayName?.split(" ")[0] ||
                 user?.displayName?.split(" ")[0] ||
                 "Valued Guest"}
@@ -409,31 +409,31 @@ export default function HomePage() {
             </h1>
           </div>
   
-          <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200 h-11 items-stretch shadow-inner">
+          <div className="flex bg-gray-100 p-0.5 rounded-xl border border-gray-200 h-9 items-stretch shadow-inner">
             <button
               onClick={() => setOrderType("delivery")}
-              className={`flex items-center gap-2 px-4 rounded-xl transition-all duration-300 ${
+              className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${
                 orderType === "delivery"
-                  ? "bg-white text-[#333] shadow-md ring-1 ring-black/5"
+                  ? "bg-white text-[#333] shadow-sm ring-1 ring-black/5"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Bike className={cn("h-4 w-4", orderType === "delivery" ? "text-primary" : "")} />
-              <span className="text-[10px] font-black uppercase tracking-widest font-headline">
+              <Bike className={cn("h-3.5 w-3.5", orderType === "delivery" ? "text-primary" : "")} />
+              <span className="text-[8px] font-black uppercase tracking-tight font-headline">
                 Delivery
               </span>
             </button>
   
             <button
               onClick={() => setOrderType("takeaway")}
-              className={`flex items-center gap-2 px-4 rounded-xl transition-all duration-300 ${
+              className={`flex items-center gap-1.5 px-3 rounded-lg transition-all duration-300 ${
                 orderType === "takeaway"
-                  ? "bg-white text-[#333] shadow-md ring-1 ring-black/5"
+                  ? "bg-white text-[#333] shadow-sm ring-1 ring-black/5"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <ShoppingBasket className={cn("h-4 w-4", orderType === "takeaway" ? "text-primary" : "")} />
-              <span className="text-[10px] font-black uppercase tracking-widest font-headline">
+              <ShoppingBasket className={cn("h-3.5 w-3.5", orderType === "takeaway" ? "text-primary" : "")} />
+              <span className="text-[8px] font-black uppercase tracking-tight font-headline">
                 Pickup
               </span>
             </button>
@@ -879,7 +879,7 @@ export default function HomePage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isFranchiseModalOpen} onOpenChange={setIsFranchiseModalOpen}>
+      <Dialog open={isFranchiseModalOpen} onOpenChange={(open) => { setIsFranchiseModalOpen(open); }}>
         <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[32px] p-0 overflow-hidden border-none shadow-2xl bg-white font-headline flex flex-col max-h-[95vh]">
           <div className="bg-[#f97316] p-6 text-white shrink-0">
             <DialogHeader>
