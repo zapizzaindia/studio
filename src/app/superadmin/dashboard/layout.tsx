@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -46,23 +46,31 @@ export default function SuperAdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
 
-  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
-  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId);
+  const profileId = user?.email?.toLowerCase().trim() || null;
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
 
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  // Authentication Guard with patience for Capacitor session restoration
   useEffect(() => {
     if (!userLoading) {
       if (!user) {
-        router.replace('/superadmin/login');
+        const timer = setTimeout(() => {
+          if (!user) router.replace('/superadmin/login');
+        }, 1000);
+        return () => clearTimeout(timer);
+      } else {
+        if (!profileLoading) {
+          if (!userProfile || userProfile.role !== 'franchise-owner') {
+            if (auth) signOut(auth);
+            router.replace('/superadmin/login');
+          } else {
+            setIsVerifying(false);
+          }
+        }
       }
     }
-  }, [user, userLoading, router]);
-
-  useEffect(() => {
-    if (!profileLoading && user && userProfile && userProfile.role !== 'franchise-owner') {
-      if (auth) signOut(auth);
-      router.replace('/superadmin/login');
-    }
-  }, [userProfile, profileLoading, auth, router, user]);
+  }, [user, userLoading, profileLoading, userProfile, router, auth]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -71,18 +79,13 @@ export default function SuperAdminDashboardLayout({
     router.push('/superadmin/login');
   }
   
-  if (userLoading || (user && profileLoading)) {
+  if (userLoading || profileLoading || isVerifying) {
     return (
         <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
             <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Admin Mesh...</p>
         </div>
     )
-  }
-
-  // Guard against flash of dashboard if redirect is pending
-  if (!user) {
-    return null;
   }
 
   return (

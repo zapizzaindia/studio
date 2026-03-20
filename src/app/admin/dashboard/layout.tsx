@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
 import Link from 'next/link';
@@ -41,29 +41,45 @@ export default function AdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   
-  const profileId = user?.email?.toLowerCase().trim() || 'dummy';
-  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId);
+  // We wait for the email to be available before attempting profile lookup
+  const profileId = user?.email?.toLowerCase().trim() || null;
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
   const effectiveOutletId = userProfile?.outletId || 'dummy';
   const { data: outlet } = useDoc<Outlet>('outlets', effectiveOutletId);
 
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  // Authentication Guard with patience for Capacitor session restoration
   useEffect(() => {
     if (!userLoading) {
       if (!user) {
-        router.replace('/admin/login');
+        // Give Capacitor a small window to resolve native session if it's lagging
+        const timer = setTimeout(() => {
+          if (!user) router.replace('/admin/login');
+        }, 1000);
+        return () => clearTimeout(timer);
+      } else {
+        // User exists, now wait for profile logic
+        if (!profileLoading) {
+          if (!userProfile || userProfile.role !== 'outlet-admin') {
+            // Improper role access detected
+            if (auth) signOut(auth);
+            router.replace('/admin/login');
+          } else {
+            // Identity and role confirmed
+            setIsVerifying(false);
+          }
+        }
       }
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, profileLoading, userProfile, router, auth]);
 
   useEffect(() => {
-    if (!profileLoading && user && userProfile && userProfile.role !== 'outlet-admin') {
-      if (auth) signOut(auth);
-      router.replace('/admin/login');
-    }
-    if (pathname === '/admin/dashboard') {
+    if (pathname === '/admin/dashboard' && !isVerifying) {
       router.replace('/admin/dashboard/orders');
     }
-  }, [userProfile, profileLoading, auth, router, pathname, user]);
+  }, [pathname, isVerifying, router]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -73,7 +89,7 @@ export default function AdminDashboardLayout({
   }
 
   // Immersive loading state while verifying identity
-  if (userLoading || (user && profileLoading)) {
+  if (userLoading || profileLoading || isVerifying) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
@@ -84,18 +100,13 @@ export default function AdminDashboardLayout({
     )
   }
 
-  // Prevent flash of dashboard if redirect is pending
-  if (!user) {
-    return null;
-  }
-
   return (
     <SidebarProvider>
         <Sidebar>
             <SidebarHeader>
               <div className="flex flex-col items-start gap-2 p-4">
                 <ZapizzaLogo className="h-10 w-10 text-primary" />
-                <h1 className="font-headline text-xl font-bold text-primary leading-tight">
+                <h1 className="font-headline text-xl font-bold text-primary leading-tight uppercase italic tracking-tighter">
                     Zapizza Admin
                 </h1>
               </div>
@@ -107,7 +118,7 @@ export default function AdminDashboardLayout({
                     <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} >
                       <Link href={item.href}>
                         <item.icon />
-                        <span>{item.label}</span>
+                        <span className="font-bold text-xs uppercase tracking-widest">{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -119,7 +130,7 @@ export default function AdminDashboardLayout({
                     <SidebarMenuItem>
                         <SidebarMenuButton onClick={handleLogout}>
                             <LogOut />
-                            <span>Logout</span>
+                            <span className="font-bold text-xs uppercase tracking-widest">Logout</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
@@ -129,7 +140,7 @@ export default function AdminDashboardLayout({
             <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background px-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
-                    <h1 className="font-headline text-xl font-bold text-primary hidden sm:block">
+                    <h1 className="font-headline text-xl font-bold text-primary hidden sm:block uppercase italic">
                         {navItems.find(item => pathname.startsWith(item.href))?.label || "Admin Panel"}
                     </h1>
                 </div>
