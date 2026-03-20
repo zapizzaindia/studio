@@ -41,7 +41,6 @@ export default function AdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   
-  // We wait for the email to be available before attempting profile lookup
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -50,30 +49,32 @@ export default function AdminDashboardLayout({
 
   const [isVerifying, setIsVerifying] = useState(true);
 
-  // Authentication Guard with patience for Capacitor session restoration
   useEffect(() => {
-    if (!userLoading) {
-      if (!user) {
-        // Give Capacitor a small window to resolve native session if it's lagging
-        const timer = setTimeout(() => {
-          if (!user) router.replace('/admin/login');
-        }, 1000);
-        return () => clearTimeout(timer);
-      } else {
-        // User exists, now wait for profile logic
-        if (!profileLoading) {
-          if (!userProfile || userProfile.role !== 'outlet-admin') {
-            // Improper role access detected
-            if (auth) signOut(auth);
-            router.replace('/admin/login');
-          } else {
-            // Identity and role confirmed
-            setIsVerifying(false);
-          }
-        }
-      }
+    // 1. Wait for Auth state to stabilize
+    if (userLoading) return;
+
+    if (!user) {
+      // No user session found, move to login
+      router.replace('/admin/login');
+      return;
     }
-  }, [user, userLoading, profileLoading, userProfile, router, auth]);
+
+    // 2. We have a user, wait for the email/profile ID to be ready
+    if (!profileId) return;
+
+    // 3. Wait for Firestore profile lookup to finish
+    if (profileLoading) return;
+
+    // 4. Verify Identity & Role
+    if (!userProfile || userProfile.role !== 'outlet-admin') {
+      console.warn("Admin Guard: Unauthorized access attempt or missing profile record.");
+      if (auth) signOut(auth);
+      router.replace('/admin/login');
+    } else {
+      // All checks passed
+      setIsVerifying(false);
+    }
+  }, [user, userLoading, profileLoading, userProfile, profileId, router, auth]);
 
   useEffect(() => {
     if (pathname === '/admin/dashboard' && !isVerifying) {
@@ -88,7 +89,6 @@ export default function AdminDashboardLayout({
     router.push('/admin/login');
   }
 
-  // Immersive loading state while verifying identity
   if (userLoading || profileLoading || isVerifying) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-white">

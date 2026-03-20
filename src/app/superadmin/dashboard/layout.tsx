@@ -51,26 +51,26 @@ export default function SuperAdminDashboardLayout({
 
   const [isVerifying, setIsVerifying] = useState(true);
 
-  // Authentication Guard with patience for Capacitor session restoration
   useEffect(() => {
-    if (!userLoading) {
-      if (!user) {
-        const timer = setTimeout(() => {
-          if (!user) router.replace('/superadmin/login');
-        }, 1000);
-        return () => clearTimeout(timer);
-      } else {
-        if (!profileLoading) {
-          if (!userProfile || userProfile.role !== 'franchise-owner') {
-            if (auth) signOut(auth);
-            router.replace('/superadmin/login');
-          } else {
-            setIsVerifying(false);
-          }
-        }
-      }
+    if (userLoading) return;
+
+    if (!user) {
+      router.replace('/superadmin/login');
+      return;
     }
-  }, [user, userLoading, profileLoading, userProfile, router, auth]);
+
+    if (!profileId) return;
+
+    if (profileLoading) return;
+
+    if (!userProfile || userProfile.role !== 'franchise-owner') {
+      console.warn("Super Admin Guard: Unauthorized access attempt or missing profile record.");
+      if (auth) signOut(auth);
+      router.replace('/superadmin/login');
+    } else {
+      setIsVerifying(false);
+    }
+  }, [user, userLoading, profileLoading, userProfile, profileId, router, auth]);
 
   const handleLogout = async () => {
     if (auth) {
