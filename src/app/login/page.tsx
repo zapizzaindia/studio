@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { useUser, useAuth, db } from '@/firebase';
+import { useUser, useAuth, useFirestore } from '@/firebase';
 import { doc, setDoc } from "firebase/firestore";
 
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,6 @@ import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 
 import { useToast } from '@/hooks/use-toast';
-import { requestForToken } from '@/firebase/messaging';
 
 const phoneSchema = z.object({
   phone: z.string().min(10, { message: 'Please enter a valid 10-digit phone number.' }).max(10),
@@ -45,6 +44,7 @@ export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -79,21 +79,6 @@ export default function LoginPage() {
   
     return () => clearTimeout(timer);
   }, [auth]);
-    
-  async function handleNotificationPermission() {
-    try {
-      if (typeof window === "undefined") return;
-      if ("Notification" in window) {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-          const token = await requestForToken();
-          if (token) window.fcmToken = token;
-        }
-      }
-    } catch (e) {
-      console.error("Notification setup error:", e);
-    }
-  }
 
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
@@ -124,7 +109,6 @@ export default function LoginPage() {
       window.confirmationResult = confirmationResult;
       toast({ title: "OTP Sent" });
       setStep("otp");
-      handleNotificationPermission();
     } catch (error: any) {
       toast({ title: "OTP Failed", description: error.message, variant: "destructive" });
     }
@@ -133,14 +117,10 @@ export default function LoginPage() {
   async function onOtpSubmit(values: z.infer<typeof otpSchema>) {
     try {
       if (!window.confirmationResult) throw new Error("Retry OTP");
-      const result = await window.confirmationResult.confirm(values.otp);
-      
-      if (window.fcmToken && db) {
-        await setDoc(doc(db, "users", result.user.uid), { fcmToken: window.fcmToken }, { merge: true });
-      }
+      await window.confirmationResult.confirm(values.otp);
       
       toast({ title: "Login Successful" });
-      router.push("/home/onboarding");
+      // The redirection will be handled by the useEffect watching 'user'
     } catch (error: any) {
       toast({ title: "Invalid OTP", variant: "destructive" });
     }
@@ -152,7 +132,13 @@ export default function LoginPage() {
     exit: { opacity: 0, x: 50 },
   };
 
-  if (userLoading || !auth) return null;
+  if (userLoading || !auth) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-sm p-4">

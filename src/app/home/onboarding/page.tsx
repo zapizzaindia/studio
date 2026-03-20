@@ -30,7 +30,11 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (!userLoading) {
       if (!user) {
-        router.replace("/login");
+        // Only redirect if auth definitely confirms no session
+        const timer = setTimeout(() => {
+          if (!user) router.replace("/login");
+        }, 1500);
+        return () => clearTimeout(timer);
       } else if (db) {
         const verifyProfile = async () => {
           try {
@@ -64,7 +68,8 @@ export default function OnboardingPage() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         () => toast({ title: "Location captured!" }),
-        () => toast({ title: "Location skipped" })
+        () => toast({ title: "Location skipped" }),
+        { timeout: 5000 }
       );
     }
     setStep("info");
