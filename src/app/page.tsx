@@ -135,9 +135,6 @@ export default function SplashPage() {
         )}
       </AnimatePresence>
 
-      {/* 3. High-Quality Brand Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none z-20" />
-
       {/* 4. Animated Central Logo */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
