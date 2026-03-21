@@ -46,7 +46,7 @@ export default function SuperAdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
 
-  const profileId = user?.uid || null;
+  const profileId = user?.email?.toLowerCase().trim() || user?.uid || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
 
   const [isVerifying, setIsVerifying] = useState(true);
@@ -64,7 +64,7 @@ export default function SuperAdminDashboardLayout({
     if (profileLoading) return;
 
     if (!userProfile) {
-      if (!profileLoading) router.replace('/superadmin/login');
+      router.replace('/superadmin/login');
       return;
     }
 

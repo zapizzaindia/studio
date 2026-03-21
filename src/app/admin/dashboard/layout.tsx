@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
-import Link from 'next/link';
+import Link from 'link';
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -41,6 +41,7 @@ export default function AdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   
+  // Use email as key for admin lookups
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -59,7 +60,7 @@ export default function AdminDashboardLayout({
       return;
     }
 
-    // 3. Wait for email to be available (sometimes lags on Android restore)
+    // 3. Wait for email to be available (sometimes lags on Android)
     if (!user.email) return;
 
     // 4. Wait for Firestore profile lookup
@@ -67,8 +68,8 @@ export default function AdminDashboardLayout({
 
     // 5. Verify Role or Missing Profile
     if (!userProfile) {
-      // If profile lookup finished and no data found, redirect
-      if (!profileLoading) router.replace('/admin/login');
+      // Profile not found in authorized users list
+      router.replace('/admin/login');
       return;
     }
 
@@ -97,7 +98,7 @@ export default function AdminDashboardLayout({
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Securing Terminal...</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Securing Terminal...</p>
             </div>
         </div>
     )

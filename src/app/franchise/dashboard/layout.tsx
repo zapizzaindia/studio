@@ -46,7 +46,8 @@ export default function FranchiseDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
 
-  const profileId = user?.uid || null;
+  // Franchise uses email or UID for lookup depending on setup
+  const profileId = user?.email?.toLowerCase().trim() || user?.uid || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
 
   const [isVerifying, setIsVerifying] = useState(true);
@@ -64,7 +65,7 @@ export default function FranchiseDashboardLayout({
     if (profileLoading) return;
 
     if (!userProfile) {
-      if (!profileLoading) router.replace('/franchise/login');
+      router.replace('/franchise/login');
       return;
     }
 
@@ -86,7 +87,7 @@ export default function FranchiseDashboardLayout({
     return (
         <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
             <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Authenticating Node...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Authenticating Global Node...</p>
         </div>
     )
   }
