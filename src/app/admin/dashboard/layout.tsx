@@ -26,8 +26,8 @@ import type { UserProfile, Outlet } from '@/lib/types';
 const navItems = [
   { href: "/admin/dashboard/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/dashboard/menu", label: "Stock", icon: List },
-  { href: "/admin/dashboard/reports", label: "Reports", icon: BarChart },
-  { href: "/admin/dashboard/outlet", label: "Settings", icon: Store },
+  { href: "/admin/dashboard/reports", label: "Intelligence", icon: BarChart },
+  { href: "/admin/dashboard/outlet", label: "Profile", icon: Store },
 ];
 
 export default function AdminDashboardLayout({
@@ -58,12 +58,15 @@ export default function AdminDashboardLayout({
 
     if (profileLoading) return;
 
+    // Wait for definite null to confirm missing profile
     if (userProfile === null || (userProfile && userProfile.role !== 'outlet-admin')) {
       router.replace('/admin/login');
       return;
     }
 
-    setIsVerifying(false);
+    if (userProfile) {
+      setIsVerifying(false);
+    }
   }, [user, userLoading, profileLoading, userProfile, router]);
 
   useEffect(() => {
@@ -84,11 +87,13 @@ export default function AdminDashboardLayout({
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Secure Terminal Auth...</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Authenticating Terminal...</p>
             </div>
         </div>
     )
   }
+
+  const brandColor = outlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
   return (
     <SidebarProvider>
@@ -107,7 +112,7 @@ export default function AdminDashboardLayout({
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={item.label}>
                       <Link href={item.href} className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5" />
+                        <item.icon className="h-5 w-5" style={{ color: pathname.startsWith(item.href) ? brandColor : undefined }} />
                         <span className="font-black text-xs uppercase tracking-widest">{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -132,19 +137,19 @@ export default function AdminDashboardLayout({
                     <SidebarTrigger className="h-10 w-10 rounded-xl bg-gray-50 border shadow-sm flex items-center justify-center">
                         <Menu className="h-5 w-5 text-primary" />
                     </SidebarTrigger>
-                    <div className="flex flex-col text-left">
-                        <h1 className="font-headline text-sm font-black text-primary uppercase italic leading-none">
-                            {navItems.find(item => pathname.startsWith(item.href))?.label || "Kitchen Terminal"}
+                    <div className="flex flex-col text-left min-w-0">
+                        <h1 className="font-headline text-[13px] font-black text-primary uppercase italic leading-none truncate">
+                            {navItems.find(item => pathname.startsWith(item.href))?.label || "Terminal"}
                         </h1>
-                        {outlet && <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">{outlet.name}</p>}
+                        {outlet && <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1 truncate">{outlet.name}</p>}
                     </div>
                 </div>
-                <Avatar className="h-9 w-9 border-2 border-primary/10 shadow-sm">
+                <Avatar className="h-9 w-9 border-2 border-primary/10 shadow-sm shrink-0">
                   <AvatarImage src={user?.photoURL || undefined} />
                   <AvatarFallback className="bg-primary text-white font-black">{(userProfile?.displayName || 'A').charAt(0)}</AvatarFallback>
                 </Avatar>
             </header>
-            <main className="flex-1 p-2 sm:p-8 bg-[#f8f9fa] pb-32 overflow-x-hidden">
+            <main className="flex-1 p-2 bg-[#f8f9fa] pb-32 overflow-x-hidden">
                 {children}
             </main>
         </SidebarInset>
