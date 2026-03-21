@@ -41,7 +41,6 @@ export default function AdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   
-  // Only attempt profile lookup if email is available
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -60,21 +59,24 @@ export default function AdminDashboardLayout({
       return;
     }
 
-    // 3. Wait for email to be available on the user object
-    // Sometimes 'user' exists but 'email' is briefly null during token restoration
-    
+    // 3. Wait for email to be available (sometimes lags on Android restore)
+    if (!user.email) return;
 
-    // 4. Wait for Firestore profile lookup to finish
+    // 4. Wait for Firestore profile lookup
     if (profileLoading) return;
 
-    // 5. Verify Role
-    if (!userProfile) return;
+    // 5. Verify Role or Missing Profile
+    if (!userProfile) {
+      // If profile lookup finished and no data found, redirect
+      if (!profileLoading) router.replace('/admin/login');
+      return;
+    }
 
-if (userProfile.role !== 'outlet-admin') {
-  router.replace('/admin/login');
-} else {
-  setIsVerifying(false);
-}
+    if (userProfile.role !== 'outlet-admin') {
+      router.replace('/admin/login');
+    } else {
+      setIsVerifying(false);
+    }
   }, [user, userLoading, profileLoading, userProfile, router]);
 
   useEffect(() => {

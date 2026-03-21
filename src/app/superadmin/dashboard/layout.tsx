@@ -52,24 +52,23 @@ export default function SuperAdminDashboardLayout({
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    // 1. Wait for Auth state
     if (userLoading) return;
 
-    // 2. No user, go to login
     if (!user) {
       router.replace('/superadmin/login');
       return;
     }
 
-    // 3. Wait for email restoration
     if (!user.email) return;
 
-    // 4. Wait for Firestore profile
     if (profileLoading) return;
 
-    // 5. Verify Role
-    if (!userProfile || userProfile.role !== 'franchise-owner') {
-      console.warn("Super Admin Guard: Unauthorized access.");
+    if (!userProfile) {
+      if (!profileLoading) router.replace('/superadmin/login');
+      return;
+    }
+
+    if (userProfile.role !== 'franchise-owner') {
       router.replace('/superadmin/login');
     } else {
       setIsVerifying(false);

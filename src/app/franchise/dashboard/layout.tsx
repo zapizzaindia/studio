@@ -52,31 +52,27 @@ export default function FranchiseDashboardLayout({
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    // 1. Wait for Auth state
     if (userLoading) return;
 
-    // 2. No user, go to login
     if (!user) {
       router.replace('/franchise/login');
       return;
     }
 
-    // 3. Wait for email restoration
     if (!user.email) return;
 
-    // 4. Wait for Firestore profile
     if (profileLoading) return;
 
-    // 5. Verify Role
-    if (profileLoading) return;
+    if (!userProfile) {
+      if (!profileLoading) router.replace('/franchise/login');
+      return;
+    }
 
-if (!userProfile) return; // wait
-
-if (userProfile.role !== 'franchise-owner') {
-  router.replace('/franchise/login');
-} else {
-  setIsVerifying(false);
-}
+    if (userProfile.role !== 'franchise-owner') {
+      router.replace('/franchise/login');
+    } else {
+      setIsVerifying(false);
+    }
   }, [user, userLoading, profileLoading, userProfile, router]);
 
   const handleLogout = async () => {
