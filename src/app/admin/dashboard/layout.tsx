@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -25,10 +26,10 @@ import type { UserProfile, Outlet } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const navItems = [
-  { href: "/admin/dashboard/orders", label: "Live Orders", icon: ShoppingCart },
-  { href: "/admin/dashboard/menu", label: "Menu Availability", icon: List },
-  { href: "/admin/dashboard/reports", label: "Sales Reports", icon: BarChart },
-  { href: "/admin/dashboard/outlet", label: "Outlet Settings", icon: Store },
+  { href: "/admin/dashboard/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/dashboard/menu", label: "Stock", icon: List },
+  { href: "/admin/dashboard/reports", label: "Reports", icon: BarChart },
+  { href: "/admin/dashboard/outlet", label: "Settings", icon: Store },
 ];
 
 export default function AdminDashboardLayout({
@@ -41,6 +42,7 @@ export default function AdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   
+  // Use email-based profile ID
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -50,28 +52,26 @@ export default function AdminDashboardLayout({
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
+    // Only proceed if auth status is known
     if (userLoading) return;
 
+    // If definitely not logged in
     if (!user) {
       router.replace('/admin/login');
       return;
     }
 
-    if (!user.email) return;
-
+    // Wait for profile to load before making role-based decisions
     if (profileLoading) return;
 
-    if (!profileLoading && !userProfile) {
+    // If profile is loaded but missing or wrong role
+    if (!userProfile || userProfile.role !== 'outlet-admin') {
       router.replace('/admin/login');
       return;
     }
 
-    if (userProfile && userProfile.role !== 'outlet-admin') {
-      router.replace('/admin/login');
-      return;
-    } else if (userProfile) {
-      setIsVerifying(false);
-    }
+    // Access granted
+    setIsVerifying(false);
   }, [user, userLoading, profileLoading, userProfile, router]);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function AdminDashboardLayout({
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verifying Terminal Access...</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verifying Node...</p>
             </div>
         </div>
     )
@@ -100,12 +100,12 @@ export default function AdminDashboardLayout({
 
   return (
     <SidebarProvider>
-        <Sidebar>
+        <Sidebar collapsible="icon">
             <SidebarHeader>
               <div className="flex flex-col items-start gap-2 p-4">
                 <ZapizzaLogo className="h-10 w-10 text-primary" />
-                <h1 className="font-headline text-xl font-bold text-primary leading-tight uppercase italic tracking-tighter">
-                    Zapizza Admin
+                <h1 className="font-headline text-lg font-bold text-primary leading-tight uppercase italic tracking-tighter group-data-[collapsible=icon]:hidden">
+                    Admin Node
                 </h1>
               </div>
             </SidebarHeader>
@@ -113,7 +113,7 @@ export default function AdminDashboardLayout({
               <SidebarMenu>
                 {navItems.map((item) => (
                   <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} >
+                    <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={item.label}>
                       <Link href={item.href}>
                         <item.icon />
                         <span className="font-bold text-xs uppercase tracking-widest">{item.label}</span>
@@ -135,25 +135,21 @@ export default function AdminDashboardLayout({
             </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-            <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background px-4">
+            <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/95 backdrop-blur-md px-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
-                    <h1 className="font-headline text-lg font-bold text-primary hidden sm:block uppercase italic">
-                        {navItems.find(item => pathname.startsWith(item.href))?.label || "Admin Panel"}
-                    </h1>
+                    <div className="flex flex-col">
+                        <h1 className="font-headline text-sm font-black text-primary uppercase italic leading-none">
+                            {navItems.find(item => pathname.startsWith(item.href))?.label || "Terminal"}
+                        </h1>
+                        {outlet && <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">{outlet.name}</p>}
+                    </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="hidden sm:flex flex-col items-end">
-                        {outlet ? <p className="text-xs font-bold text-[#14532d]">{outlet.name}</p> : <Skeleton className="h-3 w-20" />}
-                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Kitchen Live</p>
-                    </div>
-                    <Avatar className="h-7 w-7">
+                    <Avatar className="h-8 w-8 border-2 border-primary/10">
                       <AvatarImage src={user?.photoURL || undefined} />
                       <AvatarFallback>{(userProfile?.displayName || 'A').charAt(0)}</AvatarFallback>
                     </Avatar>
-                     <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={handleLogout}>
-                        <LogOut className="h-4 w-4"/>
-                    </Button>
                 </div>
             </header>
             <main className="flex-1 p-4 sm:p-6 bg-[#f8f9fa] pb-24">{children}</main>
