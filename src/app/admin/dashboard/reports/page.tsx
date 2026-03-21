@@ -1,15 +1,14 @@
+
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { 
-  Bar, 
-  BarChart as RechartsBarChart, 
   CartesianGrid, 
   XAxis, 
   YAxis, 
@@ -26,12 +25,10 @@ import {
   TrendingUp, 
   IndianRupee, 
   ShoppingBag, 
-  Utensils, 
-  Clock, 
   AlertCircle,
-  ArrowUpRight,
   Calendar as CalendarIcon,
-  BarChart3
+  BarChart3,
+  CheckCircle2
 } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -58,17 +55,6 @@ export default function AdminReportsPage() {
         
         const aov = completedOrders.length > 0 ? totalRevenue / completedOrders.length : 0;
         const successRate = orders.length > 0 ? (completedOrders.length / orders.length) * 100 : 0;
-
-        // Peak Hours Logic
-        const hourMap: Record<number, number> = {};
-        orders.forEach(o => {
-            const hour = o.createdAt.toDate().getHours();
-            hourMap[hour] = (hourMap[hour] || 0) + 1;
-        });
-        const peakHours = Object.entries(hourMap).map(([hour, count]) => ({
-            hour: `${hour}:00`,
-            orders: count
-        })).sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
 
         // Top Items Logic
         const itemMap: Record<string, { name: string, qty: number, rev: number }> = {};
@@ -110,7 +96,6 @@ export default function AdminReportsPage() {
             totalDiscounts,
             aov,
             successRate,
-            peakHours,
             topItems,
             dailyData: Object.values(dayMap),
             completedCount: completedOrders.length,
@@ -125,12 +110,12 @@ export default function AdminReportsPage() {
 
     if (ordersLoading) {
         return (
-            <div className="container mx-auto p-0 max-w-2xl space-y-6">
+            <div className="container mx-auto p-0 max-w-2xl space-y-4">
                 <Skeleton className="h-20 w-full rounded-[24px]" />
-                <div className="grid gap-4 grid-cols-2">
-                    {Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+                <div className="grid gap-3 grid-cols-2">
+                    {Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
                 </div>
-                <Skeleton className="h-64 w-full rounded-[32px]" />
+                <Skeleton className="h-64 w-full rounded-[24px]" />
             </div>
         );
     }
@@ -139,60 +124,60 @@ export default function AdminReportsPage() {
 
     const brandColor = outlet?.brand === 'zfry' ? '#e31837' : '#14532d';
     const revenueBreakdown = [
-        { name: 'Base Sales', value: stats.totalRevenue - stats.totalGst - stats.totalDelivery, color: brandColor },
-        { name: 'GST', value: stats.totalGst, color: '#4ade80' },
-        { name: 'Delivery', value: stats.totalDelivery, color: '#f59e0b' },
+        { name: 'Base', value: Math.max(0, stats.totalRevenue - stats.totalGst - stats.totalDelivery), color: brandColor },
+        { name: 'Tax', value: stats.totalGst, color: '#4ade80' },
+        { name: 'Logistics', value: stats.totalDelivery, color: '#f59e0b' },
     ];
 
     const reportRange = `${format(subDays(new Date(), 6), 'MMM dd')} - ${format(new Date(), 'MMM dd, yyyy')}`;
 
     return (
-        <div className="container mx-auto p-0 max-w-2xl space-y-6">
+        <div className="container mx-auto p-0 max-w-2xl space-y-4 overflow-x-hidden">
             <div className="bg-white p-4 rounded-[24px] border shadow-sm flex items-center justify-between">
-                <div className="text-left">
-                    <h1 className="font-headline text-2xl font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Intelligence</h1>
-                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                <div className="text-left text-ellipsis overflow-hidden pr-2">
+                    <h1 className="font-headline text-2xl font-black uppercase tracking-tight italic truncate" style={{ color: brandColor }}>Intelligence</h1>
+                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest mt-0.5 flex items-center gap-1.5 whitespace-nowrap">
                         <CalendarIcon className="h-2 w-2" /> {reportRange}
                     </p>
                 </div>
-                <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-gray-50 shadow-inner ring-1 ring-black/5">
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-gray-50 shadow-inner ring-1 ring-black/5 shrink-0">
                     <BarChart3 className="h-4 w-4" style={{ color: brandColor }} />
                 </div>
             </div>
 
             {/* KPI Overview */}
-            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-                <Card className="border-none shadow-sm bg-white p-4 rounded-[20px] border border-gray-100">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total Revenue</p>
-                    <div className="text-lg font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{stats.totalRevenue.toLocaleString()}</div>
-                    <p className="text-[7px] font-bold text-green-600 mt-1 flex items-center gap-1">
-                        <TrendingUp className="h-2 w-2" /> +12% Cycle
-                    </p>
+            <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
+                <Card className="border-none shadow-sm bg-white p-3 rounded-[20px] border border-gray-100 text-left">
+                    <p className="text-[7px] font-black uppercase tracking-widest text-muted-foreground mb-1">Gross Rev</p>
+                    <div className="text-sm font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{stats.totalRevenue.toLocaleString()}</div>
+                    <div className="flex items-center gap-1 text-[6px] font-bold text-green-600 mt-1 uppercase">
+                        <TrendingUp className="h-1.5 w-1.5" /> Growth Trend
+                    </div>
                 </Card>
-                <Card className="border-none shadow-sm bg-white p-4 rounded-[20px] border border-gray-100">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mb-1">Avg Order</p>
-                    <div className="text-lg font-black font-roboto tabular-nums">₹{Math.round(stats.aov)}</div>
-                    <p className="text-[7px] font-bold text-muted-foreground mt-1 uppercase">Per cart</p>
+                <Card className="border-none shadow-sm bg-white p-3 rounded-[20px] border border-gray-100 text-left">
+                    <p className="text-[7px] font-black uppercase tracking-widest text-muted-foreground mb-1">Avg Order</p>
+                    <div className="text-sm font-black font-roboto tabular-nums text-[#333]">₹{Math.round(stats.aov)}</div>
+                    <p className="text-[6px] font-bold text-muted-foreground mt-1 uppercase">Per Cart</p>
                 </Card>
-                <Card className="border-none shadow-sm bg-white p-4 rounded-[20px] border border-gray-100">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mb-1">Success Rate</p>
-                    <div className="text-lg font-black font-roboto tabular-nums">{Math.round(stats.successRate)}%</div>
-                    <div className="w-full bg-muted h-0.5 rounded-full mt-2 overflow-hidden">
+                <Card className="border-none shadow-sm bg-white p-3 rounded-[20px] border border-gray-100 text-left">
+                    <p className="text-[7px] font-black uppercase tracking-widest text-muted-foreground mb-1">Accuracy</p>
+                    <div className="text-sm font-black font-roboto tabular-nums text-orange-600">{Math.round(stats.successRate)}%</div>
+                    <div className="w-full bg-gray-100 h-0.5 rounded-full mt-1.5 overflow-hidden">
                         <div className="bg-orange-500 h-full" style={{ width: `${stats.successRate}%` }} />
                     </div>
                 </Card>
-                <Card className="border-none shadow-sm bg-white p-4 rounded-[20px] border border-gray-100">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mb-1">Load</p>
-                    <div className="text-lg font-black font-roboto tabular-nums">{stats.completedCount} Order</div>
-                    <p className="text-[7px] font-bold text-muted-foreground mt-1 uppercase">Kitchen Done</p>
+                <Card className="border-none shadow-sm bg-white p-3 rounded-[20px] border border-gray-100 text-left">
+                    <p className="text-[7px] font-black uppercase tracking-widest text-muted-foreground mb-1">Volume</p>
+                    <div className="text-sm font-black font-roboto tabular-nums text-[#333]">{stats.completedCount} Done</div>
+                    <p className="text-[6px] font-bold text-muted-foreground mt-1 uppercase">Kitchen Load</p>
                 </Card>
             </div>
 
-            {/* Main Sales Trend */}
+            {/* Main Trend */}
             <Card className="border-none shadow-sm bg-white rounded-[24px] overflow-hidden border border-gray-100">
-                <CardHeader className="p-4 pb-0">
+                <CardHeader className="p-4 pb-0 text-left">
                     <div className="flex items-center justify-between">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest">Growth Pulse</CardTitle>
+                        <CardTitle className="text-[10px] font-black uppercase tracking-widest">Growth Pulse</CardTitle>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1">
                                 <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: brandColor }} />
@@ -206,77 +191,44 @@ export default function AdminReportsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-2 pt-4">
-                    <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                    <ChartContainer config={chartConfig} className="h-[180px] w-full">
                         <RechartsLineChart data={stats.dailyData}>
-                            <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
-                            <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={5} className="text-[8px] font-bold uppercase font-roboto" />
-                            <YAxis yAxisId="left" stroke={brandColor} fontSize={8} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} className="font-roboto" />
-                            <YAxis yAxisId="right" orientation="right" stroke="#f97316" fontSize={8} tickLine={false} axisLine={false} className="font-roboto" />
+                            <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
+                            <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={5} className="text-[7px] font-bold uppercase font-roboto" />
+                            <YAxis yAxisId="left" stroke={brandColor} fontSize={7} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} className="font-roboto" />
+                            <YAxis yAxisId="right" orientation="right" stroke="#f97316" fontSize={7} tickLine={false} axisLine={false} className="font-roboto" />
                             <ChartTooltip content={<ChartTooltipContent />} />
-                            <Line yAxisId="left" type="monotone" dataKey="revenue" stroke={brandColor} strokeWidth={3} dot={{ r: 3, fill: brandColor }} />
-                            <Line yAxisId="right" type="monotone" dataKey="count" stroke="#f97316" strokeWidth={2} strokeDasharray="3 3" dot={false} />
+                            <Line yAxisId="left" type="monotone" dataKey="revenue" stroke={brandColor} strokeWidth={2.5} dot={{ r: 2, fill: brandColor }} />
+                            <Line yAxisId="right" type="monotone" dataKey="count" stroke="#f97316" strokeWidth={1.5} strokeDasharray="3 3" dot={false} />
                         </RechartsLineChart>
                     </ChartContainer>
                 </CardContent>
             </Card>
 
-            {/* everyday Ledger */}
-            <Card className="border-none shadow-sm rounded-[24px] overflow-hidden bg-white border border-gray-100">
-                <CardHeader className="bg-gray-50/50 p-4 border-b">
-                    <CardTitle className="text-xs font-black uppercase tracking-widest">Business Ledger</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead className="pl-4 font-black uppercase text-[8px] tracking-widest h-10">Date</TableHead>
-                                <TableHead className="font-black uppercase text-[8px] tracking-widest h-10 text-center">Vol</TableHead>
-                                <TableHead className="pr-4 font-black uppercase text-[8px] tracking-widest h-10 text-right">Revenue</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {[...stats.dailyData].reverse().map((day) => (
-                                <TableRow key={day.fullDate} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
-                                    <TableCell className="pl-4 py-2 font-bold text-[10px] uppercase text-[#333] font-roboto">
-                                        {day.fullDate}
-                                    </TableCell>
-                                    <TableCell className="text-center font-black text-xs font-roboto tabular-nums">
-                                        {day.count}
-                                    </TableCell>
-                                    <TableCell className="pr-4 text-right font-black text-xs font-roboto tabular-nums" style={{ color: brandColor }}>
-                                        ₹{day.revenue.toLocaleString()}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-
-            <div className="grid gap-4 md:grid-cols-2">
-                {/* Top Items */}
-                <Card className="border-none shadow-sm bg-white rounded-[24px] border border-gray-100 p-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-4">Popular Items</h4>
-                    <div className="space-y-3">
+            <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+                {/* Popular Items */}
+                <Card className="border-none shadow-sm bg-white rounded-[24px] border border-gray-100 p-4 text-left">
+                    <h4 className="text-[9px] font-black uppercase tracking-widest mb-3">Popular Items</h4>
+                    <div className="space-y-2">
                         {stats.topItems.map((item, i) => (
-                            <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-xl">
-                                <div className="flex flex-col text-left">
-                                    <span className="text-[11px] font-black text-[#333] uppercase leading-none">{item.name}</span>
-                                    <span className="text-[8px] font-bold text-muted-foreground uppercase mt-1">{item.qty} units sold</span>
+                            <div key={i} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100/50">
+                                <div className="flex flex-col text-left min-w-0 pr-2">
+                                    <span className="text-[10px] font-black text-[#333] uppercase leading-tight truncate">{item.name}</span>
+                                    <span className="text-[7px] font-bold text-muted-foreground uppercase mt-0.5">{item.qty} units</span>
                                 </div>
-                                <span className="text-[11px] font-black font-roboto tabular-nums" style={{ color: brandColor }}>₹{item.rev.toLocaleString()}</span>
+                                <span className="text-[10px] font-black font-roboto tabular-nums shrink-0" style={{ color: brandColor }}>₹{item.rev.toFixed(0)}</span>
                             </div>
                         ))}
                     </div>
                 </Card>
 
                 {/* revenue Mix */}
-                <Card className="border-none shadow-sm bg-white rounded-[24px] border border-gray-100 p-4 flex flex-col items-center">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 w-full text-left">Revenue Mix</h4>
-                    <div className="h-[120px] w-full">
+                <Card className="border-none shadow-sm bg-white rounded-[24px] border border-gray-100 p-4 flex flex-col items-center text-left">
+                    <h4 className="text-[9px] font-black uppercase tracking-widest mb-3 w-full">Revenue Mix</h4>
+                    <div className="h-[100px] w-full">
                         <ChartContainer config={{}} className="h-full w-full">
                             <RechartsPieChart>
-                                <Pie data={revenueBreakdown} cx="50%" cy="50%" innerRadius={35} outerRadius={50} paddingAngle={5} dataKey="value">
+                                <Pie data={revenueBreakdown} cx="50%" cy="50%" innerRadius={25} outerRadius={40} paddingAngle={5} dataKey="value">
                                     {revenueBreakdown.map((entry, index) => <Cell key={index} fill={entry.color} />)}
                                 </Pie>
                                 <ChartTooltip content={<ChartTooltipContent />} />
@@ -285,21 +237,54 @@ export default function AdminReportsPage() {
                     </div>
                     <div className="w-full mt-2 space-y-1">
                         {revenueBreakdown.map(item => (
-                            <div key={item.name} className="flex justify-between text-[8px] font-black uppercase tracking-widest">
-                                <div className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.color }} />{item.name}</div>
-                                <span className="font-roboto tabular-nums">₹{item.value.toLocaleString()}</span>
+                            <div key={item.name} className="flex justify-between text-[7px] font-black uppercase tracking-widest">
+                                <div className="flex items-center gap-1.5"><div className="h-1 w-1 rounded-full" style={{ backgroundColor: item.color }} />{item.name}</div>
+                                <span className="font-roboto tabular-nums">₹{item.value.toFixed(0)}</span>
                             </div>
                         ))}
                     </div>
                 </Card>
             </div>
 
-            <div className="bg-red-50 p-4 rounded-[20px] flex items-start gap-3 border border-red-100 text-left">
-                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
+            {/* Sales Ledger */}
+            <Card className="border-none shadow-sm rounded-[24px] overflow-hidden bg-white border border-gray-100">
+                <div className="bg-gray-50/50 p-3 border-b text-left">
+                    <h3 className="text-[9px] font-black uppercase tracking-widest">Daily Ledger</h3>
+                </div>
+                <CardContent className="p-0">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="hover:bg-transparent border-b-gray-100">
+                                <TableHead className="pl-4 font-black uppercase text-[8px] tracking-widest h-10">Date</TableHead>
+                                <TableHead className="font-black uppercase text-[8px] tracking-widest h-10 text-center">Vol</TableHead>
+                                <TableHead className="pr-4 font-black uppercase text-[8px] tracking-widest h-10 text-right">Revenue</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[...stats.dailyData].reverse().map((day) => (
+                                <TableRow key={day.fullDate} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
+                                    <TableCell className="pl-4 py-2.5 font-bold text-[9px] uppercase text-[#333] font-roboto">
+                                        {day.fullDate}
+                                    </TableCell>
+                                    <TableCell className="text-center font-black text-[10px] font-roboto tabular-nums">
+                                        {day.count}
+                                    </TableCell>
+                                    <TableCell className="pr-4 text-right font-black text-[10px] font-roboto tabular-nums" style={{ color: brandColor }}>
+                                        ₹{day.revenue.toFixed(0)}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+
+            <div className="bg-orange-50 p-4 rounded-[20px] flex items-start gap-3 border border-orange-100 text-left mb-12">
+                <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 shrink-0" />
                 <div>
-                    <h4 className="text-[10px] font-black uppercase text-red-900 tracking-widest">Impact Alert</h4>
-                    <p className="text-[9px] font-medium text-red-700 uppercase leading-relaxed mt-1">
-                        Discounts of ₹<span className="font-roboto tabular-nums">{stats.totalDiscounts.toLocaleString()}</span> represent <span className="font-roboto tabular-nums">{Math.round((stats.totalDiscounts / stats.totalRevenue) * 100) || 0}%</span> of gross revenue. Monitor campaign ROI.
+                    <h4 className="text-[9px] font-black uppercase text-orange-900 tracking-widest">Efficiency Note</h4>
+                    <p className="text-[8px] font-medium text-orange-700 uppercase leading-relaxed mt-1">
+                        Discounts of ₹<span className="font-roboto tabular-nums">{stats.totalDiscounts.toLocaleString()}</span> recorded. Track campaign efficacy against volume spikes.
                     </p>
                 </div>
             </div>
