@@ -197,7 +197,7 @@ export default function AdminOrdersPage() {
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return (
       <div className="space-y-4">
-        {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+        {Array.from({length: 3}).map((_, i) => <Skeleton className="h-24 w-full rounded-2xl" key={i} />)}
       </div>
     );
     
@@ -263,7 +263,7 @@ export default function AdminOrdersPage() {
                     <Eye className="h-3 w-3 text-primary" /> Detail
                 </Button>
                 
-                <div className="flex-[2] flex gap-1.5">
+                <div className="flex gap-1.5 flex-[2]">
                   {order.status === 'New' && (
                     <>
                       <Button variant="ghost" className="flex-1 text-red-600 font-black text-[8px] uppercase h-9 rounded-xl" onClick={() => handleUpdateStatus(order, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
@@ -355,7 +355,7 @@ export default function AdminOrdersPage() {
       </Tabs>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-xl h-[90dvh] sm:h-auto sm:rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white outline-none">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl h-[90dvh] sm:h-auto sm:rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white outline-none z-[100]">
           {selectedOrder && (
             <>
               <DialogHeader className="p-5 sm:p-8 text-white space-y-2 shrink-0 relative" style={{ backgroundColor: brandColor }}>
