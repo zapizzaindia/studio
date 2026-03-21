@@ -25,7 +25,8 @@ import {
   UserCheck, 
   Package, 
   CookingPot,
-  ClipboardList
+  ClipboardList,
+  Calendar
 } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -34,6 +35,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { refundRazorpayOrder } from '@/app/home/checkout/actions';
+import { format } from "date-fns";
 
 import {
   Dialog,
@@ -207,13 +209,20 @@ export default function AdminOrdersPage() {
         {sorted.length > 0 ? sorted.map((order) => (
           <Card key={order.id} className="border-none shadow-md overflow-hidden transition-all rounded-[20px] bg-white active:scale-[0.99] w-full border border-gray-100">
             <CardContent className="p-0">
-              {/* Responsive Header Container */}
               <div className="p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
                 <div className="flex-1 flex flex-col gap-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-black text-primary text-[9px] md:text-[10px] tracking-widest font-mono uppercase bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">#{order.id.slice(-6).toUpperCase()}</span>
-                    {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
-                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-2 border-primary/30 text-primary">{order.status}</Badge>
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-primary text-[9px] md:text-[10px] tracking-widest font-mono uppercase bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">#{order.id.slice(-6).toUpperCase()}</span>
+                      <span className="text-[8px] md:text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 font-sans tabular-nums">
+                        <Calendar className="h-2.5 w-2.5" /> 
+                        {format(order.createdAt.toDate(), 'dd MMM, HH:mm')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
+                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-2 border-primary/30 text-primary">{order.status}</Badge>
+                    </div>
                   </div>
                   
                   <div className="flex justify-between items-start">
@@ -231,7 +240,6 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                {/* Items Summary - Compact Badge View for Mobile */}
                 <div className="flex flex-wrap gap-1.5 md:min-w-[200px] md:justify-end">
                   {order.items.slice(0, 3).map((item, idx) => (
                     <Badge key={idx} variant="secondary" className="bg-gray-50 text-[8px] md:text-[9px] font-bold border-gray-100 h-6 px-2 text-gray-700 whitespace-nowrap">
@@ -246,7 +254,6 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              {/* Compact Action Footer */}
               <div className="p-1.5 bg-gray-50/50 flex gap-1.5 border-t border-gray-100">
                 <Button 
                   variant="outline" 
