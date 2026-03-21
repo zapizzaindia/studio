@@ -10,7 +10,7 @@ import type { Order, UserProfile, OutletMenuAvailability } from "@/lib/types";
 
 export default function AdminDashboardPage() {
     const { user } = useUser();
-    const profileId = user?.uid || 'dummy';
+    const profileId = user?.email?.toLowerCase().trim() || 'dummy';
     const { data: userProfile } = useDoc<UserProfile>('users', profileId);
     const outletId = userProfile?.outletId || null;
     

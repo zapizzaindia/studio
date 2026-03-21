@@ -25,6 +25,8 @@ export function FCMHandler() {
     if (!user || authLoading || !db || hasInitialized.current) return;
 
     const setupFCM = async () => {
+      const profileId = user.email?.toLowerCase().trim();
+if (!profileId) return;
       try {
         // Detect if we are running inside a Capacitor native shell
         const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
@@ -43,7 +45,7 @@ export function FCMHandler() {
             // Register listener for token generation
             await PushNotifications.addListener('registration', (token) => {
               console.log('FCM: Native token received');
-              setDoc(doc(db, 'users', user.uid), {
+              setDoc(doc(db, 'users', profileId), {
                 fcmToken: token.value,
                 lastTokenSync: new Date().toISOString()
               }, { merge: true }).catch(err => console.error("FCM Token Sync Error:", err));
@@ -68,7 +70,7 @@ export function FCMHandler() {
             console.log("FCM: Initializing Web Push Notifications...");
             const token = await requestForToken();
             if (token) {
-              await setDoc(doc(db, 'users', user.uid), {
+              await setDoc(doc(db, 'users', profileId), {
                 fcmToken: token,
                 lastTokenSync: new Date().toISOString()
               }, { merge: true });
