@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -194,7 +195,7 @@ export default function AdminOrdersPage() {
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return (
       <div className="space-y-4">
-        {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-2xl" />)}
+        {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
       </div>
     );
     
@@ -202,83 +203,86 @@ export default function AdminOrdersPage() {
     const sorted = filteredOrders ? [...filteredOrders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
     
     return (
-      <div className="space-y-4 w-full">
+      <div className="space-y-3 w-full">
         {sorted.length > 0 ? sorted.map((order) => (
-          <Card key={order.id} className="border-none shadow-lg overflow-hidden transition-all rounded-[24px] bg-white active:scale-[0.98] w-full">
+          <Card key={order.id} className="border-none shadow-md overflow-hidden transition-all rounded-[20px] bg-white active:scale-[0.99] w-full border border-gray-100">
             <CardContent className="p-0">
-              <div className="p-5 flex flex-col gap-3">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="text-left space-y-1 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-black text-primary text-[10px] tracking-widest font-mono uppercase">#{order.id.slice(-6).toUpperCase()}</span>
-                      {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
-                    </div>
-                    <h3 className="font-black text-base text-[#111] uppercase italic leading-tight">{order.customerName}</h3>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                        <MapPin className="h-3 w-3 shrink-0" />
-                        <p className="text-[10px] font-bold uppercase tracking-tight truncate">{order.deliveryAddress?.area || "N/A"}</p>
-                    </div>
+              {/* Responsive Header Container */}
+              <div className="p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-primary text-[9px] md:text-[10px] tracking-widest font-mono uppercase bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">#{order.id.slice(-6).toUpperCase()}</span>
+                    {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
+                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-2 border-primary/30 text-primary">{order.status}</Badge>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-black text-lg font-sans tabular-nums text-[#111]">₹{order.total.toFixed(0)}</p>
-                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-2 border-primary/30 text-primary mt-1">{order.status}</Badge>
+                  
+                  <div className="flex justify-between items-start">
+                    <div className="text-left">
+                      <h3 className="font-black text-sm md:text-base text-[#111] uppercase italic leading-tight">{order.customerName}</h3>
+                      <div className="flex items-center gap-1 text-muted-foreground mt-0.5">
+                          <MapPin className="h-2.5 w-2.5 shrink-0" />
+                          <p className="text-[9px] font-bold uppercase tracking-tight truncate max-w-[150px]">{order.deliveryAddress?.area || "N/A"}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-base md:text-lg font-sans tabular-nums text-[#111]">₹{order.total.toFixed(0)}</p>
+                      <span className="text-[8px] font-black uppercase text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Pre-Paid</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Ordered Items Summary */}
-                <div className="bg-gray-50/80 rounded-xl p-3 space-y-1 border border-gray-100">
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <span className="font-black text-[9px] h-5 w-5 rounded bg-white border border-gray-200 flex items-center justify-center tabular-nums shrink-0 text-primary">
-                        {item.quantity}x
-                      </span>
-                      <p className="text-[10px] font-bold text-[#333] uppercase truncate flex-1">
-                        {item.name}
-                      </p>
-                      {item.variation && (
-                        <Badge className="h-3.5 px-1 text-[7px] font-black uppercase bg-[#111] text-white rounded-sm border-none">
-                          {item.variation}
-                        </Badge>
-                      )}
-                    </div>
+                {/* Items Summary - Compact Badge View for Mobile */}
+                <div className="flex flex-wrap gap-1.5 md:min-w-[200px] md:justify-end">
+                  {order.items.slice(0, 3).map((item, idx) => (
+                    <Badge key={idx} variant="secondary" className="bg-gray-50 text-[8px] md:text-[9px] font-bold border-gray-100 h-6 px-2 text-gray-700 whitespace-nowrap">
+                      {item.quantity}x {item.name}
+                    </Badge>
                   ))}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Badge className="text-[8px] font-black uppercase h-5 px-2 bg-green-100 text-green-700 border-none">Pre-Paid</Badge>
-                  {order.specialNote && (
-                    <Badge variant="outline" className="text-[8px] font-black uppercase h-5 px-2 border-orange-200 text-orange-600 bg-orange-50 gap-1">
-                      <MessageSquareText className="h-2.5 w-2.5" /> Note
+                  {order.items.length > 3 && (
+                    <Badge variant="secondary" className="bg-gray-50 text-[8px] font-black border-gray-100 h-6 px-2 text-gray-400">
+                      +{order.items.length - 3} MORE
                     </Badge>
                   )}
                 </div>
               </div>
 
-              <div className="p-2 bg-gray-50/80 grid grid-cols-2 gap-2 border-t">
-                <Button variant="outline" className="h-10 rounded-xl font-black text-[9px] uppercase gap-1 bg-white shadow-sm border-none ring-1 ring-black/5" onClick={() => setSelectedOrder(order)}>
-                    <Eye className="h-3.5 w-3.5 text-primary" /> View Detail
-                </Button>
-                <Button variant="outline" className="h-10 rounded-xl font-black text-[9px] uppercase gap-1 bg-white shadow-sm border-none ring-1 ring-black/5" onClick={() => handleShareLocation(order)}>
-                    <Share2 className="h-3.5 w-3.5 text-[#25D366]" /> Dispatch
+              {/* Compact Action Footer */}
+              <div className="p-1.5 bg-gray-50/50 flex gap-1.5 border-t border-gray-100">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-9 rounded-xl font-black text-[8px] uppercase gap-1 bg-white shadow-sm border-none ring-1 ring-black/5" 
+                  onClick={() => setSelectedOrder(order)}
+                >
+                    <Eye className="h-3 w-3 text-primary" /> Detail
                 </Button>
                 
-                <div className="col-span-2">
+                <div className="flex-[2] flex gap-1.5">
                   {order.status === 'New' && (
-                    <div className="flex gap-2">
-                      <Button variant="ghost" className="flex-1 text-red-600 font-black text-[9px] uppercase h-12 rounded-xl" onClick={() => handleUpdateStatus(order, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
-                      <Button className="flex-[2] bg-primary hover:bg-primary/90 text-white rounded-xl h-12 font-black text-[10px] uppercase shadow-md" onClick={() => handleUpdateStatus(order, 'Preparing')}>
-                        <CookingPot className="mr-2 h-4 w-4" /> Accept Order
+                    <>
+                      <Button variant="ghost" className="flex-1 text-red-600 font-black text-[8px] uppercase h-9 rounded-xl" onClick={() => handleUpdateStatus(order, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
+                      <Button className="flex-[2] bg-primary hover:bg-primary/90 text-white rounded-xl h-9 font-black text-[9px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Preparing')}>
+                        Accept
                       </Button>
-                    </div>
+                    </>
                   )}
                   {order.status === 'Preparing' && (
-                    <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-12 font-black text-[10px] uppercase shadow-md" onClick={() => handleUpdateStatus(order, 'Out for Delivery')}>
-                        <Truck className="mr-2 h-4 w-4" /> Mark Dispatched
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-9 font-black text-[9px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Out for Delivery')}>
+                        <Truck className="mr-1.5 h-3 w-3" /> Dispatch
                     </Button>
                   )}
                   {order.status === 'Out for Delivery' && (
-                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl h-12 font-black text-[10px] uppercase shadow-md" onClick={() => handleUpdateStatus(order, 'Completed')}>
-                        <CheckCircle className="mr-2 h-4 w-4" /> Confirm Delivery
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl h-9 font-black text-[9px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Completed')}>
+                        <CheckCircle className="mr-1.5 h-3 w-3" /> Delivered
+                    </Button>
+                  )}
+                  {order.status === 'Completed' && (
+                    <Button variant="ghost" className="w-full h-9 text-green-600 font-black text-[8px] uppercase pointer-events-none opacity-50">
+                      Completed <CheckCircle className="ml-1.5 h-3 w-3" />
+                    </Button>
+                  )}
+                  {order.status === 'Cancelled' && (
+                    <Button variant="ghost" className="w-full h-9 text-red-400 font-black text-[8px] uppercase pointer-events-none opacity-50">
+                      Cancelled
                     </Button>
                   )}
                 </div>
@@ -299,9 +303,9 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
-      <div className="flex items-center justify-between bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4 shrink-0">
+      <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4 shrink-0">
         <div className="text-left">
-            <h1 className="font-headline text-lg font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
+            <h1 className="font-headline text-base md:text-lg font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -310,13 +314,13 @@ export default function AdminOrdersPage() {
               <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest">Active Node Sync</p>
             </div>
         </div>
-        <Button variant="outline" className="rounded-xl h-10 w-10 p-0 border-none bg-gray-50 shadow-inner ring-1 ring-black/5" onClick={() => setIsMuted(!isMuted)}>
+        <Button variant="outline" className="rounded-xl h-9 w-9 p-0 border-none bg-gray-50 shadow-inner ring-1 ring-black/5" onClick={() => setIsMuted(!isMuted)}>
           {isMuted ? <VolumeX className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" style={{ color: brandColor }} />}
         </Button>
       </div>
       
       <Tabs defaultValue="New" className="w-full flex-1 flex flex-col overflow-hidden">
-        <TabsList className="flex w-full mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-12 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0">
+        <TabsList className="flex w-full mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-11 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0">
           {[
             { label: "New", value: "New" },
             { label: "Cooking", value: "Preparing" },
@@ -327,7 +331,7 @@ export default function AdminOrdersPage() {
             <TabsTrigger 
               key={tab.label} 
               value={tab.value} 
-              className="flex-1 min-w-[70px] font-black text-[9px] uppercase tracking-tighter data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg transition-all h-full px-2"
+              className="flex-1 min-w-[65px] font-black text-[8px] md:text-[9px] uppercase tracking-tighter data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg transition-all h-full px-2"
             >
               {tab.label}
             </TabsTrigger>
