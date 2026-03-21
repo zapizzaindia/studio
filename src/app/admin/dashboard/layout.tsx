@@ -42,7 +42,7 @@ export default function AdminDashboardLayout({
   const { user, loading: userLoading } = useUser();
   
   // Only attempt profile lookup if email is available
-  const profileId = user?.uid || null;
+  const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
   const effectiveOutletId = userProfile?.outletId || 'dummy';
@@ -62,7 +62,7 @@ export default function AdminDashboardLayout({
 
     // 3. Wait for email to be available on the user object
     // Sometimes 'user' exists but 'email' is briefly null during token restoration
-    if (!user.email) return;
+    
 
     // 4. Wait for Firestore profile lookup to finish
     if (profileLoading) return;
