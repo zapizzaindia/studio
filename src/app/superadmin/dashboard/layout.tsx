@@ -63,14 +63,14 @@ export default function SuperAdminDashboardLayout({
 
     if (profileLoading) return;
 
-    if (!userProfile) {
+    if (userProfile === null) {
       router.replace('/superadmin/login');
       return;
     }
 
-    if (userProfile.role !== 'franchise-owner') {
+    if (userProfile && userProfile.role !== 'franchise-owner') {
       router.replace('/superadmin/login');
-    } else {
+    } else if (userProfile) {
       setIsVerifying(false);
     }
   }, [user, userLoading, profileLoading, userProfile, router]);

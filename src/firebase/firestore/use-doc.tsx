@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -15,6 +14,19 @@ export function useDoc<T>(path: string, id: string): DocData<T> {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
   const firestore = useFirestore();
+
+  // Reset loading state synchronously during render when ID changes
+  // to prevent stale loading:false states from previous documents.
+  const [lastId, setLastId] = useState(id);
+  const [lastPath, setLastPath] = useState(path);
+
+  if (id !== lastId || path !== lastPath) {
+    setLastId(id);
+    setLastPath(path);
+    setLoading(true);
+    setData(null);
+    setError(null);
+  }
 
   useEffect(() => {
     if (!firestore || !id || id === 'dummy') {

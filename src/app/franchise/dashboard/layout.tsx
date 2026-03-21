@@ -46,8 +46,7 @@ export default function FranchiseDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
 
-  // Franchise uses email or UID for lookup depending on setup
-  const profileId = user?.email?.toLowerCase().trim() || user?.uid || null;
+  const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
 
   const [isVerifying, setIsVerifying] = useState(true);
@@ -64,14 +63,14 @@ export default function FranchiseDashboardLayout({
 
     if (profileLoading) return;
 
-    if (!userProfile) {
+    if (userProfile === null) {
       router.replace('/franchise/login');
       return;
     }
 
-    if (userProfile.role !== 'franchise-owner') {
+    if (userProfile && userProfile.role !== 'franchise-owner') {
       router.replace('/franchise/login');
-    } else {
+    } else if (userProfile) {
       setIsVerifying(false);
     }
   }, [user, userLoading, profileLoading, userProfile, router]);
@@ -87,7 +86,7 @@ export default function FranchiseDashboardLayout({
     return (
         <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
             <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Authenticating Global Node...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Verifying Master Terminal...</p>
         </div>
     )
   }

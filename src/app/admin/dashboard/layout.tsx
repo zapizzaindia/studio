@@ -41,7 +41,6 @@ export default function AdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   
-  // Use email as key for admin lookups
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -51,31 +50,26 @@ export default function AdminDashboardLayout({
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    // 1. Wait for Auth state to stabilize
     if (userLoading) return;
 
-    // 2. If definitely no user, go to login
     if (!user) {
       router.replace('/admin/login');
       return;
     }
 
-    // 3. Wait for email to be available (sometimes lags on Android)
     if (!user.email) return;
 
-    // 4. Wait for Firestore profile lookup
     if (profileLoading) return;
 
-    // 5. Verify Role or Missing Profile
-    if (!userProfile) {
-      // Profile not found in authorized users list
+    // Use null check to ensure we only redirect if profile is definitively missing
+    if (userProfile === null) {
       router.replace('/admin/login');
       return;
     }
 
-    if (userProfile.role !== 'outlet-admin') {
+    if (userProfile && userProfile.role !== 'outlet-admin') {
       router.replace('/admin/login');
-    } else {
+    } else if (userProfile) {
       setIsVerifying(false);
     }
   }, [user, userLoading, profileLoading, userProfile, router]);
@@ -98,7 +92,7 @@ export default function AdminDashboardLayout({
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Securing Terminal...</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verifying Terminal Access...</p>
             </div>
         </div>
     )

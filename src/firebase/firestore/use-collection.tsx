@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { 
@@ -27,6 +26,19 @@ export function useCollection<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
   const firestore = useFirestore();
+
+  // Reset loading state synchronously during render when path or query changes
+  const currentWhereKey = JSON.stringify(options?.where);
+  const [lastPath, setLastPath] = useState(path);
+  const [lastWhere, setLastWhere] = useState(currentWhereKey);
+
+  if (path !== lastPath || currentWhereKey !== lastWhere) {
+    setLastPath(path);
+    setLastWhere(currentWhereKey);
+    setLoading(true);
+    setData(null);
+    setError(null);
+  }
 
   useEffect(() => {
     if (!firestore) return;
@@ -63,7 +75,7 @@ export function useCollection<T>(
       setError(err);
       setLoading(false);
     }
-  }, [firestore, path, JSON.stringify(options?.where)]);
+  }, [firestore, path, currentWhereKey]);
 
   return { data, loading, error };
 }
