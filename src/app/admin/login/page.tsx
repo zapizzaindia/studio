@@ -44,7 +44,9 @@ export default function AdminLoginPage() {
     
     try {
       if (auth) {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
+        const email = values.email.toLowerCase().trim();
+
+await signInWithEmailAndPassword(auth, email, values.password);
       }
       
       toast({

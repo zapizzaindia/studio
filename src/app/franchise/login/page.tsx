@@ -45,7 +45,9 @@ export default function FranchiseLoginPage() {
     
     if (auth) {
       try {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
+        const email = values.email.toLowerCase().trim();
+
+await signInWithEmailAndPassword(auth, email, values.password);
         toast({
           title: "Access Granted",
           description: "Authenticated with Firebase Security.",
