@@ -69,10 +69,10 @@ const OrderTimer = ({ createdAt, orderId, onTimeout }: { createdAt: any, orderId
 
   return (
     <div className={cn(
-      "flex items-center gap-1 font-black text-[9px] tabular-nums tracking-tighter px-2 py-0.5 rounded-full border shadow-sm",
+      "flex items-center gap-1 font-black text-[8px] tabular-nums tracking-tighter px-1.5 py-0.5 rounded-full border shadow-sm",
       timeLeft < 60000 ? "bg-red-50 text-red-600 border-red-100 animate-pulse" : "bg-orange-50 text-orange-600 border-orange-100"
     )}>
-      <Timer className="h-3 w-3" />
+      <Timer className="h-2.5 w-2.5" />
       {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
     </div>
   );
@@ -196,8 +196,8 @@ export default function AdminOrdersPage() {
 
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return (
-      <div className="space-y-4 w-full">
-        {Array.from({length: 3}).map((_, i) => <Skeleton className="h-24 w-full rounded-2xl" key={i} />)}
+      <div className="space-y-2 w-full">
+        {Array.from({length: 3}).map((_, i) => <Skeleton className="h-20 w-full rounded-xl" key={i} />)}
       </div>
     );
     
@@ -205,90 +205,90 @@ export default function AdminOrdersPage() {
     const sorted = filteredOrders ? [...filteredOrders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
     
     return (
-      <div className="space-y-3 w-full max-w-full overflow-x-hidden">
+      <div className="space-y-2 w-full max-w-full overflow-x-hidden">
         {sorted.length > 0 ? sorted.map((order) => (
-          <Card key={order.id} className="border-none shadow-md overflow-hidden transition-all rounded-[20px] bg-white active:scale-[0.99] w-full border border-gray-100">
+          <Card key={order.id} className="border-none shadow-sm overflow-hidden transition-all rounded-xl bg-white active:scale-[0.99] w-full border border-gray-100">
             <CardContent className="p-0">
-              <div className="p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
-                <div className="flex-1 flex flex-col gap-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-nowrap mb-1 overflow-hidden">
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="font-black text-primary text-[9px] tracking-widest font-mono uppercase bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">#{order.id.slice(-6).toUpperCase()}</span>
-                      <span className="text-[8px] font-bold text-muted-foreground uppercase flex items-center gap-1 font-sans tabular-nums whitespace-nowrap">
+              <div className="p-2 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-1.5 md:gap-4">
+                <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                  <div className="flex items-center justify-between gap-2 flex-nowrap mb-0.5 overflow-hidden">
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="font-black text-primary text-[8px] tracking-widest font-mono uppercase bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">#{order.id.slice(-6).toUpperCase()}</span>
+                      <span className="text-[7px] font-bold text-muted-foreground uppercase flex items-center gap-1 font-sans tabular-nums whitespace-nowrap">
                         <Calendar className="h-2 w-2" /> 
                         {format(order.createdAt.toDate(), 'dd MMM, HH:mm')}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
-                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-1.5 border-primary/30 text-primary">{order.status}</Badge>
+                      <Badge variant="outline" className="text-[7px] font-black uppercase tracking-widest py-0 px-1 border-primary/30 text-primary h-4">{order.status}</Badge>
                     </div>
                   </div>
                   
                   <div className="flex justify-between items-start gap-2">
                     <div className="text-left min-w-0 flex-1">
-                      <h3 className="font-black text-sm md:text-base text-[#111] uppercase italic leading-tight truncate">{order.customerName}</h3>
-                      <div className="flex items-center gap-1 text-muted-foreground mt-0.5">
+                      <h3 className="font-black text-xs md:text-base text-[#111] uppercase italic leading-tight truncate">{order.customerName}</h3>
+                      <div className="flex items-center gap-1 text-muted-foreground">
                           <MapPin className="h-2 w-2 shrink-0" />
-                          <p className="text-[9px] font-bold uppercase tracking-tight truncate">{order.deliveryAddress?.area || "N/A"}</p>
+                          <p className="text-[8px] font-bold uppercase tracking-tight truncate">{order.deliveryAddress?.area || "N/A"}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-black text-base md:text-lg font-sans tabular-nums text-[#111]">₹{order.total.toFixed(0)}</p>
-                      <span className="text-[8px] font-black uppercase text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Pre-Paid</span>
+                      <p className="font-black text-sm md:text-lg font-sans tabular-nums text-[#111]">₹{order.total.toFixed(0)}</p>
+                      <span className="text-[7px] font-black uppercase text-green-600 bg-green-50 px-1 py-0.5 rounded border border-green-100">Pre-Paid</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-1 md:min-w-[200px] md:justify-end">
                   {order.items.slice(0, 2).map((item, idx) => (
-                    <Badge key={idx} variant="secondary" className="bg-gray-50 text-[8px] font-bold border-gray-100 h-5 px-1.5 text-gray-700 whitespace-nowrap">
+                    <Badge key={idx} variant="secondary" className="bg-gray-50 text-[7px] font-bold border-gray-100 h-4 px-1 text-gray-700 whitespace-nowrap uppercase">
                       {item.quantity}x {item.name}
                     </Badge>
                   ))}
                   {order.items.length > 2 && (
-                    <Badge variant="secondary" className="bg-gray-50 text-[8px] font-black border-gray-100 h-5 px-1.5 text-gray-400">
+                    <Badge variant="secondary" className="bg-gray-50 text-[7px] font-black border-gray-100 h-4 px-1 text-gray-400">
                       +{order.items.length - 2} MORE
                     </Badge>
                   )}
                 </div>
               </div>
 
-              <div className="p-1.5 bg-gray-50/50 flex gap-1.5 border-t border-gray-100">
+              <div className="p-1 bg-gray-50/50 flex gap-1 border-t border-gray-100">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-9 rounded-xl font-black text-[8px] uppercase gap-1 bg-white shadow-sm border-none ring-1 ring-black/5" 
+                  className="flex-1 h-8 rounded-lg font-black text-[7px] uppercase gap-1 bg-white shadow-sm border-none ring-1 ring-black/5" 
                   onClick={() => setSelectedOrder(order)}
                 >
-                    <Eye className="h-3 w-3 text-primary" /> Detail
+                    <Eye className="h-2.5 w-2.5 text-primary" /> Detail
                 </Button>
                 
-                <div className="flex gap-1.5 flex-[2]">
+                <div className="flex gap-1 flex-[2]">
                   {order.status === 'New' && (
                     <>
-                      <Button variant="ghost" className="flex-1 text-red-600 font-black text-[8px] uppercase h-9 rounded-xl" onClick={() => handleUpdateStatus(order, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
-                      <Button className="flex-[2] bg-primary hover:bg-primary/90 text-white rounded-xl h-9 font-black text-[9px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Preparing')}>
+                      <Button variant="ghost" className="flex-1 text-red-600 font-black text-[7px] uppercase h-8 rounded-lg" onClick={() => handleUpdateStatus(order, 'Cancelled', 'Rejected by Outlet')}>Reject</Button>
+                      <Button className="flex-[2] bg-primary hover:bg-primary/90 text-white rounded-lg h-8 font-black text-[8px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Preparing')}>
                         Accept
                       </Button>
                     </>
                   )}
                   {order.status === 'Preparing' && (
-                    <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-9 font-black text-[9px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Out for Delivery')}>
-                        <Truck className="mr-1.5 h-3 w-3" /> Dispatch
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg h-8 font-black text-[8px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Out for Delivery')}>
+                        <Truck className="mr-1 h-3 w-3" /> Dispatch
                     </Button>
                   )}
                   {order.status === 'Out for Delivery' && (
-                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl h-9 font-black text-[9px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Completed')}>
-                        <CheckCircle className="mr-1.5 h-3 w-3" /> Delivered
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white rounded-lg h-8 font-black text-[8px] uppercase shadow-sm" onClick={() => handleUpdateStatus(order, 'Completed')}>
+                        <CheckCircle className="mr-1 h-3 w-3" /> Delivered
                     </Button>
                   )}
                   {order.status === 'Completed' && (
-                    <Button variant="ghost" className="w-full h-9 text-green-600 font-black text-[8px] uppercase pointer-events-none opacity-50">
-                      Completed <CheckCircle className="ml-1.5 h-3 w-3" />
+                    <Button variant="ghost" className="w-full h-8 text-green-600 font-black text-[7px] uppercase pointer-events-none opacity-50">
+                      Completed <CheckCircle className="ml-1 h-3 w-3" />
                     </Button>
                   )}
                   {order.status === 'Cancelled' && (
-                    <Button variant="ghost" className="w-full h-9 text-red-400 font-black text-[8px] uppercase pointer-events-none opacity-50">
+                    <Button variant="ghost" className="w-full h-8 text-red-400 font-black text-[7px] uppercase pointer-events-none opacity-50">
                       Cancelled
                     </Button>
                   )}
@@ -310,24 +310,24 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
-      <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4 shrink-0 w-full">
+      <div className="flex items-center justify-between bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100 mb-2 shrink-0 w-full">
         <div className="text-left">
-            <h1 className="font-headline text-base md:text-lg font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
+            <h1 className="font-headline text-sm md:text-lg font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="relative flex h-1.5 w-1.5">
+              <span className="relative flex h-1 w-1">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                <span className="relative inline-flex rounded-full h-1 w-1 bg-green-500"></span>
               </span>
-              <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest">Active Node Sync</p>
+              <p className="text-muted-foreground text-[7px] font-black uppercase tracking-widest">Active Node Sync</p>
             </div>
         </div>
-        <Button variant="outline" className="rounded-xl h-9 w-9 p-0 border-none bg-gray-50 shadow-inner ring-1 ring-black/5" onClick={() => setIsMuted(!isMuted)}>
-          {isMuted ? <VolumeX className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" style={{ color: brandColor }} />}
+        <Button variant="outline" className="rounded-lg h-8 w-8 p-0 border-none bg-gray-50 shadow-inner ring-1 ring-black/5" onClick={() => setIsMuted(!isMuted)}>
+          {isMuted ? <VolumeX className="h-3.5 w-3.5 text-red-500" /> : <Volume2 className="h-3.5 w-3.5" style={{ color: brandColor }} />}
         </Button>
       </div>
       
       <Tabs defaultValue="New" className="w-full flex-1 flex flex-col overflow-hidden">
-        <TabsList className="flex w-full mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-11 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0 no-scrollbar">
+        <TabsList className="flex w-full mb-3 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-10 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0 no-scrollbar">
           {[
             { label: "New", value: "New" },
             { label: "Cooking", value: "Preparing" },
@@ -338,7 +338,7 @@ export default function AdminOrdersPage() {
             <TabsTrigger 
               key={tab.label} 
               value={tab.value} 
-              className="flex-1 min-w-[70px] font-black text-[8px] md:text-[9px] uppercase tracking-tighter data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg transition-all h-full px-2"
+              className="flex-1 min-w-[65px] font-black text-[7.5px] md:text-[9px] uppercase tracking-tighter data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg transition-all h-full px-1.5"
             >
               {tab.label}
             </TabsTrigger>
@@ -358,112 +358,112 @@ export default function AdminOrdersPage() {
         <DialogContent className="max-w-[calc(100vw-24px)] sm:max-w-2xl max-h-[92dvh] sm:max-h-[90vh] sm:rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white outline-none z-[100]">
           {selectedOrder && (
             <>
-              <DialogHeader className="p-5 sm:p-8 text-white space-y-2 shrink-0 relative" style={{ backgroundColor: brandColor }}>
+              <DialogHeader className="p-4 sm:p-8 text-white space-y-1.5 shrink-0 relative" style={{ backgroundColor: brandColor }}>
                 <div className="flex justify-between items-center pr-8">
                   <div className="space-y-0.5 text-left">
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Terminal Manifest</p>
-                    <DialogTitle className="text-xl font-black uppercase tracking-tighter italic leading-none font-sans">#{selectedOrder.id.slice(-6).toUpperCase()}</DialogTitle>
+                    <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Terminal Manifest</p>
+                    <DialogTitle className="text-lg font-black uppercase tracking-tighter italic leading-none font-sans">#{selectedOrder.id.slice(-6).toUpperCase()}</DialogTitle>
                   </div>
-                  <Badge variant="outline" className="text-white border-white/30 bg-white/10 uppercase text-[9px] font-black px-3 py-1 rounded-full">{selectedOrder.status}</Badge>
+                  <Badge variant="outline" className="text-white border-white/30 bg-white/10 uppercase text-[8px] font-black px-2 py-0.5 rounded-full">{selectedOrder.status}</Badge>
                 </div>
               </DialogHeader>
               
-              <div className="p-5 sm:p-8 space-y-6 overflow-y-auto scrollbar-hide flex-1 bg-white">
+              <div className="p-4 sm:p-8 space-y-5 overflow-y-auto scrollbar-hide flex-1 bg-white">
                 {selectedOrder.specialNote && (
-                  <div className="space-y-2 text-left">
-                    <h4 className="text-[9px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5">
-                      <MessageSquareText className="h-3 w-3" /> Special Note
+                  <div className="space-y-1.5 text-left">
+                    <h4 className="text-[8px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1">
+                      <MessageSquareText className="h-2.5 w-2.5" /> Special Note
                     </h4>
-                    <div className="bg-orange-50 border border-orange-100 p-4 rounded-[16px]">
-                      <p className="text-xs font-bold text-orange-950 uppercase italic leading-relaxed">
+                    <div className="bg-orange-50 border border-orange-100 p-3 rounded-xl">
+                      <p className="text-[10px] font-bold text-orange-950 uppercase italic leading-relaxed">
                         "{selectedOrder.specialNote}"
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4 text-left">
-                    <div className="space-y-2">
-                        <h4 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5"><UserCheck className="h-3 w-3" /> Customer</h4>
-                        <div className="bg-gray-50 p-4 rounded-[20px] border border-gray-100 flex items-center justify-between">
+                <div className="grid grid-cols-1 gap-3 text-left">
+                    <div className="space-y-1.5">
+                        <h4 className="text-[8px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1"><UserCheck className="h-2.5 w-2.5" /> Customer</h4>
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex items-center justify-between">
                             <div>
-                                <p className="text-[13px] font-black uppercase text-[#111]">{selectedOrder.customerName}</p>
-                                <p className="text-[11px] font-black tracking-widest text-primary font-sans tabular-nums mt-0.5">{selectedOrder.customerPhone || "N/A"}</p>
+                                <p className="text-[11px] font-black uppercase text-[#111]">{selectedOrder.customerName}</p>
+                                <p className="text-[9px] font-black tracking-widest text-primary font-sans tabular-nums mt-0.5">{selectedOrder.customerPhone || "N/A"}</p>
                             </div>
-                            <Button size="icon" className="h-9 w-9 rounded-full bg-white shadow-md border border-gray-100" variant="ghost" onClick={() => window.open(`tel:${selectedOrder.customerPhone}`, '_self')}>
-                                <Phone className="h-4 w-4" style={{ color: brandColor }} />
+                            <Button size="icon" className="h-8 w-8 rounded-full bg-white shadow-md border border-gray-100" variant="ghost" onClick={() => window.open(`tel:${selectedOrder.customerPhone}`, '_self')}>
+                                <Phone className="h-3.5 w-3.5" style={{ color: brandColor }} />
                             </Button>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <h4 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Destination</h4>
-                        <div className="bg-gray-50 p-4 rounded-[20px] border border-gray-100 space-y-3">
+                    <div className="space-y-1.5">
+                        <h4 className="text-[8px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1"><MapPin className="h-2.5 w-2.5" /> Destination</h4>
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
                             <div className="flex justify-between items-start">
                                 <div className="text-left flex-1 pr-2">
-                                    <Badge className="text-[8px] font-black uppercase mb-2 bg-white border-gray-200 text-gray-500 px-2">{selectedOrder.deliveryAddress?.label || "HOME"}</Badge>
-                                    <p className="text-[11px] font-bold text-[#333] leading-snug">{selectedOrder.deliveryAddress?.flatNo}, {selectedOrder.deliveryAddress?.area}</p>
+                                    <Badge className="text-[7px] font-black uppercase mb-1 bg-white border-gray-200 text-gray-500 px-1.5 h-4">HOME</Badge>
+                                    <p className="text-[10px] font-bold text-[#333] leading-snug">{selectedOrder.deliveryAddress?.flatNo}, {selectedOrder.deliveryAddress?.area}</p>
                                 </div>
                                 {selectedOrder.deliveryAddress?.latitude && (
-                                    <Button size="icon" className="h-9 w-9 rounded-full bg-white shadow-md border border-gray-100 shrink-0" variant="ghost" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`, '_blank')}>
-                                        <Navigation className="h-4 w-4" style={{ color: brandColor }} />
+                                    <Button size="icon" className="h-8 w-8 rounded-full bg-white shadow-md border border-gray-100 shrink-0" variant="ghost" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${selectedOrder.deliveryAddress.latitude},${selectedOrder.deliveryAddress.longitude}`, '_blank')}>
+                                        <Navigation className="h-3.5 w-3.5" style={{ color: brandColor }} />
                                     </Button>
                                 )}
                             </div>
-                            <Button variant="outline" className="w-full h-10 rounded-xl font-black uppercase text-[9px] tracking-widest bg-white border-none shadow-sm gap-2" onClick={() => handleShareLocation(selectedOrder)}>
-                                <Share2 className="h-3.5 w-3.5" style={{ color: brandColor }} /> Share To Rider
+                            <Button variant="outline" className="w-full h-8 rounded-lg font-black uppercase text-[8px] tracking-widest bg-white border-none shadow-sm gap-1.5" onClick={() => handleShareLocation(selectedOrder)}>
+                                <Share2 className="h-3 w-3" style={{ color: brandColor }} /> Share To Rider
                             </Button>
                         </div>
                     </div>
                 </div>
 
-                <div className="space-y-3 text-left">
+                <div className="space-y-2 text-left">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5"><ClipboardList className="h-3 w-3"/> Items</h4>
-                    <Badge variant="secondary" className="text-[8px] font-black uppercase h-5 px-2">{selectedOrder.items.length} SKUs</Badge>
+                    <h4 className="text-[8px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1"><ClipboardList className="h-2.5 w-2.5"/> Items</h4>
+                    <Badge variant="secondary" className="text-[7px] font-black uppercase h-4 px-1.5">{selectedOrder.items.length} SKUs</Badge>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-start bg-gray-50/50 p-3 rounded-[16px] border border-gray-100/50">
-                        <div className="flex gap-3">
-                          <span className="font-black h-7 w-7 rounded-lg flex items-center justify-center text-[9px] shadow-sm font-sans tabular-nums bg-white border" style={{ color: brandColor }}>{item.quantity}x</span>
-                          <div className="flex flex-col gap-1 text-left">
-                            <span className="font-black text-xs uppercase tracking-tight text-[#111] italic leading-tight">{item.name}</span>
+                      <div key={idx} className="flex justify-between items-start bg-gray-50/50 p-2.5 rounded-xl border border-gray-100/50">
+                        <div className="flex gap-2">
+                          <span className="font-black h-6 w-6 rounded flex items-center justify-center text-[8px] shadow-sm font-sans tabular-nums bg-white border" style={{ color: brandColor }}>{item.quantity}x</span>
+                          <div className="flex flex-col gap-0.5 text-left">
+                            <span className="text-[11px] font-black uppercase tracking-tight text-[#111] italic leading-tight">{item.name}</span>
                             <div className="flex flex-wrap gap-1">
-                                {item.variation && <Badge className="text-[7px] font-black uppercase px-1.5 py-0 bg-[#111] text-white rounded-sm border-none">{item.variation}</Badge>}
-                                {item.addons?.map((a, i) => <Badge key={i} variant="outline" className="text-[7px] font-black uppercase px-1.5 py-0 border-dashed rounded-sm" style={{ borderColor: brandColor + '40', color: brandColor }}>+ {a}</Badge>)}
+                                {item.variation && <Badge className="text-[6px] font-black uppercase px-1 py-0 bg-[#111] text-white rounded-sm border-none h-3.5">{item.variation}</Badge>}
+                                {item.addons?.map((a, i) => <Badge key={i} variant="outline" className="text-[6px] font-black uppercase px-1 py-0 border-dashed rounded-sm h-3.5" style={{ borderColor: brandColor + '40', color: brandColor }}>+ {a}</Badge>)}
                             </div>
                           </div>
                         </div>
-                        <span className="font-black text-xs text-[#111] font-sans tabular-nums">₹{item.price * item.quantity}</span>
+                        <span className="font-black text-[10px] text-[#111] font-sans tabular-nums">₹{item.price * item.quantity}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-gray-100/50 p-5 rounded-[24px] space-y-2 shadow-inner border border-gray-100 text-left">
-                  <div className="flex justify-between text-[9px] font-black text-muted-foreground uppercase tracking-widest"><span>Net Base</span><span className="font-sans tabular-nums">₹{selectedOrder.subtotal.toFixed(0)}</span></div>
-                  <div className="flex justify-between text-[9px] font-black text-muted-foreground uppercase tracking-widest"><span>Logistics</span><span className="font-sans tabular-nums">₹{selectedOrder.deliveryFee.toFixed(0)}</span></div>
-                  {selectedOrder.discount > 0 && <div className="flex justify-between text-[9px] font-black text-green-600 uppercase tracking-widest"><span>Campaign</span><span className="font-sans tabular-nums">-₹{selectedOrder.discount.toFixed(0)}</span></div>}
-                  <Separator className="bg-gray-300/50 my-2" />
+                <div className="bg-gray-100/50 p-4 rounded-2xl space-y-1.5 shadow-inner border border-gray-100 text-left">
+                  <div className="flex justify-between text-[8px] font-black text-muted-foreground uppercase tracking-widest"><span>Net Base</span><span className="font-sans tabular-nums">₹{selectedOrder.subtotal.toFixed(0)}</span></div>
+                  <div className="flex justify-between text-[8px] font-black text-muted-foreground uppercase tracking-widest"><span>Logistics</span><span className="font-sans tabular-nums">₹{selectedOrder.deliveryFee.toFixed(0)}</span></div>
+                  {selectedOrder.discount > 0 && <div className="flex justify-between text-[8px] font-black text-green-600 uppercase tracking-widest"><span>Campaign</span><span className="font-sans tabular-nums">-₹{selectedOrder.discount.toFixed(0)}</span></div>}
+                  <Separator className="bg-gray-300/50 my-1.5" />
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-black uppercase text-[#111] italic">Settlement</span>
-                    <span className="text-xl font-black tracking-tighter italic font-sans tabular-nums" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(0)}</span>
+                    <span className="text-[10px] font-black uppercase text-[#111] italic">Settlement</span>
+                    <span className="text-lg font-black tracking-tighter italic font-sans tabular-nums" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(0)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-white border-t flex flex-col gap-2 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-                <div className="flex gap-2">
-                  <Button variant="ghost" onClick={() => setSelectedOrder(null)} className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest bg-gray-50 border-none">Close</Button>
+              <div className="p-3 bg-white border-t flex flex-col gap-1.5 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+                <div className="flex gap-1.5">
+                  <Button variant="ghost" onClick={() => setSelectedOrder(null)} className="flex-1 h-10 rounded-lg font-black uppercase text-[9px] tracking-widest bg-gray-50 border-none">Close</Button>
                   {selectedOrder.status === 'New' && (
-                    <Button onClick={() => handleUpdateStatus(selectedOrder, 'Preparing')} className="flex-[2] text-white h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg border-none" style={{ backgroundColor: brandColor }}>Accept</Button>
+                    <Button onClick={() => handleUpdateStatus(selectedOrder, 'Preparing')} className="flex-[2] text-white h-10 rounded-lg font-black uppercase text-[9px] tracking-widest shadow-lg border-none" style={{ backgroundColor: brandColor }}>Accept</Button>
                   )}
                   {selectedOrder.status === 'Preparing' && (
-                    <Button onClick={() => handleUpdateStatus(selectedOrder, 'Out for Delivery')} className="flex-[2] text-white h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg border-none" style={{ backgroundColor: brandColor }}>Dispatch</Button>
+                    <Button onClick={() => handleUpdateStatus(selectedOrder, 'Out for Delivery')} className="flex-[2] text-white h-10 rounded-lg font-black uppercase text-[9px] tracking-widest shadow-lg border-none" style={{ backgroundColor: brandColor }}>Dispatch</Button>
                   )}
                   {selectedOrder.status === 'Out for Delivery' && (
-                    <Button onClick={() => handleUpdateStatus(selectedOrder, 'Completed')} className="flex-[2] text-white h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg bg-green-600 border-none">Delivered</Button>
+                    <Button onClick={() => handleUpdateStatus(selectedOrder, 'Completed')} className="flex-[2] text-white h-10 rounded-lg font-black uppercase text-[9px] tracking-widest shadow-lg bg-green-600 border-none">Delivered</Button>
                   )}
                 </div>
               </div>
