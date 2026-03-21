@@ -1,3 +1,4 @@
+
 'use server'
 
 import admin from "firebase-admin"
@@ -16,6 +17,86 @@ if (!admin.apps.length && serviceAccountKey) {
     });
   } catch (err) {
     console.error("FCM Admin Init Error:", err);
+  }
+}
+
+/**
+ * Specifically notifies admins of an outlet when a new order arrives.
+ * This is designed to wake up minimized/closed devices.
+ */
+export async function notifyAdminsOfOrder(payload: {
+  orderId: string
+  outletId: string
+  customerName: string
+  total: number
+}) {
+  if (!admin.apps.length) {
+    return { success: false, message: "Firebase Admin not initialized." }
+  }
+
+  try {
+    const db = admin.firestore();
+    
+    // Find admins for this specific outlet
+    const adminsSnapshot = await db.collection('users')
+      .where('role', '==', 'outlet-admin')
+      .where('outletId', '==', payload.outletId)
+      .get();
+
+    const tokens: string[] = [];
+    adminsSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.fcmToken) tokens.push(data.fcmToken);
+    });
+
+    if (tokens.length === 0) {
+      return { success: false, message: "No admins found with active device tokens." }
+    }
+
+    console.log(`Sending new order alert to ${tokens.length} admins...`);
+
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens,
+      notification: {
+        title: "🚨 NEW ORDER RECEIVED!",
+        body: `${payload.customerName} just ordered for ₹${payload.total.toFixed(0)}`,
+      },
+      data: {
+        orderId: payload.orderId,
+        url: "/admin/dashboard/orders",
+        click_action: "FLUTTER_NOTIFICATION_CLICK"
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          sound: 'order_alarm', // Matches res/raw/order_alarm.mp3
+          channelId: 'orders', // Matches high-priority notification channel
+          icon: 'stock_ticker_update',
+          color: '#14532d',
+          tag: 'new_order',
+          clickAction: 'FLUTTER_NOTIFICATION_CLICK'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'order_alarm.wav',
+            badge: 1,
+            contentAvailable: true
+          }
+        }
+      }
+    });
+
+    return { 
+      success: true, 
+      sent: response.successCount, 
+      failed: response.failureCount 
+    };
+
+  } catch (err: any) {
+    console.error("ADMIN NOTIFY ERROR:", err);
+    return { success: false, message: err.message };
   }
 }
 
@@ -46,7 +127,6 @@ export async function broadcastPushNotification(payload: {
       },
       data: {
         url: payload.deepLink || "/home",
-        // Supporting background handling
         click_action: "FLUTTER_NOTIFICATION_CLICK" 
       },
       android: {
@@ -64,8 +144,6 @@ export async function broadcastPushNotification(payload: {
         }
       }
     });
-  
-    console.log("FCM Multicast response:", response);
   
     return {
       success: true,

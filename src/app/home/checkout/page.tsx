@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -18,6 +19,7 @@ import { FirestorePermissionError } from "@/firebase/errors";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { createRazorpayOrder } from "./actions";
+import { notifyAdminsOfOrder } from "@/app/actions/notifications";
 
 declare global {
   interface Window {
@@ -173,10 +175,11 @@ export default function CheckoutPage() {
 
     const pointsEarned = Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1));
     const outletObj = selectedOutlet || { id: 'default' };
+    const customerName = userProfile?.displayName || user.displayName || "Gourmet Customer";
 
     const orderData: any = {
       customerId: user.uid,
-      customerName: userProfile?.displayName || user.displayName || "Gourmet Customer",
+      customerName: customerName,
       customerPhone: userProfile?.phoneNumber || user.phoneNumber || "+91-0000000000",
       items: items.map(i => ({
         menuItemId: i.id,
@@ -216,7 +219,16 @@ export default function CheckoutPage() {
     };
 
     try {
-      await addDoc(collection(db, 'orders'), orderData);
+      const orderRef = await addDoc(collection(db, 'orders'), orderData);
+      
+      // TRIGGER BACKGROUND PUSH TO ADMIN
+      notifyAdminsOfOrder({
+        orderId: orderRef.id,
+        outletId: outletObj.id,
+        customerName: customerName,
+        total: orderData.total
+      });
+
       const netPointsUpdate = pointsEarned - (calculations.loyaltyDiscount || 0);
       if (netPointsUpdate !== 0) {
         await updateDoc(doc(db, 'users', user.uid), { 
