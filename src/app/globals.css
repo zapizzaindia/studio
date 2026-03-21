@@ -26,7 +26,7 @@
     --ring: 142 76% 20%;
     --radius: 0.75rem;
 
-    /* Sidebar - Ensure Solid White on Mobile */
+    /* Sidebar - Explicitly Solid White */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 142 76% 20%;

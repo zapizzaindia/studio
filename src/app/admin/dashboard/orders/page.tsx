@@ -202,24 +202,24 @@ export default function AdminOrdersPage() {
     const sorted = filteredOrders ? [...filteredOrders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
     
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         {sorted.length > 0 ? sorted.map((order) => (
-          <Card key={order.id} className="border-none shadow-lg overflow-hidden transition-all rounded-[24px] bg-white active:scale-[0.98]">
+          <Card key={order.id} className="border-none shadow-lg overflow-hidden transition-all rounded-[24px] bg-white active:scale-[0.98] w-full">
             <CardContent className="p-0">
               <div className="p-5 flex flex-col gap-3">
-                <div className="flex justify-between items-start">
-                  <div className="text-left space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-primary text-xs tracking-widest font-mono uppercase">#{order.id.slice(-6).toUpperCase()}</span>
+                <div className="flex justify-between items-start gap-4">
+                  <div className="text-left space-y-1 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-black text-primary text-[10px] tracking-widest font-mono uppercase">#{order.id.slice(-6).toUpperCase()}</span>
                       {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
                     </div>
                     <h3 className="font-black text-base text-[#111] uppercase italic leading-tight">{order.customerName}</h3>
                     <div className="flex items-center gap-1 text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        <p className="text-[10px] font-bold uppercase tracking-tight truncate max-w-[140px]">{order.deliveryAddress?.area || "N/A"}</p>
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <p className="text-[10px] font-bold uppercase tracking-tight truncate">{order.deliveryAddress?.area || "N/A"}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="font-black text-lg font-sans tabular-nums text-[#111]">₹{order.total.toFixed(0)}</p>
                     <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-2 border-primary/30 text-primary mt-1">{order.status}</Badge>
                   </div>
@@ -279,8 +279,8 @@ export default function AdminOrdersPage() {
   const brandColor = outlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex items-center justify-between bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4">
+    <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
+      <div className="flex items-center justify-between bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4 shrink-0">
         <div className="text-left">
             <h1 className="font-headline text-lg font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -296,7 +296,7 @@ export default function AdminOrdersPage() {
         </Button>
       </div>
       
-      <Tabs defaultValue="New" className="w-full flex-1 flex flex-col">
+      <Tabs defaultValue="New" className="w-full flex-1 flex flex-col overflow-hidden">
         <TabsList className="flex w-full mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-12 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0">
           {[
             { label: "New", value: "New" },
@@ -315,12 +315,12 @@ export default function AdminOrdersPage() {
           ))}
         </TabsList>
         
-        <div className="flex-1 pb-32">
-          <TabsContent value="All" className="mt-0"><OrderTable statusFilter="All" /></TabsContent>
-          <TabsContent value="New" className="mt-0"><OrderTable statusFilter="New" /></TabsContent>
-          <TabsContent value="Preparing" className="mt-0"><OrderTable statusFilter="Preparing" /></TabsContent>
-          <TabsContent value="Out for Delivery" className="mt-0"><OrderTable statusFilter="Out for Delivery" /></TabsContent>
-          <TabsContent value="Completed" className="mt-0"><OrderTable statusFilter="Completed" /></TabsContent>
+        <div className="flex-1 pb-32 overflow-y-auto scrollbar-hide">
+          <TabsContent value="All" className="mt-0 outline-none"><OrderTable statusFilter="All" /></TabsContent>
+          <TabsContent value="New" className="mt-0 outline-none"><OrderTable statusFilter="New" /></TabsContent>
+          <TabsContent value="Preparing" className="mt-0 outline-none"><OrderTable statusFilter="Preparing" /></TabsContent>
+          <TabsContent value="Out for Delivery" className="mt-0 outline-none"><OrderTable statusFilter="Out for Delivery" /></TabsContent>
+          <TabsContent value="Completed" className="mt-0 outline-none"><OrderTable statusFilter="Completed" /></TabsContent>
         </div>
       </Tabs>
 

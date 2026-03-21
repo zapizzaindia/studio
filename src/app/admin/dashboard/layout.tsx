@@ -92,7 +92,7 @@ export default function AdminDashboardLayout({
 
   return (
     <SidebarProvider>
-        <Sidebar collapsible="icon" className="border-r border-gray-100 shadow-xl">
+        <Sidebar collapsible="icon" className="border-r border-gray-100 shadow-xl bg-white">
             <SidebarHeader className="bg-white">
               <div className="flex flex-col items-start gap-2 p-4">
                 <ZapizzaLogo className="h-10 w-10 text-primary" />
@@ -126,10 +126,10 @@ export default function AdminDashboardLayout({
                 </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="bg-[#f8f9fa]">
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white/95 backdrop-blur-md px-4 shadow-sm pt-safe">
+        <SidebarInset className="bg-[#f8f9fa] flex flex-col">
+            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white/95 backdrop-blur-md px-4 shadow-sm pt-safe shrink-0">
                 <div className="flex items-center gap-3">
-                    <SidebarTrigger className="h-10 w-10 rounded-xl bg-gray-50 border shadow-sm">
+                    <SidebarTrigger className="h-10 w-10 rounded-xl bg-gray-50 border shadow-sm flex items-center justify-center">
                         <Menu className="h-5 w-5 text-primary" />
                     </SidebarTrigger>
                     <div className="flex flex-col text-left">
@@ -144,7 +144,7 @@ export default function AdminDashboardLayout({
                   <AvatarFallback className="bg-primary text-white font-black">{(userProfile?.displayName || 'A').charAt(0)}</AvatarFallback>
                 </Avatar>
             </header>
-            <main className="flex-1 p-4 sm:p-8 bg-[#f8f9fa] pb-32">
+            <main className="flex-1 p-2 sm:p-8 bg-[#f8f9fa] pb-32 overflow-x-hidden">
                 {children}
             </main>
         </SidebarInset>
