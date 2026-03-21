@@ -52,25 +52,29 @@ export default function SuperAdminDashboardLayout({
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
+    // 1. Wait for Auth state
     if (userLoading) return;
 
+    // 2. No user, go to login
     if (!user) {
       router.replace('/superadmin/login');
       return;
     }
 
-    if (profileId && profileLoading) return;
+    // 3. Wait for email restoration
+    if (!user.email) return;
 
-    if (!profileId || !userProfile || userProfile.role !== 'franchise-owner') {
-      if (!profileLoading) {
-        console.warn("Super Admin Guard: Unauthorized access or missing profile record.");
-        if (auth) signOut(auth);
-        router.replace('/superadmin/login');
-      }
+    // 4. Wait for Firestore profile
+    if (profileLoading) return;
+
+    // 5. Verify Role
+    if (!userProfile || userProfile.role !== 'franchise-owner') {
+      console.warn("Super Admin Guard: Unauthorized access.");
+      router.replace('/superadmin/login');
     } else {
       setIsVerifying(false);
     }
-  }, [user, userLoading, profileLoading, userProfile, profileId, router, auth]);
+  }, [user, userLoading, profileLoading, userProfile, router]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -83,7 +87,7 @@ export default function SuperAdminDashboardLayout({
     return (
         <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
             <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Admin Mesh...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Authenticating Admin Node...</p>
         </div>
     )
   }

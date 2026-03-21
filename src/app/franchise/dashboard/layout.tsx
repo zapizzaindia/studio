@@ -52,25 +52,29 @@ export default function FranchiseDashboardLayout({
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
+    // 1. Wait for Auth state
     if (userLoading) return;
 
+    // 2. No user, go to login
     if (!user) {
       router.replace('/franchise/login');
       return;
     }
 
-    if (profileId && profileLoading) return;
+    // 3. Wait for email restoration
+    if (!user.email) return;
 
-    if (!profileId || !userProfile || userProfile.role !== 'franchise-owner') {
-      if (!profileLoading) {
-        console.warn("Franchise Guard: Unauthorized access or missing profile record.");
-        if (auth) signOut(auth);
-        router.replace('/franchise/login');
-      }
+    // 4. Wait for Firestore profile
+    if (profileLoading) return;
+
+    // 5. Verify Role
+    if (!userProfile || userProfile.role !== 'franchise-owner') {
+      console.warn("Franchise Guard: Unauthorized access.");
+      router.replace('/franchise/login');
     } else {
       setIsVerifying(false);
     }
-  }, [user, userLoading, profileLoading, userProfile, profileId, router, auth]);
+  }, [user, userLoading, profileLoading, userProfile, router]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -83,7 +87,7 @@ export default function FranchiseDashboardLayout({
     return (
         <div className="flex flex-col h-screen w-full items-center justify-center bg-white">
             <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Synchronizing Franchise Mesh...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Authenticating Node...</p>
         </div>
     )
   }

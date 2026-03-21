@@ -41,6 +41,7 @@ export default function AdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   
+  // Only attempt profile lookup if email is available
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -59,22 +60,23 @@ export default function AdminDashboardLayout({
       return;
     }
 
-    // 3. Wait for profile lookup to finish (if email is present)
-    if (profileId && profileLoading) return;
+    // 3. Wait for email to be available on the user object
+    // Sometimes 'user' exists but 'email' is briefly null during token restoration
+    if (!user.email) return;
 
-    // 4. Verify Identity & Role
-    if (!profileId || !userProfile || userProfile.role !== 'outlet-admin') {
-      // If we have a user but no valid admin profile, sign them out and reject
-      if (!profileLoading) {
-        console.warn("Admin Guard: Unauthorized access or missing profile record.");
-        if (auth) signOut(auth);
-        router.replace('/admin/login');
-      }
+    // 4. Wait for Firestore profile lookup to finish
+    if (profileLoading) return;
+
+    // 5. Verify Role
+    if (!userProfile || userProfile.role !== 'outlet-admin') {
+      console.warn("Admin Guard: Unauthorized access detected.");
+      // Redirect without signing out to avoid the destructive loop
+      router.replace('/admin/login');
     } else {
-      // All checks passed
+      // Access granted
       setIsVerifying(false);
     }
-  }, [user, userLoading, profileLoading, userProfile, profileId, router, auth]);
+  }, [user, userLoading, profileLoading, userProfile, router]);
 
   useEffect(() => {
     if (pathname === '/admin/dashboard' && !isVerifying) {
@@ -94,7 +96,7 @@ export default function AdminDashboardLayout({
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Verifying Terminal Access...</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Securing Terminal...</p>
             </div>
         </div>
     )
