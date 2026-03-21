@@ -62,14 +62,19 @@ export default function AdminDashboardLayout({
     if (profileLoading) return;
 
     // Use null check to ensure we only redirect if profile is definitively missing
-    if (userProfile === null) {
-      router.replace('/admin/login');
-      return;
-    }
+    // 🚫 DO NOT trust null immediately
+if (!profileLoading && !userProfile) {
+  console.log("❌ Profile NOT found AFTER loading:", user?.email);
+  router.replace('/admin/login');
+  return;
+}
 
-    if (userProfile && userProfile.role !== 'outlet-admin') {
-      router.replace('/admin/login');
-    } else if (userProfile) {
+if (userProfile && userProfile.role !== 'outlet-admin') {
+  console.log("❌ Wrong role:", userProfile.role);
+  router.replace('/admin/login');
+  return;
+} else if (userProfile) {
+  console.log("✅ Admin verified:", user.email);
       setIsVerifying(false);
     }
   }, [user, userLoading, profileLoading, userProfile, router]);
