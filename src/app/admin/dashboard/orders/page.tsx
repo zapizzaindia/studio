@@ -224,6 +224,25 @@ export default function AdminOrdersPage() {
                     <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-2 border-primary/30 text-primary mt-1">{order.status}</Badge>
                   </div>
                 </div>
+
+                {/* Ordered Items Summary */}
+                <div className="bg-gray-50/80 rounded-xl p-3 space-y-1 border border-gray-100">
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="font-black text-[9px] h-5 w-5 rounded bg-white border border-gray-200 flex items-center justify-center tabular-nums shrink-0 text-primary">
+                        {item.quantity}x
+                      </span>
+                      <p className="text-[10px] font-bold text-[#333] uppercase truncate flex-1">
+                        {item.name}
+                      </p>
+                      {item.variation && (
+                        <Badge className="h-3.5 px-1 text-[7px] font-black uppercase bg-[#111] text-white rounded-sm border-none">
+                          {item.variation}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
                 
                 <div className="flex items-center gap-2">
                   <Badge className="text-[8px] font-black uppercase h-5 px-2 bg-green-100 text-green-700 border-none">Pre-Paid</Badge>
@@ -237,7 +256,7 @@ export default function AdminOrdersPage() {
 
               <div className="p-2 bg-gray-50/80 grid grid-cols-2 gap-2 border-t">
                 <Button variant="outline" className="h-10 rounded-xl font-black text-[9px] uppercase gap-1 bg-white shadow-sm border-none ring-1 ring-black/5" onClick={() => setSelectedOrder(order)}>
-                    <Eye className="h-3.5 w-3.5 text-primary" /> View
+                    <Eye className="h-3.5 w-3.5 text-primary" /> View Detail
                 </Button>
                 <Button variant="outline" className="h-10 rounded-xl font-black text-[9px] uppercase gap-1 bg-white shadow-sm border-none ring-1 ring-black/5" onClick={() => handleShareLocation(order)}>
                     <Share2 className="h-3.5 w-3.5 text-[#25D366]" /> Dispatch
