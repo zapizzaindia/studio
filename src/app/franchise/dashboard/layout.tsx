@@ -63,14 +63,18 @@ export default function FranchiseDashboardLayout({
 
     if (profileLoading) return;
 
-    if (userProfile === null) {
+    if (!profileLoading && !userProfile) {
+      console.log("❌ Franchise profile NOT found:", user?.email);
       router.replace('/franchise/login');
       return;
     }
 
     if (userProfile && userProfile.role !== 'franchise-owner') {
+      console.log("❌ Not franchise owner:", userProfile.role);
       router.replace('/franchise/login');
+      return;
     } else if (userProfile) {
+      console.log("✅ Franchise verified:", user.email);
       setIsVerifying(false);
     }
   }, [user, userLoading, profileLoading, userProfile, router]);
