@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -63,7 +62,7 @@ export default function AdminMenuPage() {
 
     setDoc(availabilityRef, { isAvailable: newStatus }, { merge: true })
         .then(() => {
-            toast({ title: 'Status Synced', duration: 1500 });
+            toast({ title: 'Kitchen Synced' });
         })
         .catch(error => {
             // Revert on error
@@ -82,16 +81,16 @@ export default function AdminMenuPage() {
 
   return (
     <div className="container mx-auto p-0 max-w-2xl">
-      <div className="mb-6 flex flex-col">
-        <h1 className="font-headline text-2xl font-black uppercase italic text-[#333]">Kitchen Stock</h1>
-        <p className="text-muted-foreground text-[9px] uppercase font-black tracking-[0.2em] mt-0.5">Local Availability Override</p>
+      <div className="mb-8 flex flex-col text-left">
+        <h1 className="font-headline text-3xl font-black uppercase italic text-[#111]">Kitchen Stock</h1>
+        <p className="text-muted-foreground text-[10px] uppercase font-black tracking-[0.3em] mt-1.5">Live Store Availability Override</p>
       </div>
 
       {isLoading ? (
         Array.from({length: 2}).map((_, i) => (
-          <div key={i} className="mb-6">
-            <Skeleton className="h-6 w-32 mb-3 rounded-lg" />
-            <Card className="rounded-[24px] overflow-hidden"><CardContent className="p-0"><Skeleton className="w-full h-40" /></CardContent></Card>
+          <div key={i} className="mb-8">
+            <Skeleton className="h-8 w-48 mb-4 rounded-lg" />
+            <Card className="rounded-[32px] overflow-hidden border-none shadow-sm"><CardContent className="p-0"><Skeleton className="w-full h-64" /></CardContent></Card>
           </div>
         ))
       ) : sortedCategories.map(category => {
@@ -99,19 +98,19 @@ export default function AdminMenuPage() {
         if (catItems.length === 0) return null;
 
         return (
-          <div key={category.id} className="mb-10">
-              <div className="flex items-center gap-3 mb-4 pl-2">
-                <div className="h-1 w-8 rounded-full bg-primary/20" />
-                <h2 className="font-headline text-lg font-black italic uppercase tracking-tight text-[#333]">{category.name}</h2>
+          <div key={category.id} className="mb-12">
+              <div className="flex items-center gap-4 mb-5 pl-2">
+                <div className="h-1.5 w-10 rounded-full bg-primary/20" />
+                <h2 className="font-headline text-xl font-black italic uppercase tracking-tighter text-[#111]">{category.name}</h2>
               </div>
-              <Card className="border-none shadow-md rounded-[28px] overflow-hidden bg-white">
+              <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
                   <CardContent className="p-0">
                       <Table>
-                          <TableHeader className="bg-gray-50/50">
+                          <TableHeader className="bg-gray-50/80">
                               <TableRow className="hover:bg-transparent border-b-gray-100">
-                                  <TableHead className="w-[60px] pl-5 font-black uppercase text-[9px] tracking-widest">Item</TableHead>
-                                  <TableHead className="font-black uppercase text-[9px] tracking-widest">Details</TableHead>
-                                  <TableHead className="text-right pr-5 font-black uppercase text-[9px] tracking-widest">Status</TableHead>
+                                  <TableHead className="w-[70px] pl-6 font-black uppercase text-[10px] tracking-widest h-14">Visual</TableHead>
+                                  <TableHead className="font-black uppercase text-[10px] tracking-widest h-14">Details</TableHead>
+                                  <TableHead className="text-right pr-6 font-black uppercase text-[10px] tracking-widest h-14">Action</TableHead>
                               </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -122,9 +121,9 @@ export default function AdminMenuPage() {
                                   const priceDisplay = hasVariations ? `₹${minPrice}+` : `₹${minPrice}`;
 
                                   return (
-                                    <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
-                                        <TableCell className="pl-5 py-4">
-                                          <div className="relative h-12 w-12 rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                                    <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/50 transition-colors">
+                                        <TableCell className="pl-6 py-5">
+                                          <div className="relative h-14 w-14 rounded-2xl overflow-hidden border-2 border-white shadow-md ring-1 ring-black/5">
                                             <Image
                                               src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
                                               alt={item.name}
@@ -133,22 +132,27 @@ export default function AdminMenuPage() {
                                             />
                                           </div>
                                         </TableCell>
-                                        <TableCell className="py-4">
+                                        <TableCell className="py-5 text-left">
                                             <div className="flex flex-col">
-                                              <div className="flex items-center gap-1.5">
-                                                <span className={cn("h-2 w-2 rounded-full", item.isVeg ? "bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" : "bg-red-500")} />
-                                                <p className="font-black uppercase text-[12px] tracking-tight text-[#333]">{item.name}</p>
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <span className={cn("h-2.5 w-2.5 rounded-full ring-2 ring-white shadow-sm", item.isVeg ? "bg-green-500" : "bg-red-500")} />
+                                                <p className="font-black uppercase text-[14px] tracking-tight text-[#111]">{item.name}</p>
                                               </div>
-                                              <p className="font-bold text-[10px] text-muted-foreground mt-0.5 tabular-nums font-sans">{priceDisplay}</p>
+                                              <p className="font-bold text-[11px] text-muted-foreground tabular-nums font-sans">{priceDisplay}</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right pr-5 py-4">
-                                            <Switch
-                                                checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}
-                                                disabled={!item.isAvailableGlobally}
-                                                onCheckedChange={() => handleToggleAvailability(item.id, item.isAvailableGlobally)}
-                                                className="data-[state=checked]:bg-green-500 scale-90"
-                                            />
+                                        <TableCell className="text-right pr-6 py-5">
+                                            <div className="flex flex-col items-end gap-2">
+                                                <Switch
+                                                    checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}
+                                                    disabled={!item.isAvailableGlobally}
+                                                    onCheckedChange={() => handleToggleAvailability(item.id, item.isAvailableGlobally)}
+                                                    className="data-[state=checked]:bg-green-500 scale-110"
+                                                />
+                                                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">
+                                                    {(availabilityMap[item.id] ?? true) ? 'LIVE' : 'OFF'}
+                                                </span>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                   );
