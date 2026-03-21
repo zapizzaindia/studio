@@ -61,20 +61,15 @@ export default function AdminDashboardLayout({
 
     if (profileLoading) return;
 
-    // Use null check to ensure we only redirect if profile is definitively missing
-    // 🚫 DO NOT trust null immediately
-if (!profileLoading && !userProfile) {
-  console.log("❌ Profile NOT found AFTER loading:", user?.email);
-  router.replace('/admin/login');
-  return;
-}
+    if (!profileLoading && !userProfile) {
+      router.replace('/admin/login');
+      return;
+    }
 
-if (userProfile && userProfile.role !== 'outlet-admin') {
-  console.log("❌ Wrong role:", userProfile.role);
-  router.replace('/admin/login');
-  return;
-} else if (userProfile) {
-  console.log("✅ Admin verified:", user.email);
+    if (userProfile && userProfile.role !== 'outlet-admin') {
+      router.replace('/admin/login');
+      return;
+    } else if (userProfile) {
       setIsVerifying(false);
     }
   }, [user, userLoading, profileLoading, userProfile, router]);
@@ -140,28 +135,28 @@ if (userProfile && userProfile.role !== 'outlet-admin') {
             </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-            <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background px-4">
+            <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background px-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
-                    <h1 className="font-headline text-xl font-bold text-primary hidden sm:block uppercase italic">
+                    <h1 className="font-headline text-lg font-bold text-primary hidden sm:block uppercase italic">
                         {navItems.find(item => pathname.startsWith(item.href))?.label || "Admin Panel"}
                     </h1>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="hidden md:flex flex-col items-end">
-                        {outlet ? <p className="text-sm font-bold text-[#14532d]">{outlet.name}</p> : <Skeleton className="h-4 w-24" />}
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Kitchen Live</p>
+                <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex flex-col items-end">
+                        {outlet ? <p className="text-xs font-bold text-[#14532d]">{outlet.name}</p> : <Skeleton className="h-3 w-20" />}
+                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Kitchen Live</p>
                     </div>
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-7 w-7">
                       <AvatarImage src={user?.photoURL || undefined} />
                       <AvatarFallback>{(userProfile?.displayName || 'A').charAt(0)}</AvatarFallback>
                     </Avatar>
-                     <Button variant="ghost" className="md:hidden" onClick={handleLogout}>
-                        <LogOut className="h-5 w-5"/>
+                     <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={handleLogout}>
+                        <LogOut className="h-4 w-4"/>
                     </Button>
                 </div>
             </header>
-            <main className="flex-1 p-4 sm:p-6 bg-[#f8f9fa]">{children}</main>
+            <main className="flex-1 p-4 sm:p-6 bg-[#f8f9fa] pb-24">{children}</main>
         </SidebarInset>
     </SidebarProvider>
   );

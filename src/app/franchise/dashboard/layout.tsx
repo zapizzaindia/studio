@@ -46,7 +46,7 @@ export default function FranchiseDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
 
-  const profileId = user?.email?.toLowerCase().trim() || null;
+  const profileId = user?.uid ?? 'dummy';
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
 
   const [isVerifying, setIsVerifying] = useState(true);

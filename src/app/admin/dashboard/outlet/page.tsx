@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,7 +18,6 @@ import { cn } from '@/lib/utils';
 
 export default function AdminOutletPage() {
     const { user } = useUser();
-    // Using email as ID for Admin lookup as per the "Authorize" logic
     const profileId = user?.email?.toLowerCase().trim() || 'dummy';
     const { data: userProfile } = useDoc<UserProfile>('users', profileId);
     const outletId = userProfile?.outletId;
@@ -44,14 +42,8 @@ export default function AdminOutletPage() {
     }, [outlet]);
     
     const handleSaveChanges = () => {
-        console.log("USER:", user);
-console.log("PROFILE ID:", profileId);
-console.log("USER PROFILE:", userProfile);
-console.log("OUTLET ID:", outletId);
-console.log("DB:", db);
-
         if (!db || !outletId || outletId === 'dummy') {
-            toast({ variant: 'destructive', title: 'Error', description: 'Outlet ID not found. Please re-login.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Outlet ID not found.' });
             return;
         }
         
@@ -65,14 +57,11 @@ console.log("DB:", db);
             closingTime,
         };
 
-        // Non-blocking mutation as per guidelines
         updateDoc(outletRef, updatedData)
             .then(() => {
-                console.log("Firestore update SUCCESS");
-                toast({ title: 'Success', description: 'Outlet details synchronized with master database.' });
+                toast({ title: 'Success', description: 'Outlet details updated.' });
             })
             .catch(error => {
-                console.log("Firestore update FAILED:", error);
                 const permissionError = new FirestorePermissionError({
                     path: outletRef.path,
                     operation: 'update',
@@ -88,17 +77,16 @@ console.log("DB:", db);
     if (loading) {
         return (
              <div className="container mx-auto p-0 max-w-2xl">
-                <div className="mb-8">
-                    <Skeleton className="h-10 w-1/2 rounded-xl" />
-                    <Skeleton className="h-4 w-1/3 mt-2 rounded-lg" />
+                <div className="mb-6">
+                    <Skeleton className="h-8 w-1/2 rounded-lg" />
                 </div>
-                <Card className="border-none shadow-xl rounded-[32px] overflow-hidden">
-                    <CardHeader className="bg-gray-50/50 p-8"><Skeleton className="h-8 w-3/4" /></CardHeader>
-                    <CardContent className="p-8 space-y-6">
-                        <Skeleton className="h-16 w-full rounded-2xl" />
+                <Card className="border-none shadow-md rounded-[24px] overflow-hidden">
+                    <CardHeader className="bg-gray-50/50 p-6"><Skeleton className="h-6 w-3/4" /></CardHeader>
+                    <CardContent className="p-6 space-y-4">
                         <Skeleton className="h-12 w-full rounded-xl" />
-                        <Skeleton className="h-12 w-full rounded-xl" />
-                        <Skeleton className="h-14 w-32 rounded-xl" />
+                        <Skeleton className="h-10 w-full rounded-lg" />
+                        <Skeleton className="h-10 w-full rounded-lg" />
+                        <Skeleton className="h-12 w-32 rounded-xl" />
                     </CardContent>
                 </Card>
             </div>
@@ -109,87 +97,79 @@ console.log("DB:", db);
 
     return (
         <div className="container mx-auto p-0 max-w-2xl">
-            <div className="mb-8 bg-white p-6 rounded-[32px] border shadow-sm flex items-center justify-between">
+            <div className="mb-6 bg-white p-4 rounded-[24px] border shadow-sm flex items-center justify-between">
                 <div>
-                    <h1 className="font-headline text-3xl font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Profile</h1>
-                    <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Configure your outlet's local identity and timings</p>
+                    <h1 className="font-headline text-2xl font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Profile</h1>
+                    <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest mt-0.5">Operating Parameters</p>
                 </div>
-                <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandColor + '10', color: brandColor }}>
-                    <Clock className="h-6 w-6" />
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: brandColor + '10', color: brandColor }}>
+                    <Clock className="h-5 w-5" />
                 </div>
             </div>
 
-            <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
-                <CardHeader className="bg-gray-50/50 p-8 border-b">
-                    <CardTitle className="text-xl font-black uppercase tracking-tight italic text-[#333]">{outlet?.name}</CardTitle>
-                    <CardDescription className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-2">
-                        <MapPin className="h-3 w-3" />
-                        <span>Authorized Node: {outletId}</span>
+            <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
+                <CardHeader className="bg-gray-50/50 p-6 border-b">
+                    <CardTitle className="text-lg font-black uppercase tracking-tight italic text-[#333]">{outlet?.name}</CardTitle>
+                    <CardDescription className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest text-muted-foreground mt-1">
+                        <MapPin className="h-2.5 w-2.5" />
+                        <span>Outlet ID: {outletId}</span>
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="p-8 space-y-8">
-                    {/* Status Toggle */}
-                    <div className="flex items-center justify-between rounded-[24px] border p-6 bg-gray-50/50 group transition-all">
-                        <div className="flex items-center space-x-4">
+                <CardContent className="p-6 space-y-6">
+                    <div className="flex items-center justify-between rounded-2xl border p-4 bg-gray-50/50">
+                        <div className="flex items-center space-x-3">
                             <div className={cn(
-                                "h-12 w-12 rounded-2xl flex items-center justify-center transition-colors",
+                                "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
                                 isOutletOpen ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                             )}>
-                                <Power className="h-6 w-6" />
+                                <Power className="h-5 w-5" />
                             </div>
                             <div>
-                                <h3 className="text-xs font-black uppercase tracking-widest">Kitchen Live Status</h3>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-0.5">
-                                    {isOutletOpen ? "Accepting incoming orders" : "Temporarily closed for orders"}
+                                <h3 className="text-[10px] font-black uppercase tracking-widest">Live Status</h3>
+                                <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">
+                                    {isOutletOpen ? "Accepting Orders" : "Kitchen Closed"}
                                 </p>
                             </div>
                         </div>
                         <Switch
                             checked={isOutletOpen}
                             onCheckedChange={setIsOutletOpen}
-                            className="data-[state=checked]:bg-green-500"
+                            className="data-[state=checked]:bg-green-500 scale-90"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Public Outlet Name</Label>
+                        <Input 
+                            value={outletName} 
+                            onChange={(e) => setOutletName(e.target.value)} 
+                            className="h-11 rounded-xl font-bold text-sm"
                         />
                     </div>
 
                     <div className="space-y-3">
-                        <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Outlet Public Name</Label>
-                        <Input 
-                            value={outletName} 
-                            onChange={(e) => setOutletName(e.target.value)} 
-                            className="h-12 rounded-xl font-black text-lg"
-                            placeholder="e.g. Zapizza Rudrapur"
-                        />
-                    </div>
-
-                    <div className="space-y-4">
-                        <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">Operating Windows</Label>
-                        <div className="grid grid-cols-2 gap-6">
-                             <div className="space-y-2">
-                                <span className="text-[8px] font-black text-muted-foreground uppercase">Opens At</span>
-                                <div className="relative">
-                                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input type="time" value={openingTime} onChange={e => setOpeningTime(e.target.value)} className="pl-10 h-12 rounded-xl font-bold"/>
-                                </div>
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Operating Window</Label>
+                        <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-1">
+                                <span className="text-[7px] font-black text-muted-foreground uppercase">Opens</span>
+                                <Input type="time" value={openingTime} onChange={e => setOpeningTime(e.target.value)} className="h-10 rounded-xl font-bold text-xs"/>
                             </div>
-                            <div className="space-y-2">
-                                <span className="text-[8px] font-black text-muted-foreground uppercase">Closes At</span>
-                                <div className="relative">
-                                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input type="time" value={closingTime} onChange={e => setClosingTime(e.target.value)} className="pl-10 h-12 rounded-xl font-bold"/>
-                                </div>
+                            <div className="space-y-1">
+                                <span className="text-[7px] font-black text-muted-foreground uppercase">Closes</span>
+                                <Input type="time" value={closingTime} onChange={e => setClosingTime(e.target.value)} className="h-10 rounded-xl font-bold text-xs"/>
                             </div>
                         </div>
                     </div>
                     
-                    <div className="pt-4 flex justify-end">
+                    <div className="pt-2 flex justify-end">
                         <Button 
                             onClick={handleSaveChanges} 
                             disabled={isSaving}
-                            className="h-14 px-10 rounded-2xl text-white font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 border-none"
+                            className="w-full sm:w-auto h-12 px-8 rounded-xl text-white font-black uppercase text-[10px] tracking-widest shadow-lg"
                             style={{ backgroundColor: brandColor }}
                         >
-                            {isSaving ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />}
-                            Update Outlet Settings
+                            {isSaving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                            Sync Settings
                         </Button>
                     </div>
                 </CardContent>

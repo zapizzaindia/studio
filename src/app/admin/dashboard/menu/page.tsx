@@ -44,7 +44,7 @@ export default function AdminMenuPage() {
     if (!db || !outletId || outletId === 'dummy') return;
 
     if (!isGloballyAvailable) {
-        toast({ variant: 'destructive', title: 'Action not allowed', description: 'This item is managed by the franchise and cannot be toggled here.'});
+        toast({ variant: 'destructive', title: 'Action not allowed', description: 'This item is managed by the franchise.'});
         return;
     }
 
@@ -81,16 +81,16 @@ export default function AdminMenuPage() {
 
   return (
     <div className="container mx-auto p-0">
-      <div className="mb-8">
-        <h1 className="font-headline text-3xl font-bold">Kitchen Stock</h1>
-        <p className="text-muted-foreground">Toggle availability of menu items for your local outlet.</p>
+      <div className="mb-6">
+        <h1 className="font-headline text-2xl font-bold">Kitchen Stock</h1>
+        <p className="text-muted-foreground text-xs uppercase font-black tracking-widest">Local Availability Toggle</p>
       </div>
 
       {isLoading ? (
-        Array.from({length: 3}).map((_, i) => (
-          <div key={i} className="mb-8">
-            <Skeleton className="h-8 w-48 mb-4" />
-            <Card><CardContent className="p-0"><Skeleton className="w-full h-64" /></CardContent></Card>
+        Array.from({length: 2}).map((_, i) => (
+          <div key={i} className="mb-6">
+            <Skeleton className="h-6 w-32 mb-3" />
+            <Card><CardContent className="p-0"><Skeleton className="w-full h-40" /></CardContent></Card>
           </div>
         ))
       ) : sortedCategories.map(category => {
@@ -98,17 +98,17 @@ export default function AdminMenuPage() {
         if (catItems.length === 0) return null;
 
         return (
-          <div key={category.id} className="mb-10">
-              <h2 className="font-headline text-2xl font-bold mb-4 italic uppercase tracking-tight text-[#333]">{category.name}</h2>
-              <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
+          <div key={category.id} className="mb-8">
+              <h2 className="font-headline text-lg font-bold mb-3 italic uppercase tracking-tight text-[#333]">{category.name}</h2>
+              <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
                   <CardContent className="p-0">
                       <Table>
                           <TableHeader className="bg-gray-50/50">
-                              <TableRow className="border-b-gray-100 hover:bg-transparent">
-                                  <TableHead className="w-[80px] pl-8">Image</TableHead>
-                                  <TableHead>Item</TableHead>
+                              <TableRow className="hover:bg-transparent">
+                                  <TableHead className="w-[60px] pl-4">Item</TableHead>
+                                  <TableHead className="hidden sm:table-cell">Details</TableHead>
                                   <TableHead>Price</TableHead>
-                                  <TableHead className="text-right pr-8">Available</TableHead>
+                                  <TableHead className="text-right pr-4">Live</TableHead>
                               </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -116,15 +116,12 @@ export default function AdminMenuPage() {
                                   const hasVariations = item.variations && item.variations.length > 0;
                                   const prices = hasVariations ? item.variations!.map(v => v.price) : [item.price];
                                   const minPrice = Math.min(...prices);
-                                  const maxPrice = Math.max(...prices);
-                                  const priceDisplay = hasVariations && minPrice !== maxPrice 
-                                    ? `₹${minPrice.toFixed(2)} - ₹${maxPrice.toFixed(2)}`
-                                    : `₹${minPrice.toFixed(2)}`;
+                                  const priceDisplay = hasVariations ? `₹${minPrice}+` : `₹${minPrice}`;
 
                                   return (
                                     <TableRow key={item.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
-                                        <TableCell className="pl-8 py-4">
-                                          <div className="relative h-14 w-14 rounded-xl overflow-hidden border-2 border-white shadow-md">
+                                        <TableCell className="pl-4 py-3">
+                                          <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-gray-100 shadow-sm">
                                             <Image
                                               src={placeholderImageMap.get(item.imageId)?.imageUrl || 'https://picsum.photos/seed/placeholder/600/400'}
                                               alt={item.name}
@@ -133,24 +130,24 @@ export default function AdminMenuPage() {
                                             />
                                           </div>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="py-3">
                                             <div className="flex flex-col">
-                                              <div className="flex items-center gap-2">
-                                                <span className={cn("h-2 w-2 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
-                                                <p className="font-black uppercase text-xs tracking-tight">{item.name}</p>
+                                              <div className="flex items-center gap-1.5">
+                                                <span className={cn("h-1.5 w-1.5 rounded-full", item.isVeg ? "bg-green-500" : "bg-red-500")} />
+                                                <p className="font-black uppercase text-[11px] tracking-tight line-clamp-1">{item.name}</p>
                                               </div>
-                                              <p className="text-[10px] text-muted-foreground hidden md:block mt-0.5">{item.description}</p>
+                                              <p className="text-[9px] text-muted-foreground hidden sm:block mt-0.5">{item.description}</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-bold whitespace-nowrap font-sans tabular-nums">
+                                        <TableCell className="font-bold text-[11px] whitespace-nowrap font-sans tabular-nums py-3">
                                             {priceDisplay}
                                         </TableCell>
-                                        <TableCell className="text-right pr-8">
+                                        <TableCell className="text-right pr-4 py-3">
                                             <Switch
                                                 checked={!item.isAvailableGlobally ? false : (availabilityMap[item.id] ?? true)}
                                                 disabled={!item.isAvailableGlobally}
                                                 onCheckedChange={() => handleToggleAvailability(item.id, item.isAvailableGlobally)}
-                                                className="data-[state=checked]:bg-green-500"
+                                                className="data-[state=checked]:bg-green-500 scale-75"
                                             />
                                         </TableCell>
                                     </TableRow>
