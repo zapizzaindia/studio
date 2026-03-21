@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
-import Link from 'link';
+import Link from 'next/link';
 import { 
   SidebarProvider, 
   Sidebar, 

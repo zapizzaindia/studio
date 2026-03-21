@@ -64,7 +64,7 @@ export async function notifyAdminsOfOrder(payload: {
       data: {
         orderId: payload.orderId,
         url: "/admin/dashboard/orders",
-        click_action: "FLUTTER_NOTIFICATION_CLICK"
+        clickAction: 'OPEN_ACTIVITY'
       },
       android: {
         priority: 'high',
@@ -127,7 +127,7 @@ export async function broadcastPushNotification(payload: {
       },
       data: {
         url: payload.deepLink || "/home",
-        click_action: "FLUTTER_NOTIFICATION_CLICK" 
+        clickAction: 'OPEN_ACTIVITY' 
       },
       android: {
         notification: {
