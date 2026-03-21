@@ -43,7 +43,7 @@ export default function AdminDashboardLayout({
   
   // Only attempt profile lookup if email is available
   const profileId = user?.uid || null;
-  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'uid');
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
   const effectiveOutletId = userProfile?.outletId || 'dummy';
   const { data: outlet } = useDoc<Outlet>('outlets', effectiveOutletId);

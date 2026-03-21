@@ -12,7 +12,7 @@ export default function AdminDashboardPage() {
     const { user } = useUser();
     const profileId = user?.uid || 'dummy';
     const { data: userProfile } = useDoc<UserProfile>('users', profileId);
-    const outletId = userProfile?.outletId;
+    const outletId = userProfile?.outletId || null;
     
     const { data: allOrders, loading: ordersLoading } = useCollection<Order>('orders');
     
