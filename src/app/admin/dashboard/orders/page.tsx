@@ -9,8 +9,6 @@ import type { Order, OrderStatus, UserProfile, Outlet } from '@/lib/types';
 import { 
   Truck, 
   CheckCircle, 
-  XCircle, 
-  Loader, 
   CircleDot, 
   Volume2, 
   VolumeX, 
@@ -20,11 +18,8 @@ import {
   Eye, 
   Navigation, 
   Share2, 
-  IndianRupee, 
   MessageSquareText, 
   UserCheck, 
-  Package, 
-  CookingPot,
   ClipboardList,
   Calendar
 } from 'lucide-react';
@@ -197,7 +192,7 @@ export default function AdminOrdersPage() {
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return (
       <div className="space-y-2 w-full">
-        {Array.from({length: 3}).map((_, i) => <Skeleton className="h-20 w-full rounded-xl" key={i} />)}
+        {Array.from({length: 3}).map((_, i) => <Skeleton className="h-24 w-full rounded-xl" key={i} />)}
       </div>
     );
     
@@ -205,9 +200,9 @@ export default function AdminOrdersPage() {
     const sorted = filteredOrders ? [...filteredOrders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
     
     return (
-      <div className="space-y-2 w-full max-w-full overflow-x-hidden">
+      <div className="space-y-2 w-full">
         {sorted.length > 0 ? sorted.map((order) => (
-          <Card key={order.id} className="border-none shadow-sm overflow-hidden transition-all rounded-xl bg-white active:scale-[0.99] w-full border border-gray-100">
+          <Card key={order.id} className="border-none shadow-sm overflow-hidden transition-all rounded-xl bg-white border border-gray-100">
             <CardContent className="p-0">
               <div className="p-2 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-1.5 md:gap-4">
                 <div className="flex-1 flex flex-col gap-0.5 min-w-0">
@@ -309,25 +304,25 @@ export default function AdminOrdersPage() {
   const brandColor = outlet?.brand === 'zfry' ? '#e31837' : '#14532d';
 
   return (
-    <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
-      <div className="flex items-center justify-between bg-white p-2 md:p-4 rounded-xl shadow-sm border border-gray-100 mb-2 shrink-0 w-full">
+    <div className="container mx-auto p-0 max-w-2xl">
+      <div className="mb-6 bg-white p-4 rounded-[24px] border shadow-sm flex items-center justify-between">
         <div className="text-left">
-            <h1 className="font-headline text-sm md:text-lg font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <h1 className="font-headline text-2xl font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
+            <p className="text-muted-foreground text-[9px] font-black uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
               <span className="relative flex h-1 w-1">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1 w-1 bg-green-500"></span>
               </span>
-              <p className="text-muted-foreground text-[7px] font-black uppercase tracking-widest">Active Node Sync</p>
-            </div>
+              Active Node Sync
+            </p>
         </div>
-        <Button variant="outline" className="rounded-lg h-8 w-8 p-0 border-none bg-gray-50 shadow-inner ring-1 ring-black/5" onClick={() => setIsMuted(!isMuted)}>
-          {isMuted ? <VolumeX className="h-3.5 w-3.5 text-red-500" /> : <Volume2 className="h-3.5 w-3.5" style={{ color: brandColor }} />}
+        <Button variant="outline" className="rounded-xl h-10 w-10 p-0 border-none bg-gray-50 shadow-inner ring-1 ring-black/5" onClick={() => setIsMuted(!isMuted)}>
+          {isMuted ? <VolumeX className="h-4 w-4 text-red-500" /> : <Volume2 className="h-4 w-4" style={{ color: brandColor }} />}
         </Button>
       </div>
       
-      <Tabs defaultValue="New" className="w-full flex-1 flex flex-col overflow-hidden">
-        <TabsList className="flex w-full mb-3 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-10 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0 no-scrollbar">
+      <Tabs defaultValue="New" className="w-full">
+        <TabsList className="flex w-full mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-10 overflow-x-auto scrollbar-hide justify-start gap-1 no-scrollbar">
           {[
             { label: "New", value: "New" },
             { label: "Cooking", value: "Preparing" },
@@ -345,13 +340,11 @@ export default function AdminOrdersPage() {
           ))}
         </TabsList>
         
-        <div className="flex-1 pb-32 overflow-y-auto scrollbar-hide">
-          <TabsContent value="All" className="mt-0 outline-none w-full"><OrderTable statusFilter="All" /></TabsContent>
-          <TabsContent value="New" className="mt-0 outline-none w-full"><OrderTable statusFilter="New" /></TabsContent>
-          <TabsContent value="Preparing" className="mt-0 outline-none w-full"><OrderTable statusFilter="Preparing" /></TabsContent>
-          <TabsContent value="Out for Delivery" className="mt-0 outline-none w-full"><OrderTable statusFilter="Out for Delivery" /></TabsContent>
-          <TabsContent value="Completed" className="mt-0 outline-none w-full"><OrderTable statusFilter="Completed" /></TabsContent>
-        </div>
+        <TabsContent value="All" className="mt-0 outline-none w-full"><OrderTable statusFilter="All" /></TabsContent>
+        <TabsContent value="New" className="mt-0 outline-none w-full"><OrderTable statusFilter="New" /></TabsContent>
+        <TabsContent value="Preparing" className="mt-0 outline-none w-full"><OrderTable statusFilter="Preparing" /></TabsContent>
+        <TabsContent value="Out for Delivery" className="mt-0 outline-none w-full"><OrderTable statusFilter="Out for Delivery" /></TabsContent>
+        <TabsContent value="Completed" className="mt-0 outline-none w-full"><OrderTable statusFilter="Completed" /></TabsContent>
       </Tabs>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
