@@ -204,7 +204,7 @@ export default function AdminOrdersPage() {
         {sorted.length > 0 ? sorted.map((order) => (
           <Card key={order.id} className="border-none shadow-sm overflow-hidden transition-all rounded-xl bg-white border border-gray-100">
             <CardContent className="p-0">
-              <div className="p-2 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-1.5 md:gap-4">
+              <div className="p-2 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
                 <div className="flex-1 flex flex-col gap-0.5 min-w-0">
                   <div className="flex items-center justify-between gap-2 flex-nowrap mb-0.5 overflow-hidden">
                     <div className="flex items-center gap-1 shrink-0">
@@ -235,17 +235,30 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-1 md:min-w-[200px] md:justify-end">
-                  {order.items.slice(0, 2).map((item, idx) => (
-                    <Badge key={idx} variant="secondary" className="bg-gray-50 text-[7px] font-bold border-gray-100 h-4 px-1 text-gray-700 whitespace-nowrap uppercase">
-                      {item.quantity}x {item.name}
-                    </Badge>
+                {/* Items Summary with Variations and Addons */}
+                <div className="flex flex-col gap-1 md:min-w-[200px] md:items-end">
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-start md:items-end bg-gray-50/50 p-1.5 rounded-lg border border-gray-100">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-black text-primary text-[9px] font-sans tabular-nums">{item.quantity}x</span>
+                        <span className="font-black text-[9px] uppercase text-[#333] italic leading-none">{item.name}</span>
+                        {item.variation && (
+                          <Badge variant="outline" className="text-[6px] font-black uppercase h-3.5 px-1 bg-white border-primary/20 text-primary">
+                            {item.variation}
+                          </Badge>
+                        )}
+                      </div>
+                      {item.addons && item.addons.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-0.5 md:justify-end">
+                          {item.addons.map((addon, aIdx) => (
+                            <span key={aIdx} className="text-[7px] font-bold text-muted-foreground uppercase leading-none opacity-70 italic">
+                              + {addon}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
-                  {order.items.length > 2 && (
-                    <Badge variant="secondary" className="bg-gray-50 text-[7px] font-black border-gray-100 h-4 px-1 text-gray-400">
-                      +{order.items.length - 2} MORE
-                    </Badge>
-                  )}
                 </div>
               </div>
 
