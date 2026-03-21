@@ -196,7 +196,7 @@ export default function AdminOrdersPage() {
 
   const OrderTable = ({ statusFilter }: { statusFilter: OrderStatus | 'All' }) => {
     if (ordersLoading) return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         {Array.from({length: 3}).map((_, i) => <Skeleton className="h-24 w-full rounded-2xl" key={i} />)}
       </div>
     );
@@ -205,50 +205,50 @@ export default function AdminOrdersPage() {
     const sorted = filteredOrders ? [...filteredOrders].sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()) : [];
     
     return (
-      <div className="space-y-3 w-full">
+      <div className="space-y-3 w-full max-w-full overflow-x-hidden">
         {sorted.length > 0 ? sorted.map((order) => (
           <Card key={order.id} className="border-none shadow-md overflow-hidden transition-all rounded-[20px] bg-white active:scale-[0.99] w-full border border-gray-100">
             <CardContent className="p-0">
               <div className="p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
-                <div className="flex-1 flex flex-col gap-1">
-                  <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-primary text-[9px] md:text-[10px] tracking-widest font-mono uppercase bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">#{order.id.slice(-6).toUpperCase()}</span>
-                      <span className="text-[8px] md:text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 font-sans tabular-nums">
-                        <Calendar className="h-2.5 w-2.5" /> 
+                <div className="flex-1 flex flex-col gap-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 flex-nowrap mb-1 overflow-hidden">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="font-black text-primary text-[9px] tracking-widest font-mono uppercase bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">#{order.id.slice(-6).toUpperCase()}</span>
+                      <span className="text-[8px] font-bold text-muted-foreground uppercase flex items-center gap-1 font-sans tabular-nums whitespace-nowrap">
+                        <Calendar className="h-2 w-2" /> 
                         {format(order.createdAt.toDate(), 'dd MMM, HH:mm')}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {order.status === 'New' && <OrderTimer createdAt={order.createdAt} orderId={order.id} onTimeout={handleAutoCancel} />}
-                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-2 border-primary/30 text-primary">{order.status}</Badge>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest py-0 px-1.5 border-primary/30 text-primary">{order.status}</Badge>
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-start">
-                    <div className="text-left">
-                      <h3 className="font-black text-sm md:text-base text-[#111] uppercase italic leading-tight">{order.customerName}</h3>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="text-left min-w-0 flex-1">
+                      <h3 className="font-black text-sm md:text-base text-[#111] uppercase italic leading-tight truncate">{order.customerName}</h3>
                       <div className="flex items-center gap-1 text-muted-foreground mt-0.5">
-                          <MapPin className="h-2.5 w-2.5 shrink-0" />
-                          <p className="text-[9px] font-bold uppercase tracking-tight truncate max-w-[150px]">{order.deliveryAddress?.area || "N/A"}</p>
+                          <MapPin className="h-2 w-2 shrink-0" />
+                          <p className="text-[9px] font-bold uppercase tracking-tight truncate">{order.deliveryAddress?.area || "N/A"}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className="font-black text-base md:text-lg font-sans tabular-nums text-[#111]">₹{order.total.toFixed(0)}</p>
                       <span className="text-[8px] font-black uppercase text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Pre-Paid</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 md:min-w-[200px] md:justify-end">
-                  {order.items.slice(0, 3).map((item, idx) => (
-                    <Badge key={idx} variant="secondary" className="bg-gray-50 text-[8px] md:text-[9px] font-bold border-gray-100 h-6 px-2 text-gray-700 whitespace-nowrap">
+                <div className="flex flex-wrap gap-1 md:min-w-[200px] md:justify-end">
+                  {order.items.slice(0, 2).map((item, idx) => (
+                    <Badge key={idx} variant="secondary" className="bg-gray-50 text-[8px] font-bold border-gray-100 h-5 px-1.5 text-gray-700 whitespace-nowrap">
                       {item.quantity}x {item.name}
                     </Badge>
                   ))}
-                  {order.items.length > 3 && (
-                    <Badge variant="secondary" className="bg-gray-50 text-[8px] font-black border-gray-100 h-6 px-2 text-gray-400">
-                      +{order.items.length - 3} MORE
+                  {order.items.length > 2 && (
+                    <Badge variant="secondary" className="bg-gray-50 text-[8px] font-black border-gray-100 h-5 px-1.5 text-gray-400">
+                      +{order.items.length - 2} MORE
                     </Badge>
                   )}
                 </div>
@@ -297,7 +297,7 @@ export default function AdminOrdersPage() {
             </CardContent>
           </Card>
         )) : (
-          <div className="h-48 flex flex-col items-center justify-center text-muted-foreground bg-white rounded-[24px] border border-dashed border-gray-200">
+          <div className="h-48 flex flex-col items-center justify-center text-muted-foreground bg-white rounded-[24px] border border-dashed border-gray-200 w-full">
             <CircleDot className="h-8 w-8 mb-3 opacity-20" />
             <p className="uppercase text-[9px] font-black tracking-[0.2em] text-center px-8 opacity-40">Queue Empty</p>
           </div>
@@ -310,7 +310,7 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
-      <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4 shrink-0">
+      <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-[20px] shadow-sm border border-gray-100 mb-4 shrink-0 w-full">
         <div className="text-left">
             <h1 className="font-headline text-base md:text-lg font-black uppercase tracking-tight italic" style={{ color: brandColor }}>Kitchen Live</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -327,7 +327,7 @@ export default function AdminOrdersPage() {
       </div>
       
       <Tabs defaultValue="New" className="w-full flex-1 flex flex-col overflow-hidden">
-        <TabsList className="flex w-full mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-11 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0">
+        <TabsList className="flex w-full mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-100 h-11 overflow-x-auto scrollbar-hide justify-start gap-1 shrink-0 no-scrollbar">
           {[
             { label: "New", value: "New" },
             { label: "Cooking", value: "Preparing" },
@@ -338,7 +338,7 @@ export default function AdminOrdersPage() {
             <TabsTrigger 
               key={tab.label} 
               value={tab.value} 
-              className="flex-1 min-w-[65px] font-black text-[8px] md:text-[9px] uppercase tracking-tighter data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg transition-all h-full px-2"
+              className="flex-1 min-w-[70px] font-black text-[8px] md:text-[9px] uppercase tracking-tighter data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg transition-all h-full px-2"
             >
               {tab.label}
             </TabsTrigger>
@@ -346,16 +346,16 @@ export default function AdminOrdersPage() {
         </TabsList>
         
         <div className="flex-1 pb-32 overflow-y-auto scrollbar-hide">
-          <TabsContent value="All" className="mt-0 outline-none"><OrderTable statusFilter="All" /></TabsContent>
-          <TabsContent value="New" className="mt-0 outline-none"><OrderTable statusFilter="New" /></TabsContent>
-          <TabsContent value="Preparing" className="mt-0 outline-none"><OrderTable statusFilter="Preparing" /></TabsContent>
-          <TabsContent value="Out for Delivery" className="mt-0 outline-none"><OrderTable statusFilter="Out for Delivery" /></TabsContent>
-          <TabsContent value="Completed" className="mt-0 outline-none"><OrderTable statusFilter="Completed" /></TabsContent>
+          <TabsContent value="All" className="mt-0 outline-none w-full"><OrderTable statusFilter="All" /></TabsContent>
+          <TabsContent value="New" className="mt-0 outline-none w-full"><OrderTable statusFilter="New" /></TabsContent>
+          <TabsContent value="Preparing" className="mt-0 outline-none w-full"><OrderTable statusFilter="Preparing" /></TabsContent>
+          <TabsContent value="Out for Delivery" className="mt-0 outline-none w-full"><OrderTable statusFilter="Out for Delivery" /></TabsContent>
+          <TabsContent value="Completed" className="mt-0 outline-none w-full"><OrderTable statusFilter="Completed" /></TabsContent>
         </div>
       </Tabs>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl h-[90dvh] sm:h-auto sm:rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white outline-none z-[100]">
+        <DialogContent className="max-w-[calc(100vw-24px)] sm:max-w-2xl max-h-[92dvh] sm:max-h-[90vh] sm:rounded-[32px] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white outline-none z-[100]">
           {selectedOrder && (
             <>
               <DialogHeader className="p-5 sm:p-8 text-white space-y-2 shrink-0 relative" style={{ backgroundColor: brandColor }}>
