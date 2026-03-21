@@ -46,7 +46,7 @@ export default function FranchiseDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
 
-  const profileId = user?.email?.toLowerCase().trim() || null;
+  const profileId = user?.uid || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
 
   const [isVerifying, setIsVerifying] = useState(true);
@@ -68,12 +68,15 @@ export default function FranchiseDashboardLayout({
     if (profileLoading) return;
 
     // 5. Verify Role
-    if (!userProfile || userProfile.role !== 'franchise-owner') {
-      console.warn("Franchise Guard: Unauthorized access.");
-      router.replace('/franchise/login');
-    } else {
-      setIsVerifying(false);
-    }
+    if (profileLoading) return;
+
+if (!userProfile) return; // wait
+
+if (userProfile.role !== 'franchise-owner') {
+  router.replace('/franchise/login');
+} else {
+  setIsVerifying(false);
+}
   }, [user, userLoading, profileLoading, userProfile, router]);
 
   const handleLogout = async () => {

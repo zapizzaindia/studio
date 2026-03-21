@@ -46,7 +46,7 @@ export default function SuperAdminDashboardLayout({
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
 
-  const profileId = user?.email?.toLowerCase().trim() || null;
+  const profileId = user?.uid || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
 
   const [isVerifying, setIsVerifying] = useState(true);

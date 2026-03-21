@@ -42,8 +42,8 @@ export default function AdminDashboardLayout({
   const { user, loading: userLoading } = useUser();
   
   // Only attempt profile lookup if email is available
-  const profileId = user?.email?.toLowerCase().trim() || null;
-  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
+  const profileId = user?.uid || null;
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'uid');
   
   const effectiveOutletId = userProfile?.outletId || 'dummy';
   const { data: outlet } = useDoc<Outlet>('outlets', effectiveOutletId);
@@ -68,14 +68,13 @@ export default function AdminDashboardLayout({
     if (profileLoading) return;
 
     // 5. Verify Role
-    if (!userProfile || userProfile.role !== 'outlet-admin') {
-      console.warn("Admin Guard: Unauthorized access detected.");
-      // Redirect without signing out to avoid the destructive loop
-      router.replace('/admin/login');
-    } else {
-      // Access granted
-      setIsVerifying(false);
-    }
+    if (!userProfile) return;
+
+if (userProfile.role !== 'outlet-admin') {
+  router.replace('/admin/login');
+} else {
+  setIsVerifying(false);
+}
   }, [user, userLoading, profileLoading, userProfile, router]);
 
   useEffect(() => {
