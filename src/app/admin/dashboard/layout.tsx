@@ -49,25 +49,29 @@ export default function AdminDashboardLayout({
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    if (userLoading) return;
-
+    if (userLoading || profileLoading) return;
+  
+    // 🔒 Not logged in
     if (!user) {
+      const timer = setTimeout(() => {
+        if (!auth?.currentUser) {
+          router.replace('/admin/login');
+        }
+      }, 2000);
+  
+      return () => clearTimeout(timer);
+    }
+  
+    // 🚫 No profile OR wrong role
+    if (!userProfile || userProfile.role !== 'outlet-admin') {
       router.replace('/admin/login');
       return;
     }
-
-    if (profileLoading) return;
-
-    // Wait for definite null to confirm missing profile
-    if (userProfile === null || (userProfile && userProfile.role !== 'outlet-admin')) {
-      router.replace('/admin/login');
-      return;
-    }
-
-    if (userProfile) {
-      setIsVerifying(false);
-    }
-  }, [user, userLoading, profileLoading, userProfile, router]);
+  
+    // ✅ All good
+    setIsVerifying(false);
+  
+  }, [user, userLoading, profileLoading, userProfile, auth, router]);
 
   useEffect(() => {
     if (pathname === '/admin/dashboard' && !isVerifying) {

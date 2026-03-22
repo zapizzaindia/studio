@@ -58,6 +58,18 @@ if (!profileId) return;
                 description: notification.body,
               });
             });
+            await PushNotifications.addListener(
+              'pushNotificationActionPerformed',
+              (notification) => {
+                const url = notification.notification.data?.url;
+            
+                console.log("📲 Notification clicked:", url);
+            
+                if (url) {
+                  window.location.href = url;
+                }
+              }
+            );
 
             // Trigger the native registration process
             await PushNotifications.register();

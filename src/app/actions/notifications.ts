@@ -64,7 +64,7 @@ export async function notifyAdminsOfOrder(payload: {
       data: {
         orderId: payload.orderId,
         url: "/admin/dashboard/orders",
-        clickAction: 'OPEN_ACTIVITY'
+        
       },
       android: {
         priority: 'high',
@@ -74,7 +74,7 @@ export async function notifyAdminsOfOrder(payload: {
           icon: 'stock_ticker_update',
           color: '#14532d',
           tag: 'new_order',
-          clickAction: 'FLUTTER_NOTIFICATION_CLICK'
+        
         }
       },
       apns: {
