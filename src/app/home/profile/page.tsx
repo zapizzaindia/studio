@@ -21,8 +21,8 @@ import {
   ChevronRight,
   Cake,
   Crown,
-  Trophy,
-  BellRing
+  BellRing,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,18 +58,23 @@ export default function ProfilePage() {
   
   const [savedOutletId, setSavedOutletId] = useState<string | null>(null);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
+  const [isPermissionLoading, setIsPermissionLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('zapizza-outlet');
     if (saved) {
       try { setSavedOutletId(JSON.parse(saved).id); } catch(e) {}
     }
+  }, []);
 
-    // Check current notification permission status
-    if (typeof window !== 'undefined' && 'Notification' in window) {
+  // Sync toggle state with profile and system permissions
+  useEffect(() => {
+    if (profile?.fcmToken) {
+      setIsNotificationsEnabled(true);
+    } else if (typeof window !== 'undefined' && 'Notification' in window) {
       setIsNotificationsEnabled(Notification.permission === 'granted');
     }
-  }, []);
+  }, [profile]);
 
   const { data: outlet } = useDoc<Outlet>('outlets', savedOutletId || 'dummy');
 
@@ -107,36 +112,62 @@ export default function ProfilePage() {
   };
 
   const handleToggleNotifications = async (checked: boolean) => {
+    if (!user || !db) return;
+
+    // 1. Turning OFF
     if (!checked) {
       setIsNotificationsEnabled(false);
-      if (user && db) {
-        updateDoc(doc(db, 'users', user.uid), { fcmToken: null })
-          .catch(() => {});
-      }
+      updateDoc(doc(db, 'users', user.uid), { fcmToken: null })
+        .then(() => toast({ title: "Notifications Paused" }))
+        .catch(() => {});
       return;
     }
 
+    // 2. Turning ON
+    setIsPermissionLoading(true);
     try {
-      const token = await requestForToken();
-      if (token) {
-        setIsNotificationsEnabled(true);
-        if (user && db) {
+      // Detect if running in Capacitor Native
+      const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
+
+      if (isNative) {
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        let permStatus = await PushNotifications.checkPermissions();
+        
+        if (permStatus.receive !== 'granted') {
+          permStatus = await PushNotifications.requestPermissions();
+        }
+
+        if (permStatus.receive === 'granted') {
+          await PushNotifications.register();
+          // The actual token update happens in src/components/fcm-handler.tsx via listener
+          setIsNotificationsEnabled(true);
+          toast({ title: "Signal Established", description: "Native push is active." });
+        } else {
+          throw new Error("Denied");
+        }
+      } else {
+        // PWA Web Flow
+        const token = await requestForToken();
+        if (token) {
           await setDoc(doc(db, 'users', user.uid), { 
             fcmToken: token,
             lastTokenSync: new Date().toISOString()
           }, { merge: true });
+          setIsNotificationsEnabled(true);
+          toast({ title: "Notifications Enabled", description: "You'll now receive live order updates." });
+        } else {
+          throw new Error("Denied");
         }
-        toast({ title: "Notifications Enabled", description: "You'll now receive live order updates." });
-      } else {
-        setIsNotificationsEnabled(false);
-        toast({ 
-          variant: "destructive", 
-          title: "Permission Denied", 
-          description: "Please enable notifications in your device settings." 
-        });
       }
     } catch (e) {
       setIsNotificationsEnabled(false);
+      toast({ 
+        variant: "destructive", 
+        title: "Permission Denied", 
+        description: "Please enable notifications in your device settings." 
+      });
+    } finally {
+      setIsPermissionLoading(false);
     }
   };
 
@@ -153,6 +184,7 @@ export default function ProfilePage() {
     setDoc(userRef, updatedData, { merge: true })
       .then(() => {
         setIsEditDialogOpen(false);
+        toast({ title: "Profile Updated" });
       })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -167,7 +199,7 @@ export default function ProfilePage() {
   if (!isHydrated || userLoading || profileLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#f8f9fa] items-center justify-center p-6">
-        <Skeleton className="h-12 w-12 rounded-full animate-spin mb-4" />
+        <Loader2 className="h-12 w-12 rounded-full animate-spin mb-4 text-[#14532d]" />
         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest font-headline">Loading Profile...</p>
       </div>
     );
@@ -283,7 +315,6 @@ export default function ProfilePage() {
       </div>
 
       <div className="px-4 -mt-6 space-y-4 relative z-20">
-        {/* Notification Permission Card */}
         <Card className="border-orange-200 bg-orange-50/50 rounded-[24px] overflow-hidden shadow-xl">
           <div className="bg-orange-100/50 px-6 py-3 border-b border-orange-200 flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-orange-600" />
@@ -292,7 +323,11 @@ export default function ProfilePage() {
           <CardContent className="p-6 flex items-center justify-between gap-4">
             <div className="flex items-start gap-4 text-left">
               <div className="mt-1">
-                <BellRing className="h-6 w-6 text-[#333]" />
+                {isPermissionLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
+                ) : (
+                  <BellRing className="h-6 w-6 text-[#333]" />
+                )}
               </div>
               <div className="space-y-1">
                 <h3 className="text-lg font-black text-[#333] uppercase leading-tight font-headline">Push Notifications</h3>
@@ -304,6 +339,7 @@ export default function ProfilePage() {
             <Switch 
               checked={isNotificationsEnabled} 
               onCheckedChange={handleToggleNotifications}
+              disabled={isPermissionLoading}
               className="data-[state=checked]:bg-orange-500 scale-110"
             />
           </CardContent>
