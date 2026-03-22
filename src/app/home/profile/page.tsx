@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -126,7 +125,6 @@ export default function ProfilePage() {
     // 2. Turning ON
     setIsPermissionLoading(true);
     try {
-      // Detect if running in Capacitor Native
       const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
 
       if (isNative) {
@@ -139,7 +137,6 @@ export default function ProfilePage() {
 
         if (permStatus.receive === 'granted') {
           await PushNotifications.register();
-          // The actual token update happens in src/components/fcm-handler.tsx via listener
           setIsNotificationsEnabled(true);
           toast({ title: "Signal Established", description: "Native push is active." });
         } else {
