@@ -21,7 +21,8 @@ import {
   ChevronRight,
   Cake,
   Crown,
-  Trophy
+  Trophy,
+  BellRing
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,24 +40,34 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { doc, setDoc } from "firebase/firestore";
+import { Switch } from "@/components/ui/switch";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import { requestForToken } from "@/firebase/messaging";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
   const router = useRouter();
   const auth = useAuth();
   const { user, loading: userLoading } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
   const { data: profile, loading: profileLoading } = useDoc<UserProfile>('users', user?.uid || 'dummy');
   
   const [savedOutletId, setSavedOutletId] = useState<string | null>(null);
+  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('zapizza-outlet');
     if (saved) {
       try { setSavedOutletId(JSON.parse(saved).id); } catch(e) {}
+    }
+
+    // Check current notification permission status
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setIsNotificationsEnabled(Notification.permission === 'granted');
     }
   }, []);
 
@@ -93,6 +104,40 @@ export default function ProfilePage() {
     if (!auth) return;
     await signOut(auth);
     router.replace('/login');
+  };
+
+  const handleToggleNotifications = async (checked: boolean) => {
+    if (!checked) {
+      setIsNotificationsEnabled(false);
+      if (user && db) {
+        updateDoc(doc(db, 'users', user.uid), { fcmToken: null })
+          .catch(() => {});
+      }
+      return;
+    }
+
+    try {
+      const token = await requestForToken();
+      if (token) {
+        setIsNotificationsEnabled(true);
+        if (user && db) {
+          await setDoc(doc(db, 'users', user.uid), { 
+            fcmToken: token,
+            lastTokenSync: new Date().toISOString()
+          }, { merge: true });
+        }
+        toast({ title: "Notifications Enabled", description: "You'll now receive live order updates." });
+      } else {
+        setIsNotificationsEnabled(false);
+        toast({ 
+          variant: "destructive", 
+          title: "Permission Denied", 
+          description: "Please enable notifications in your device settings." 
+        });
+      }
+    } catch (e) {
+      setIsNotificationsEnabled(false);
+    }
   };
 
   const handleUpdateProfile = async () => {
@@ -238,6 +283,32 @@ export default function ProfilePage() {
       </div>
 
       <div className="px-4 -mt-6 space-y-4 relative z-20">
+        {/* Notification Permission Card */}
+        <Card className="border-orange-200 bg-orange-50/50 rounded-[24px] overflow-hidden shadow-xl">
+          <div className="bg-orange-100/50 px-6 py-3 border-b border-orange-200 flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-orange-600" />
+            <span className="text-sm font-black text-orange-800 uppercase tracking-widest font-headline">Needs Your Attention</span>
+          </div>
+          <CardContent className="p-6 flex items-center justify-between gap-4">
+            <div className="flex items-start gap-4 text-left">
+              <div className="mt-1">
+                <BellRing className="h-6 w-6 text-[#333]" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-[#333] uppercase leading-tight font-headline">Push Notifications</h3>
+                <p className="text-[11px] font-medium text-muted-foreground uppercase leading-relaxed font-headline">
+                  Allow push notifications to stay updated on your order status and the latest offers and deals.
+                </p>
+              </div>
+            </div>
+            <Switch 
+              checked={isNotificationsEnabled} 
+              onCheckedChange={handleToggleNotifications}
+              className="data-[state=checked]:bg-orange-500 scale-110"
+            />
+          </CardContent>
+        </Card>
+
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
             <CardContent className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
