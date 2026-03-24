@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -5,6 +6,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { CartProvider } from '@/hooks/use-cart';
 import { FCMHandler } from '@/components/fcm-handler';
 import { OfflineDetector } from '@/components/offline-detector';
+import { GlobalPullRefresh } from '@/components/global-pull-refresh';
 
 /**
  * Root Layout - Pure static shell for the PWA.
@@ -66,9 +68,11 @@ export default function RootLayout({
           <CartProvider>
             <FCMHandler />
             <OfflineDetector />
-            <div className="flex-1 flex flex-col">
-              {children}
-            </div>
+            <GlobalPullRefresh>
+              <div className="flex-1 flex flex-col">
+                {children}
+              </div>
+            </GlobalPullRefresh>
           </CartProvider>
         </FirebaseClientProvider>
         <Toaster />
