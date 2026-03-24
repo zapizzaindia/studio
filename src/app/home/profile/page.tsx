@@ -218,7 +218,8 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-12">
-      <div className="bg-[#14532d] text-white px-6 pt-4 pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
+      {/* Added top padding to clear the fixed MainNav */}
+      <div className="bg-[#14532d] text-white px-6 pt-[calc(64px+env(safe-area-inset-top,0px))] pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button 
