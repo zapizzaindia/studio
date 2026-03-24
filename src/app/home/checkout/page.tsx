@@ -3,12 +3,13 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2, ShoppingCart, Sparkles } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2, ShoppingCart, Sparkles, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/hooks/use-cart";
-import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
+import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
 import { doc, collection, addDoc, serverTimestamp, query, getDocs, updateDoc, increment } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import type { GlobalSettings, Coupon, Address, Outlet, UserProfile } from "@/lib/types";
@@ -18,6 +19,7 @@ import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { createRazorpayOrder } from "./actions";
 import { notifyAdminsOfOrder } from "@/app/actions/notifications";
 
@@ -27,6 +29,7 @@ declare global {
   }
 }
 
+// Haversine formula to calculate distance in KM
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -124,19 +127,14 @@ export default function CheckoutPage() {
       const eligibleSubtotal = eligibleItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
       if (appliedCoupon.type === 'bogo') {
-        // Buy 1 Get 1 logic: Buy X items, floor(X/2) cheapest ones are free
         const sortedEligible = eligibleItems.flatMap(item => Array(item.quantity).fill(item.price)).sort((a, b) => a - b);
         const freeCount = Math.floor(sortedEligible.length / 2);
-        
-        // Take the smallest freeCount prices and sum them
         discount = sortedEligible.slice(0, freeCount).reduce((sum, p) => sum + p, 0);
 
-        // Nudge logic: If user has 1, 3, 5 items... they are 1 away from another free item
         if (sortedEligible.length > 0 && sortedEligible.length % 2 !== 0) {
-            bogoNudge = "Add 1 more item from this offer category to get it FREE!";
+            bogoNudge = `Add 1 more ${appliedCoupon.eligibleCategoryIds ? 'eligible item' : 'pizza'} to get it FREE!`;
         }
       } else {
-        // Standard Targeting
         if (appliedCoupon.discountType === 'percentage') {
           const potentialDiscount = (eligibleSubtotal * appliedCoupon.discountValue) / 100;
           discount = appliedCoupon.maxDiscountAmount 
@@ -154,13 +152,26 @@ export default function CheckoutPage() {
 
     let loyaltyDiscount = 0;
     if (useLoyaltyPoints && userProfile?.loyaltyPoints) {
-        const maxRedeemable = (subtotal - discount) * 0.1;
+        const maxRedeemable = (subtotal - discount) * 0.1; // Max 10% redemption
         loyaltyDiscount = Math.min(userProfile.loyaltyPoints, maxRedeemable);
     }
 
     const finalTotal = subtotal + gstTotal + deliveryFee - discount - loyaltyDiscount;
 
-    return { subtotal, deliveryFee, gstTotal, cgst, sgst, gstRate, discount, loyaltyDiscount, finalTotal, distanceKm, isOutOfRange, bogoNudge };
+    return { 
+      subtotal, 
+      deliveryFee, 
+      gstTotal, 
+      cgst, 
+      sgst, 
+      gstRate, 
+      discount, 
+      loyaltyDiscount, 
+      finalTotal, 
+      distanceKm, 
+      isOutOfRange, 
+      bogoNudge 
+    };
   }, [totalPrice, items, settings, appliedCoupon, selectedAddress, selectedOutlet, useLoyaltyPoints, userProfile]);
 
   const handleApplyCoupon = (couponOrCode: Coupon | string) => {
@@ -169,7 +180,7 @@ export default function CheckoutPage() {
     let found: Coupon | undefined;
     if (typeof couponOrCode === 'string') {
       found = allCoupons?.find(c => 
-        c.code === couponOrCode.toUpperCase() && 
+        c.code === couponInput.toUpperCase() && 
         c.brand === selectedOutlet.brand
       );
     } else {
@@ -240,16 +251,21 @@ export default function CheckoutPage() {
 
     try {
       const orderRef = await addDoc(collection(db, 'orders'), orderData);
+      
+      // Wake up outlet admins
       notifyAdminsOfOrder({
         orderId: orderRef.id,
         outletId: outletObj.id,
         customerName: customerName,
         total: orderData.total
       });
+
+      // Update Loyalty Balance
       const netPointsUpdate = pointsEarned - (calculations.loyaltyDiscount || 0);
       if (netPointsUpdate !== 0) {
         await updateDoc(doc(db, 'users', user.uid), { loyaltyPoints: increment(netPointsUpdate) });
       }
+
       clearCart();
       router.push('/home/checkout/success');
     } catch (error) {
@@ -282,11 +298,23 @@ export default function CheckoutPage() {
         name: selectedOutlet?.brand === 'zfry' ? "Zfry India" : "Zapizza",
         description: `Order Payment #${order.id.slice(-6)}`,
         order_id: order.id,
-        handler: async function (response: any) { await saveOrderToFirestore(response.razorpay_payment_id, "Success"); },
-        prefill: { name: userProfile?.displayName || user.displayName, email: userProfile?.email || user.email, contact: userProfile?.phoneNumber || user.phoneNumber },
+        handler: async function (response: any) { 
+          await saveOrderToFirestore(response.razorpay_payment_id, "Success"); 
+        },
+        prefill: { 
+          name: userProfile?.displayName || user.displayName, 
+          email: userProfile?.email || user.email, 
+          contact: userProfile?.phoneNumber || user.phoneNumber 
+        },
         theme: { color: selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d' },
-        modal: { ondismiss: function() { setIsPlacing(false); toast({ variant: 'destructive', title: "Payment Cancelled" }); } }
+        modal: { 
+          ondismiss: function() { 
+            setIsPlacing(false); 
+            toast({ variant: 'destructive', title: "Payment Cancelled" }); 
+          } 
+        }
       };
+      
       if (typeof window.Razorpay === 'undefined') throw new Error("Gateway SDK failed to load.");
       const rzp = new window.Razorpay(options);
       rzp.open();
@@ -301,7 +329,7 @@ export default function CheckoutPage() {
       <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6 text-center">
         <ShoppingCart className="h-16 w-16 text-muted-foreground/30 mb-6" />
         <h2 className="text-2xl font-black text-[#14532d] uppercase italic mb-2 font-headline">Your cart is empty</h2>
-        <Button onClick={() => router.push('/home/menu')} className="bg-[#14532d] text-white px-8 h-12 font-black uppercase tracking-widest rounded-xl">GO TO MENU</Button>
+        <Button onClick={() => router.push('/home/menu')} className="bg-[#14532d] text-white px-8 h-12 font-black uppercase tracking-widest rounded-xl font-headline">GO TO MENU</Button>
       </div>
     );
   }
@@ -310,12 +338,12 @@ export default function CheckoutPage() {
   const brandCoupons = allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-64">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-64 font-headline">
       <Script id="razorpay-checkout" src="https://checkout.razorpay.com/v1/checkout.js" />
 
       <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4 pt-safe">
         <Button variant="ghost" size="icon" onClick={() => router.back()}><ArrowLeft className="h-6 w-6" /></Button>
-        <h1 className="text-xl font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Review Order</h1>
+        <h1 className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Review Order</h1>
       </div>
 
       <div className="container mx-auto p-4 space-y-4 max-w-lg text-left">
@@ -323,7 +351,7 @@ export default function CheckoutPage() {
             <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-center justify-between gap-3 animate-pulse">
                 <div className="flex items-center gap-3">
                     <Sparkles className="h-5 w-5 text-indigo-600" />
-                    <p className="text-[10px] font-black text-indigo-950 uppercase leading-tight font-headline">
+                    <p className="text-[10px] font-black text-indigo-950 uppercase leading-tight">
                         {calculations.bogoNudge}
                     </p>
                 </div>
@@ -334,56 +362,63 @@ export default function CheckoutPage() {
         {isOutletClosed && (
           <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
-            <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1 font-headline">This kitchen is currently closed.</p>
+            <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1">This kitchen is currently closed and not accepting orders.</p>
           </div>
         )}
 
+        {/* Address Card */}
         <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between font-headline">
+          <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
-              <MapPinned className="h-4 w-4" /> Delivery Address
+              <MapPinned className="h-4 w-4" /> Delivery Destination
             </CardTitle>
             <Button variant="link" size="sm" onClick={() => router.push('/home/addresses')} className="h-auto p-0 text-[10px] font-black uppercase" style={{ color: brandColor }}>CHANGE</Button>
           </CardHeader>
-          <CardContent className="p-4 bg-white font-headline">
+          <CardContent className="p-4 bg-white">
             {selectedAddress ? (
               <div className="flex justify-between items-start">
                 <div>
                     <Badge variant="secondary" className="text-[8px] font-black uppercase mb-2" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
                     <p className="text-xs font-bold text-[#333333] leading-snug">{selectedAddress.flatNo}, {selectedAddress.area}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold mt-1">{selectedAddress.city}</p>
                 </div>
                 {selectedAddress.latitude && (
                     <div className="flex flex-col items-end">
-                        <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1 mb-1 font-headline"><Navigation className="h-2 w-2 fill-current" /> GPS PINNED</span>
+                        <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1 mb-1"><Navigation className="h-2 w-2 fill-current" /> GPS PINNED</span>
                         <span className="text-[9px] font-bold text-muted-foreground uppercase font-sans tabular-nums">{calculations.distanceKm.toFixed(1)} KM</span>
                     </div>
                 )}
               </div>
             ) : (
-              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12" style={{ borderColor: brandColor, color: brandColor }}>+ Add Address</Button>
+              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12" style={{ borderColor: brandColor, color: brandColor }}>+ Add Delivery Address</Button>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm font-headline">
+        {/* Item Summary Card */}
+        <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4"><CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Order Summary</CardTitle></CardHeader>
           <CardContent className="p-0 bg-white">
             {items.map((item) => (
-              <div key={item.cartId} className="p-4 border-b last:border-0 flex items-center justify-between font-headline">
+              <div key={item.cartId} className="p-4 border-b last:border-0 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                     <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
                   </div>
                   <div>
                     <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                        {item.selectedVariation && <Badge variant="outline" className="text-[7px] font-black uppercase h-3.5 px-1 border-gray-200">{item.selectedVariation.name}</Badge>}
+                        {item.selectedAddons?.map(a => <Badge key={a.name} variant="outline" className="text-[7px] font-black uppercase h-3.5 px-1 border-dashed text-muted-foreground">+ {a.name}</Badge>)}
+                    </div>
                     <span className="text-[11px] font-black mt-1.5 block font-sans tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
-                    <button onClick={() => updateQuantity(item.cartId, -1)}><Minus className="h-3 w-3" /></button>
+                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
                     <span className="text-sm font-black min-w-[20px] text-center font-sans tabular-nums">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.cartId, 1)}><Plus className="h-3 w-3" /></button>
+                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
                   </div>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeItem(item.cartId)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -392,24 +427,44 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm overflow-hidden font-headline">
+        {/* Special Instructions Card */}
+        <Card className="border-none shadow-sm overflow-hidden">
           <CardContent className="p-4 bg-white">
-            <div className="flex items-center gap-2 mb-3"><Ticket className="h-4 w-4" style={{ color: brandColor }} /><span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Offers & Coupons</span></div>
+            <div className="flex items-center gap-2 mb-3">
+                <MessageSquareText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Kitchen Instructions</span>
+            </div>
+            <Textarea 
+                placeholder="e.g. Please avoid onions / Leave at the gate" 
+                value={specialNote}
+                onChange={e => setSpecialNote(e.target.value)}
+                className="h-20 rounded-xl font-medium text-xs border-gray-100 bg-gray-50/50"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Coupon Card */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <CardContent className="p-4 bg-white">
+            <div className="flex items-center gap-2 mb-3"><Ticket className="h-4 w-4" style={{ color: brandColor }} /><span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Promos & Coupons</span></div>
             {appliedCoupon ? (
               <div className="flex items-center justify-between p-3 rounded-lg border border-dashed" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '30' }}>
-                <span className="text-xs font-black uppercase" style={{ color: brandColor }}>{appliedCoupon.code} applied!</span>
-                <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600">REMOVE</Button>
+                <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-xs font-black uppercase" style={{ color: brandColor }}>{appliedCoupon.code} applied!</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600 hover:bg-red-50">REMOVE</Button>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex gap-2">
-                  <Input placeholder="ENTER CODE" value={couponInput} onChange={e => setCouponInput(e.target.value)} className="h-10 text-xs font-black uppercase" />
-                  <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
+                  <Input placeholder="ENTER VOUCHER CODE" value={couponInput} onChange={e => setCouponInput(e.target.value)} className="h-10 text-xs font-black uppercase" />
+                  <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px] h-10 px-6" style={{ backgroundColor: brandColor }}>APPLY</Button>
                 </div>
                 {brandCoupons.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     {brandCoupons.map((coupon) => (
-                      <button key={coupon.id} onClick={() => handleApplyCoupon(coupon)} className="flex-shrink-0 text-left p-2.5 rounded-xl border border-dashed bg-gray-50 hover:bg-white" style={{ borderColor: brandColor + '30' }}>
+                      <button key={coupon.id} onClick={() => handleApplyCoupon(coupon)} className="flex-shrink-0 text-left p-2.5 rounded-xl border border-dashed bg-gray-50 hover:bg-white transition-colors" style={{ borderColor: brandColor + '30' }}>
                         <span className="text-[10px] font-black text-[#333] uppercase">{coupon.code}</span>
                         <p className="text-[8px] font-bold text-muted-foreground uppercase">{coupon.type === 'bogo' ? 'BUY 1 GET 1' : `${coupon.discountValue}% OFF`}</p>
                       </button>
@@ -421,19 +476,96 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm font-headline">
+        {/* Loyalty Points Card */}
+        {userProfile?.loyaltyPoints ? (
+            <Card className="border-none shadow-sm overflow-hidden">
+                <CardContent className="p-4 bg-white flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                            <Crown className="h-5 w-5" />
+                        </div>
+                        <div className="text-left">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Redeem LP Coins</span>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Balance: {userProfile.loyaltyPoints} Coins</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black uppercase text-green-600">-₹{calculations.loyaltyDiscount.toFixed(0)}</span>
+                        <Switch 
+                            checked={useLoyaltyPoints} 
+                            onCheckedChange={setUseLoyaltyPoints} 
+                            className="data-[state=checked]:bg-amber-500"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+        ) : null}
+
+        {/* Enhanced Bill Details Card */}
+        <Card className="border-none shadow-sm overflow-hidden">
           <CardHeader className="bg-white border-b py-4"><CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle></CardHeader>
-          <CardContent className="p-4 space-y-3 bg-white font-headline">
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase"><span>Item Total</span><span className="font-sans tabular-nums">₹{calculations.subtotal}</span></div>
-            {calculations.discount > 0 && <div className="flex justify-between text-xs font-black text-green-600 uppercase"><span>Coupon Discount</span><span className="font-sans tabular-nums">-₹{calculations.discount.toFixed(2)}</span></div>}
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase"><span>Delivery Fee</span><span className={cn("font-sans tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>{calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}</span></div>
-            <div className="border-t border-dashed pt-3 flex justify-between items-center"><span className="text-lg font-black text-[#333333]">TO PAY</span><span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span></div>
+          <CardContent className="p-4 space-y-3 bg-white">
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
+                <span>Item Total</span>
+                <span className="font-sans tabular-nums">₹{calculations.subtotal.toFixed(2)}</span>
+            </div>
+            
+            {calculations.discount > 0 && (
+                <div className="flex justify-between text-xs font-black text-green-600 uppercase">
+                    <span>Promo Discount</span>
+                    <span className="font-sans tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
+                </div>
+            )}
+
+            {calculations.loyaltyDiscount > 0 && (
+                <div className="flex justify-between text-xs font-black text-amber-600 uppercase">
+                    <span>LP Coins Redeemed</span>
+                    <span className="font-sans tabular-nums">-₹{calculations.loyaltyDiscount.toFixed(2)}</span>
+                </div>
+            )}
+
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
+                <span>Delivery Logistics</span>
+                <span className={cn("font-sans tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>
+                    {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee.toFixed(2)}`}
+                </span>
+            </div>
+
+            <div className="pt-1 space-y-1">
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+                    <span>CGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
+                    <span className="font-sans tabular-nums">₹{calculations.cgst.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+                    <span>SGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
+                    <span className="font-sans tabular-nums">₹{calculations.sgst.toFixed(2)}</span>
+                </div>
+            </div>
+
+            <div className="border-t border-dashed pt-3 flex justify-between items-center">
+                <div className="flex flex-col text-left">
+                    <span className="text-lg font-black text-[#333333] uppercase italic leading-none">GRAND TOTAL</span>
+                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-1">Inclusive of all taxes</span>
+                </div>
+                <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Gateway Security Badge */}
+        <div className="flex items-center justify-center gap-2 py-4 opacity-40">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="text-[9px] font-black uppercase tracking-[0.2em]">100% Secure PCI-DSS Gateway</span>
+        </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
-        <Button onClick={handlePlaceOrder} disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed} className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg" style={{ backgroundColor: brandColor }}>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+        <Button 
+            onClick={handlePlaceOrder} 
+            disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed} 
+            className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 border-none" 
+            style={{ backgroundColor: brandColor }}
+        >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (isOutletClosed ? "OUTLET CLOSED" : (calculations.isOutOfRange ? "OUT OF RANGE" : `PAY ₹${Math.round(calculations.finalTotal)}`))}
         </Button>
       </div>
