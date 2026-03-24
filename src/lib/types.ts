@@ -63,9 +63,12 @@ export type GlobalSettings = {
   distanceSlabs?: DistanceSlab[]; // Configurable pricing tiers
 };
 
+export type CouponType = 'standard' | 'bogo';
+
 export type Coupon = {
   id: string;
   code: string;
+  type: CouponType;
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   minOrderAmount: number;
@@ -73,6 +76,8 @@ export type Coupon = {
   active: boolean;
   description?: string;
   brand: Brand;
+  eligibleItemIds?: string[];
+  eligibleCategoryIds?: string[];
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';

@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2, ShoppingCart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -85,7 +85,7 @@ export default function CheckoutPage() {
 
   const calculations = useMemo(() => {
     const subtotal = totalPrice;
-    const gstRate = settings?.gstPercentage ?? 5; // Default 5% for food
+    const gstRate = settings?.gstPercentage ?? 5; 
     const freeThreshold = settings?.minOrderForFreeDelivery ?? 500;
     const maxRadius = settings?.maxDeliveryRadius ?? 10;
     
@@ -100,48 +100,68 @@ export default function CheckoutPage() {
             selectedAddress.latitude, 
             selectedAddress.longitude!
         );
-
-        if (distanceKm > maxRadius) {
-            isOutOfRange = true;
-        }
-
+        if (distanceKm > maxRadius) isOutOfRange = true;
         if (settings?.distanceSlabs && settings.distanceSlabs.length > 0) {
             const matchedSlab = settings.distanceSlabs.find(s => distanceKm <= s.upToKm);
-            if (matchedSlab) {
-                computedDeliveryFee = matchedSlab.fee;
-            } else if (!isOutOfRange) {
-                computedDeliveryFee = settings.distanceSlabs[settings.distanceSlabs.length - 1].fee;
-            }
+            if (matchedSlab) computedDeliveryFee = matchedSlab.fee;
+            else if (!isOutOfRange) computedDeliveryFee = settings.distanceSlabs[settings.distanceSlabs.length - 1].fee;
         }
     }
 
     const deliveryFee = subtotal >= freeThreshold ? 0 : computedDeliveryFee;
-    const gstTotal = (subtotal * gstRate) / 100;
-    const cgst = gstTotal / 2;
-    const sgst = gstTotal / 2;
     
     let discount = 0;
+    let bogoNudge: string | null = null;
+
     if (appliedCoupon) {
-      if (appliedCoupon.discountType === 'percentage') {
-        const potentialDiscount = (subtotal * appliedCoupon.discountValue) / 100;
-        discount = appliedCoupon.maxDiscountAmount 
-            ? Math.min(potentialDiscount, appliedCoupon.maxDiscountAmount) 
-            : potentialDiscount;
+      // Logic for item/category restriction
+      const eligibleItems = items.filter(item => {
+        const isItemEligible = !appliedCoupon.eligibleItemIds || appliedCoupon.eligibleItemIds.includes(item.id);
+        const isCategoryEligible = !appliedCoupon.eligibleCategoryIds || appliedCoupon.eligibleCategoryIds.includes(item.category);
+        return isItemEligible && isCategoryEligible;
+      });
+
+      const eligibleSubtotal = eligibleItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+
+      if (appliedCoupon.type === 'bogo') {
+        // Buy 1 Get 1 logic: Buy X items, floor(X/2) cheapest ones are free
+        const sortedEligible = eligibleItems.flatMap(item => Array(item.quantity).fill(item.price)).sort((a, b) => a - b);
+        const freeCount = Math.floor(sortedEligible.length / 2);
+        
+        // Take the smallest freeCount prices and sum them
+        discount = sortedEligible.slice(0, freeCount).reduce((sum, p) => sum + p, 0);
+
+        // Nudge logic: If user has 1, 3, 5 items... they are 1 away from another free item
+        if (sortedEligible.length > 0 && sortedEligible.length % 2 !== 0) {
+            bogoNudge = "Add 1 more item from this offer category to get it FREE!";
+        }
       } else {
-        discount = appliedCoupon.discountValue;
+        // Standard Targeting
+        if (appliedCoupon.discountType === 'percentage') {
+          const potentialDiscount = (eligibleSubtotal * appliedCoupon.discountValue) / 100;
+          discount = appliedCoupon.maxDiscountAmount 
+              ? Math.min(potentialDiscount, appliedCoupon.maxDiscountAmount) 
+              : potentialDiscount;
+        } else {
+          discount = appliedCoupon.discountValue;
+        }
       }
     }
 
+    const gstTotal = ((subtotal - discount) * gstRate) / 100;
+    const cgst = gstTotal / 2;
+    const sgst = gstTotal / 2;
+
     let loyaltyDiscount = 0;
     if (useLoyaltyPoints && userProfile?.loyaltyPoints) {
-        const maxRedeemable = subtotal * 0.1;
+        const maxRedeemable = (subtotal - discount) * 0.1;
         loyaltyDiscount = Math.min(userProfile.loyaltyPoints, maxRedeemable);
     }
 
     const finalTotal = subtotal + gstTotal + deliveryFee - discount - loyaltyDiscount;
 
-    return { subtotal, deliveryFee, gstTotal, cgst, sgst, gstRate, discount, loyaltyDiscount, finalTotal, distanceKm, isOutOfRange };
-  }, [totalPrice, settings, appliedCoupon, selectedAddress, selectedOutlet, useLoyaltyPoints, userProfile]);
+    return { subtotal, deliveryFee, gstTotal, cgst, sgst, gstRate, discount, loyaltyDiscount, finalTotal, distanceKm, isOutOfRange, bogoNudge };
+  }, [totalPrice, items, settings, appliedCoupon, selectedAddress, selectedOutlet, useLoyaltyPoints, userProfile]);
 
   const handleApplyCoupon = (couponOrCode: Coupon | string) => {
     if (!selectedOutlet) return;
@@ -220,29 +240,20 @@ export default function CheckoutPage() {
 
     try {
       const orderRef = await addDoc(collection(db, 'orders'), orderData);
-      
-      // TRIGGER BACKGROUND PUSH TO ADMIN
       notifyAdminsOfOrder({
         orderId: orderRef.id,
         outletId: outletObj.id,
         customerName: customerName,
         total: orderData.total
       });
-
       const netPointsUpdate = pointsEarned - (calculations.loyaltyDiscount || 0);
       if (netPointsUpdate !== 0) {
-        await updateDoc(doc(db, 'users', user.uid), { 
-            loyaltyPoints: increment(netPointsUpdate) 
-        });
+        await updateDoc(doc(db, 'users', user.uid), { loyaltyPoints: increment(netPointsUpdate) });
       }
       clearCart();
       router.push('/home/checkout/success');
     } catch (error) {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: 'orders',
-        operation: 'create',
-        requestResourceData: orderData,
-      }));
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'orders', operation: 'create', requestResourceData: orderData }));
     }
   };
 
@@ -262,11 +273,8 @@ export default function CheckoutPage() {
     }
 
     setIsPlacing(true);
-
     try {
-      toast({ title: "Initiating Gateway", description: "Connecting to secure servers..." });
       const order = await createRazorpayOrder(calculations.finalTotal);
-
       const options = {
         key: "rzp_live_SPtyccI9oY5o0h",
         amount: order.amount,
@@ -274,30 +282,12 @@ export default function CheckoutPage() {
         name: selectedOutlet?.brand === 'zfry' ? "Zfry India" : "Zapizza",
         description: `Order Payment #${order.id.slice(-6)}`,
         order_id: order.id,
-        handler: async function (response: any) {
-          toast({ title: "Payment Verified", description: "Finalizing your feast..." });
-          await saveOrderToFirestore(response.razorpay_payment_id, "Success");
-        },
-        prefill: {
-          name: userProfile?.displayName || user.displayName,
-          email: userProfile?.email || user.email,
-          contact: userProfile?.phoneNumber || user.phoneNumber,
-        },
-        theme: {
-          color: selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d',
-        },
-        modal: {
-          ondismiss: function() {
-            setIsPlacing(false);
-            toast({ variant: 'destructive', title: "Payment Cancelled", description: "Transaction was not completed." });
-          }
-        }
+        handler: async function (response: any) { await saveOrderToFirestore(response.razorpay_payment_id, "Success"); },
+        prefill: { name: userProfile?.displayName || user.displayName, email: userProfile?.email || user.email, contact: userProfile?.phoneNumber || user.phoneNumber },
+        theme: { color: selectedOutlet?.brand === 'zfry' ? '#e31837' : '#14532d' },
+        modal: { ondismiss: function() { setIsPlacing(false); toast({ variant: 'destructive', title: "Payment Cancelled" }); } }
       };
-
-      if (typeof window.Razorpay === 'undefined') {
-        throw new Error("Razorpay SDK failed to load. Please check your connection.");
-      }
-
+      if (typeof window.Razorpay === 'undefined') throw new Error("Gateway SDK failed to load.");
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (e: any) {
@@ -309,9 +299,9 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6 text-center">
-        <Trash2 className="h-16 w-16 text-muted-foreground/30 mb-6" />
+        <ShoppingCart className="h-16 w-16 text-muted-foreground/30 mb-6" />
         <h2 className="text-2xl font-black text-[#14532d] uppercase italic mb-2 font-headline">Your cart is empty</h2>
-        <Button onClick={() => router.push('/home/menu')} className="bg-[#14532d] text-white px-8 h-12 font-black uppercase tracking-widest rounded-xl font-headline">GO TO MENU</Button>
+        <Button onClick={() => router.push('/home/menu')} className="bg-[#14532d] text-white px-8 h-12 font-black uppercase tracking-widest rounded-xl">GO TO MENU</Button>
       </div>
     );
   }
@@ -321,151 +311,90 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-64">
-      <Script 
-        id="razorpay-checkout" 
-        src="https://checkout.razorpay.com/v1/checkout.js" 
-        onLoad={() => console.log("Razorpay SDK Loaded")}
-      />
+      <Script id="razorpay-checkout" src="https://checkout.razorpay.com/v1/checkout.js" />
 
       <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4 pt-safe">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-6 w-6" />
-        </Button>
+        <Button variant="ghost" size="icon" onClick={() => router.back()}><ArrowLeft className="h-6 w-6" /></Button>
         <h1 className="text-xl font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Review Order</h1>
       </div>
 
       <div className="container mx-auto p-4 space-y-4 max-w-lg text-left">
+        {calculations.bogoNudge && (
+            <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-center justify-between gap-3 animate-pulse">
+                <div className="flex items-center gap-3">
+                    <Sparkles className="h-5 w-5 text-indigo-600" />
+                    <p className="text-[10px] font-black text-indigo-950 uppercase leading-tight font-headline">
+                        {calculations.bogoNudge}
+                    </p>
+                </div>
+                <Button onClick={() => router.push('/home/menu')} className="h-8 px-3 bg-indigo-600 text-white rounded-lg text-[8px] font-black uppercase">ADD MORE</Button>
+            </div>
+        )}
+
         {isOutletClosed && (
           <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
-            <div>
-              <p className="text-[10px] font-black text-red-900 uppercase">Outlet is Closed</p>
-              <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1">
-                This kitchen is currently not accepting new orders. Please check back during operating hours.
-              </p>
-            </div>
+            <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1 font-headline">This kitchen is currently closed.</p>
           </div>
         )}
 
-        {calculations.isOutOfRange && !isOutletClosed && (
-            <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
-                <div>
-                    <p className="text-[10px] font-black text-red-900 uppercase">Out of Delivery Range</p>
-                    <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1">
-                        We currently only deliver up to {settings?.maxDeliveryRadius || 10}km. This address is {calculations.distanceKm.toFixed(1)}km away.
-                    </p>
-                </div>
-            </div>
-        )}
-
         <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 font-headline" style={{ color: brandColor }}>
+          <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between font-headline">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
               <MapPinned className="h-4 w-4" /> Delivery Address
             </CardTitle>
-            <Button variant="link" size="sm" onClick={() => router.push('/home/addresses')} className="h-auto p-0 text-[10px] font-black uppercase font-headline" style={{ color: brandColor }}>CHANGE</Button>
+            <Button variant="link" size="sm" onClick={() => router.push('/home/addresses')} className="h-auto p-0 text-[10px] font-black uppercase" style={{ color: brandColor }}>CHANGE</Button>
           </CardHeader>
-          <CardContent className="p-4 bg-white">
+          <CardContent className="p-4 bg-white font-headline">
             {selectedAddress ? (
               <div className="flex justify-between items-start">
                 <div>
-                    <div className="flex items-center gap-2 mb-2 font-headline">
-                    <Badge variant="secondary" className="text-[8px] font-black uppercase" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
-                    </div>
-                    <p className="text-xs font-bold text-[#333333] leading-snug font-body">{selectedAddress.flatNo}, {selectedAddress.area}</p>
-                    {selectedAddress.landmark && <p className="text-[10px] text-muted-foreground uppercase font-medium mt-1 font-headline">Near: {selectedAddress.landmark}</p>}
+                    <Badge variant="secondary" className="text-[8px] font-black uppercase mb-2" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
+                    <p className="text-xs font-bold text-[#333333] leading-snug">{selectedAddress.flatNo}, {selectedAddress.area}</p>
                 </div>
                 {selectedAddress.latitude && (
                     <div className="flex flex-col items-end">
-                        <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1 mb-1">
-                            <Navigation className="h-2 w-2 fill-current" /> GPS PINNED
-                        </span>
+                        <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 flex items-center gap-1 mb-1 font-headline"><Navigation className="h-2 w-2 fill-current" /> GPS PINNED</span>
                         <span className="text-[9px] font-bold text-muted-foreground uppercase font-sans tabular-nums">{calculations.distanceKm.toFixed(1)} KM</span>
                     </div>
                 )}
               </div>
             ) : (
-              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12 font-headline" style={{ borderColor: brandColor, color: brandColor }}>
-                + Add Delivery Address
-              </Button>
+              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12" style={{ borderColor: brandColor, color: brandColor }}>+ Add Address</Button>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Order Summary</CardTitle>
-          </CardHeader>
+        <Card className="border-none shadow-sm font-headline">
+          <CardHeader className="bg-white border-b py-4"><CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Order Summary</CardTitle></CardHeader>
           <CardContent className="p-0 bg-white">
             {items.map((item) => (
-              <div key={item.cartId} className="p-4 border-b last:border-0 flex items-center justify-between">
+              <div key={item.cartId} className="p-4 border-b last:border-0 flex items-center justify-between font-headline">
                 <div className="flex items-center gap-3">
-                  <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-[#4CAF50]' : 'border-[#e31837]'}`}>
-                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-[#4CAF50]' : 'bg-[#e31837]'}`} />
+                  <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
                   </div>
                   <div>
-                    <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight font-headline">{item.name}</h4>
+                    <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
                     <span className="text-[11px] font-black mt-1.5 block font-sans tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
-                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1 transition-colors hover:text-primary"><Minus className="h-3 w-3" /></button>
+                    <button onClick={() => updateQuantity(item.cartId, -1)}><Minus className="h-3 w-3" /></button>
                     <span className="text-sm font-black min-w-[20px] text-center font-sans tabular-nums">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1 transition-colors hover:text-primary"><Plus className="h-3 w-3" /></button>
+                    <button onClick={() => updateQuantity(item.cartId, 1)}><Plus className="h-3 w-3" /></button>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => removeItem(item.cartId)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeItem(item.cartId)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        {userProfile && (userProfile.loyaltyPoints || 0) > 0 && (
-            <Card className="border-none shadow-sm overflow-hidden bg-white">
-                <CardContent className="p-4 font-headline">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-yellow-400/10 flex items-center justify-center text-yellow-600">
-                                <Crown className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black uppercase text-[#333]">Redeem LP Coins</p>
-                                <p className="text-[9px] font-bold text-muted-foreground uppercase">Balance: <span className="font-sans tabular-nums">{userProfile.loyaltyPoints}</span> Coins</p>
-                            </div>
-                        </div>
-                        <Switch 
-                            checked={useLoyaltyPoints} 
-                            onCheckedChange={setUseLoyaltyPoints}
-                            className="data-[state=checked]:bg-yellow-500"
-                        />
-                    </div>
-                    {useLoyaltyPoints && (
-                        <div className="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-100 flex items-center gap-2">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-yellow-600" />
-                            <p className="text-[9px] font-black text-yellow-800 uppercase">
-                                Applying ₹<span className="font-sans tabular-nums">{calculations.loyaltyDiscount.toFixed(0)}</span> discount from your vault.
-                            </p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        )}
-
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardContent className="p-4 bg-white font-headline">
-            <div className="flex items-center gap-2 mb-3">
-               <Ticket className="h-4 w-4" style={{ color: brandColor }} />
-               <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Offers & Coupons</span>
-            </div>
+        <Card className="border-none shadow-sm overflow-hidden font-headline">
+          <CardContent className="p-4 bg-white">
+            <div className="flex items-center gap-2 mb-3"><Ticket className="h-4 w-4" style={{ color: brandColor }} /><span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Offers & Coupons</span></div>
             {appliedCoupon ? (
               <div className="flex items-center justify-between p-3 rounded-lg border border-dashed" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '30' }}>
                 <span className="text-xs font-black uppercase" style={{ color: brandColor }}>{appliedCoupon.code} applied!</span>
@@ -474,36 +403,17 @@ export default function CheckoutPage() {
             ) : (
               <div className="space-y-4">
                 <div className="flex gap-2">
-                  <Input 
-                    placeholder="ENTER PROMO CODE" 
-                    value={couponInput}
-                    onChange={e => setCouponInput(e.target.value)}
-                    className="h-10 text-xs font-black uppercase"
-                  />
+                  <Input placeholder="ENTER CODE" value={couponInput} onChange={e => setCouponInput(e.target.value)} className="h-10 text-xs font-black uppercase" />
                   <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px]" style={{ backgroundColor: brandColor }}>APPLY</Button>
                 </div>
-
                 {brandCoupons.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Available Coupons</p>
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                      {brandCoupons.map((coupon) => (
-                        <button
-                          key={coupon.id}
-                          onClick={() => handleApplyCoupon(coupon)}
-                          className="flex-shrink-0 text-left p-2.5 rounded-xl border border-dashed transition-all active:scale-95 bg-gray-50 hover:bg-white"
-                          style={{ borderColor: brandColor + '30' }}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] font-black text-[#333] tracking-widest uppercase">{coupon.code}</span>
-                            <Plus className="h-2.5 w-2.5" style={{ color: brandColor }} />
-                          </div>
-                          <p className="text-[8px] font-bold text-muted-foreground uppercase line-clamp-1">
-                            {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {brandCoupons.map((coupon) => (
+                      <button key={coupon.id} onClick={() => handleApplyCoupon(coupon)} className="flex-shrink-0 text-left p-2.5 rounded-xl border border-dashed bg-gray-50 hover:bg-white" style={{ borderColor: brandColor + '30' }}>
+                        <span className="text-[10px] font-black text-[#333] uppercase">{coupon.code}</span>
+                        <p className="text-[8px] font-bold text-muted-foreground uppercase">{coupon.type === 'bogo' ? 'BUY 1 GET 1' : `${coupon.discountValue}% OFF`}</p>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -511,80 +421,20 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader className="bg-white border-b py-4">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest font-headline" style={{ color: brandColor }}>Bill Details</CardTitle>
-          </CardHeader>
+        <Card className="border-none shadow-sm font-headline">
+          <CardHeader className="bg-white border-b py-4"><CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle></CardHeader>
           <CardContent className="p-4 space-y-3 bg-white font-headline">
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
-              <span>Item Total</span>
-              <span className="font-sans tabular-nums">₹{calculations.subtotal}</span>
-            </div>
-            {calculations.discount > 0 && (
-              <div className="flex justify-between text-xs font-black text-green-600 uppercase">
-                <span>Coupon Discount</span>
-                <span className="font-sans tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
-              </div>
-            )}
-            {calculations.loyaltyDiscount > 0 && (
-              <div className="flex justify-between text-xs font-black text-yellow-600 uppercase">
-                <span>Loyalty Points</span>
-                <span className="font-sans tabular-nums">-₹{calculations.loyaltyDiscount.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
-              <div className="flex flex-col">
-                <span>Delivery Fee</span>
-                {selectedAddress?.latitude && (
-                    <span className="text-[7px] text-muted-foreground/60 leading-none mt-0.5">Based on {calculations.distanceKm.toFixed(1)}km distance</span>
-                )}
-              </div>
-              <span className={cn("font-sans tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>
-                {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}
-              </span>
-            </div>
-            
-            {/* GST Breakdown */}
-            <div className="pt-1 space-y-1">
-                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
-                    <span>CGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
-                    <span className="font-sans tabular-nums">₹{calculations.cgst.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
-                    <span>SGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
-                    <span className="font-sans tabular-nums">₹{calculations.sgst.toFixed(2)}</span>
-                </div>
-            </div>
-
-            <div className="border-t border-dashed pt-3 flex justify-between items-center">
-              <span className="text-lg font-black text-[#333333]">TO PAY</span>
-              <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
-            </div>
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase"><span>Item Total</span><span className="font-sans tabular-nums">₹{calculations.subtotal}</span></div>
+            {calculations.discount > 0 && <div className="flex justify-between text-xs font-black text-green-600 uppercase"><span>Coupon Discount</span><span className="font-sans tabular-nums">-₹{calculations.discount.toFixed(2)}</span></div>}
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase"><span>Delivery Fee</span><span className={cn("font-sans tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>{calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee}`}</span></div>
+            <div className="border-t border-dashed pt-3 flex justify-between items-center"><span className="text-lg font-black text-[#333333]">TO PAY</span><span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span></div>
           </CardContent>
         </Card>
-
-        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-start gap-3">
-          <ShieldCheck className="h-5 w-5 text-blue-600 mt-0.5" />
-          <p className="text-[9px] font-bold text-blue-800 uppercase leading-relaxed">
-            Secure 256-bit encrypted payment via Razorpay. Your transaction is 100% safe.
-          </p>
-        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)] font-headline">
-        <Button 
-          onClick={handlePlaceOrder}
-          disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed}
-          className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95"
-          style={{ backgroundColor: brandColor }}
-        >
-          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (
-            isOutletClosed ? "OUTLET CURRENTLY CLOSED" : (
-              calculations.isOutOfRange ? "UNAVAILABLE IN YOUR AREA" : (
-                  `PAY & PLACE ORDER ₹${Math.round(calculations.finalTotal)}`
-              )
-            )
-          )}
+        <Button onClick={handlePlaceOrder} disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed} className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg" style={{ backgroundColor: brandColor }}>
+          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (isOutletClosed ? "OUTLET CLOSED" : (calculations.isOutOfRange ? "OUT OF RANGE" : `PAY ₹${Math.round(calculations.finalTotal)}`))}
         </Button>
       </div>
     </div>
