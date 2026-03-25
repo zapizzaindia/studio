@@ -18,6 +18,8 @@ import { placeholderImageMap, getImageUrl } from '@/lib/placeholder-images';
 import type { Banner, Brand } from '@/lib/types';
 import { cn } from "@/lib/utils";
 import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { app } from "@/firebase/config";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,11 +29,13 @@ export default function FranchiseBannersPage() {
   const firestore = useFirestore();
   const { data: allBanners, loading } = useCollection<Banner>('banners');
   const { toast } = useToast();
+  const storage = getStorage(app);
 
   const [activeBrand, setActiveBrand] = useState<Brand>('zapizza');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,57 +60,58 @@ export default function FranchiseBannersPage() {
     setIsAddDialogOpen(true);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.type.startsWith('video/')) {
-        setMediaType('video');
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            setNewImageId(event.target?.result as string);
-            toast({ title: 'Video Uploaded', description: 'Asset ready for hero background.' });
-        };
-        reader.readAsDataURL(file);
-        return;
-    }
+    setIsUploading(true);
+    const fileRef = ref(storage, `banners/${Date.now()}-${file.name}`);
 
-    setMediaType('image');
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new globalThis.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
+    try {
+        if (file.type.startsWith('video/')) {
+            setMediaType('video');
+            const snapshot = await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            setNewImageId(downloadURL);
+            toast({ title: 'Video Uploaded', description: 'Asset hosted on Firebase Storage.' });
         } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
+            setMediaType('image');
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new globalThis.Image();
+                img.onload = async () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_WIDTH = 1200;
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(async (blob) => {
+                        if (blob) {
+                            const snapshot = await uploadBytes(fileRef, blob);
+                            const downloadURL = await getDownloadURL(snapshot.ref);
+                            setNewImageId(downloadURL);
+                            toast({ title: 'HD Image Uploaded', description: 'Optimized and hosted.' });
+                        }
+                    }, 'image/jpeg', 0.8);
+                };
+                img.src = event.target?.result as string;
+            };
+            reader.readAsDataURL(file);
         }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        setNewImageId(dataUrl);
-        toast({ title: 'HD Visual Optimized', description: 'Photo processed for high-res display.' });
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+        console.error("Upload error:", error);
+        toast({ variant: 'destructive', title: 'Upload Failed', description: 'Check your connection or storage quota.' });
+    } finally {
+        setIsUploading(false);
+    }
   };
 
   const handleAddBanner = () => {
@@ -265,13 +270,15 @@ export default function FranchiseBannersPage() {
                     </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                    <input type="file" hidden ref={fileInputRef} accept="image/*,video/*" onChange={handleFileUpload} />
+                    <input type="file" hidden ref={fileInputRef} accept={mediaType === 'video' ? 'video/*' : 'image/*'} onChange={handleFileUpload} />
                     <Button 
                         variant="outline" 
                         className="h-11 rounded-xl font-black uppercase text-[9px] tracking-widest border-2"
                         onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
                     >
-                        <Upload className="mr-2 h-3.5 w-3.5" /> Pick HD File
+                        {isUploading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-2 h-3.5 w-3.5" />}
+                        Pick HD File
                     </Button>
                     <div className="relative">
                         <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
@@ -285,7 +292,7 @@ export default function FranchiseBannersPage() {
                 </div>
                 <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 bg-muted/20 mt-2 shadow-inner">
                     {mediaType === 'video' ? (
-                        <video src={newImageId} className="w-full h-full object-cover" autoPlay muted loop />
+                        <video src={getImageUrl(newImageId)} className="w-full h-full object-cover" autoPlay muted loop />
                     ) : (
                         <Image 
                             src={getImageUrl(newImageId)} 
@@ -295,7 +302,7 @@ export default function FranchiseBannersPage() {
                         />
                     )}
                 </div>
-                <Select onValueChange={setNewImageId} value={newImageId.startsWith('data:') || newImageId.startsWith('http') ? 'custom' : newImageId}>
+                <Select onValueChange={setNewImageId} value={newImageId.startsWith('http') || newImageId.startsWith('data:') ? 'custom' : newImageId}>
                     <SelectTrigger className="h-10 rounded-xl font-bold uppercase text-[9px]">
                         <SelectValue placeholder="Or select from library" />
                     </SelectTrigger>
@@ -303,14 +310,14 @@ export default function FranchiseBannersPage() {
                         <SelectItem value="banner_1">Promo Large</SelectItem>
                         <SelectItem value="banner_2">Cheese Lava</SelectItem>
                         <SelectItem value="banner_3">Dessert Special</SelectItem>
-                        {(newImageId.startsWith('data:') || newImageId.startsWith('http')) && <SelectItem value="custom">Custom Asset Ready</SelectItem>}
+                        {(newImageId.startsWith('http') || newImageId.startsWith('data:')) && <SelectItem value="custom">Cloud Asset Ready</SelectItem>}
                     </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 border-t flex gap-4">
               <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)} className="flex-1 h-14 rounded-2xl font-black uppercase text-xs tracking-widest">Discard</Button>
-              <Button onClick={handleAddBanner} disabled={isSaving} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
+              <Button onClick={handleAddBanner} disabled={isSaving || isUploading} style={{ backgroundColor: brandColor }} className="flex-[2] h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl px-10">
                 {isSaving ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : (editingBanner ? 'Update and Publish' : 'Save and Publish')}
               </Button>
             </DialogFooter>
@@ -338,7 +345,7 @@ export default function FranchiseBannersPage() {
                   <TableCell className="pl-8 py-6">
                     <div className="relative h-20 w-32 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5">
                       {banner.mediaType === 'video' ? (
-                        <video src={banner.imageId} className="w-full h-full object-cover" muted />
+                        <video src={getImageUrl(banner.imageId)} className="w-full h-full object-cover" muted />
                       ) : (
                         <Image
                             src={getImageUrl(banner.imageId)}
