@@ -157,6 +157,7 @@ export default function CheckoutPage() {
     }
 
     const finalTotal = subtotal + gstTotal + deliveryFee - discount - loyaltyDiscount;
+    const pointsEarned = Math.floor((subtotal / 100) * (settings?.loyaltyRatio ?? 1));
 
     return { 
       subtotal, 
@@ -170,7 +171,8 @@ export default function CheckoutPage() {
       finalTotal, 
       distanceKm, 
       isOutOfRange, 
-      bogoNudge 
+      bogoNudge,
+      pointsEarned
     };
   }, [totalPrice, items, settings, appliedCoupon, selectedAddress, selectedOutlet, useLoyaltyPoints, userProfile]);
 
@@ -204,7 +206,7 @@ export default function CheckoutPage() {
   const saveOrderToFirestore = async (paymentId: string, status: string = "Success") => {
     if (!db || !user) return;
 
-    const pointsEarned = Math.floor((calculations.subtotal / 100) * (settings?.loyaltyRatio ?? 1));
+    const pointsEarned = calculations.pointsEarned;
     const outletObj = selectedOutlet || { id: 'default' };
     const customerName = userProfile?.displayName || user.displayName || "Gourmet Customer";
 
@@ -403,7 +405,7 @@ export default function CheckoutPage() {
               <div key={item.cartId} className="p-4 border-b last:border-0 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                   </div>
                   <div>
                     <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
@@ -531,6 +533,13 @@ export default function CheckoutPage() {
                 </span>
             </div>
 
+            {userProfile?.loyaltyPoints && userProfile.loyaltyPoints > 0 ? (
+                <div className="flex justify-between text-[10px] font-bold text-amber-600 uppercase">
+                    <span>Loyalty Balance</span>
+                    <span className="font-sans tabular-nums">{userProfile.loyaltyPoints} Coins</span>
+                </div>
+            ) : null}
+
             <div className="pt-1 space-y-1">
                 <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
                     <span>CGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
@@ -548,6 +557,14 @@ export default function CheckoutPage() {
                     <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-1">Inclusive of all taxes</span>
                 </div>
                 <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
+            </div>
+
+            <div className="mt-2 pt-2 border-t flex items-center justify-between">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase">LP Coins to Earn</span>
+                <div className="flex items-center gap-1.5">
+                    <Crown className="h-3 w-3 text-amber-500" />
+                    <span className="text-xs font-black text-amber-600 font-sans tabular-nums">+{calculations.pointsEarned}</span>
+                </div>
             </div>
           </CardContent>
         </Card>
