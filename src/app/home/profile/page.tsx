@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -66,14 +67,10 @@ export default function ProfilePage() {
     }
   }, []);
 
-  // Sync toggle state with profile and system permissions
+  // Sync toggle state with actual DB status
   useEffect(() => {
-    if (profile?.fcmToken) {
-      setIsNotificationsEnabled(true);
-    } else if (typeof window !== 'undefined' && 'Notification' in window) {
-      setIsNotificationsEnabled(Notification.permission === 'granted');
-    }
-  }, [profile]);
+    setIsNotificationsEnabled(!!profile?.fcmToken);
+  }, [profile?.fcmToken]);
 
   const { data: outlet } = useDoc<Outlet>('outlets', savedOutletId || 'dummy');
 
@@ -137,7 +134,7 @@ export default function ProfilePage() {
 
         if (permStatus.receive === 'granted') {
           await PushNotifications.register();
-          setIsNotificationsEnabled(true);
+          // Token will be synced via FCMHandler's listener
           toast({ title: "Signal Established", description: "Native push is active." });
         } else {
           throw new Error("Denied");
@@ -146,10 +143,10 @@ export default function ProfilePage() {
         // PWA Web Flow
         const token = await requestForToken();
         if (token) {
-          await setDoc(doc(db, 'users', user.uid), { 
+          await updateDoc(doc(db, 'users', user.uid), { 
             fcmToken: token,
             lastTokenSync: new Date().toISOString()
-          }, { merge: true });
+          });
           setIsNotificationsEnabled(true);
           toast({ title: "Notifications Enabled", description: "You'll now receive live order updates." });
         } else {
@@ -160,8 +157,8 @@ export default function ProfilePage() {
       setIsNotificationsEnabled(false);
       toast({ 
         variant: "destructive", 
-        title: "Permission Denied", 
-        description: "Please enable notifications in your device settings." 
+        title: "Permission Required", 
+        description: "Please enable notifications in your browser or device settings." 
       });
     } finally {
       setIsPermissionLoading(false);
@@ -218,7 +215,6 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-12">
-      {/* Added top padding to clear the fixed MainNav */}
       <div className="bg-[#14532d] text-white px-6 pt-[calc(64px+env(safe-area-inset-top,0px))] pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex items-center justify-between">
@@ -313,35 +309,38 @@ export default function ProfilePage() {
       </div>
 
       <div className="px-4 -mt-6 space-y-4 relative z-20">
-        <Card className="border-orange-200 bg-orange-50/50 rounded-[24px] overflow-hidden shadow-xl">
-          <div className="bg-orange-100/50 px-6 py-3 border-b border-orange-200 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-orange-600" />
-            <span className="text-sm font-black text-orange-800 uppercase tracking-widest font-headline">Needs Your Attention</span>
-          </div>
-          <CardContent className="p-6 flex items-center justify-between gap-4">
-            <div className="flex items-start gap-4 text-left">
-              <div className="mt-1">
-                {isPermissionLoading ? (
-                  <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
-                ) : (
-                  <BellRing className="h-6 w-6 text-[#333]" />
-                )}
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-black text-[#333] uppercase leading-tight font-headline">Push Notifications</h3>
-                <p className="text-[11px] font-medium text-muted-foreground uppercase leading-relaxed font-headline">
-                  Allow push notifications to stay updated on your order status and the latest offers and deals.
-                </p>
-              </div>
+        {/* Only show setup card if notifications are not already configured */}
+        {!profile?.fcmToken && (
+          <Card className="border-orange-200 bg-orange-50/50 rounded-[24px] overflow-hidden shadow-xl">
+            <div className="bg-orange-100/50 px-6 py-3 border-b border-orange-200 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <span className="text-sm font-black text-orange-800 uppercase tracking-widest font-headline">Needs Your Attention</span>
             </div>
-            <Switch 
-              checked={isNotificationsEnabled} 
-              onCheckedChange={handleToggleNotifications}
-              disabled={isPermissionLoading}
-              className="data-[state=checked]:bg-orange-500 scale-110"
-            />
-          </CardContent>
-        </Card>
+            <CardContent className="p-6 flex items-center justify-between gap-4">
+              <div className="flex items-start gap-4 text-left">
+                <div className="mt-1">
+                  {isPermissionLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
+                  ) : (
+                    <BellRing className="h-6 w-6 text-[#333]" />
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-[#333] uppercase leading-tight font-headline">Push Notifications</h3>
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase leading-relaxed font-headline">
+                    Allow push notifications to stay updated on your order status and the latest offers and deals.
+                  </p>
+                </div>
+              </div>
+              <Switch 
+                checked={isNotificationsEnabled} 
+                onCheckedChange={handleToggleNotifications}
+                disabled={isPermissionLoading}
+                className="data-[state=checked]:bg-orange-500 scale-110"
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="border-none shadow-xl rounded-[32px] overflow-hidden bg-white">
             <CardContent className="p-6 flex items-center justify-between">
