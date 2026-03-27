@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -10,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 /**
  * FCMHandler - Manages Firebase Cloud Messaging for both Web and Native (Capacitor).
- * It waits for a stable session before requesting permissions.
+ * Automatically triggers the native system permission popup on Android/iOS when the app starts.
  */
 export function FCMHandler() {
   const { user, loading: authLoading } = useUser();
@@ -19,12 +20,11 @@ export function FCMHandler() {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
+    // Wait until user is authenticated and DB is ready
     if (!user || authLoading || !db || hasInitialized.current) return;
 
     const setupFCM = async () => {
-      // Logic to determine profile ID:
-      // Customers (Phone Login) use UID as document ID.
-      // Admins (Email Login) use Email as document ID.
+      // Determine Profile ID: Admins use Email, Customers use UID.
       const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
       const profileId = isPasswordUser ? user.email?.toLowerCase().trim() : user.uid;
       
@@ -36,43 +36,42 @@ export function FCMHandler() {
         if (isNative) {
           const { PushNotifications } = await import('@capacitor/push-notifications');
           
-          let permStatus = await PushNotifications.checkPermissions();
-          
-          if (permStatus.receive !== 'granted') {
-            permStatus = await PushNotifications.requestPermissions();
-          }
+          // Trigger the standard native system permission popup
+          // On Android 13+, this will show the "Allow Notifications" dialog.
+          let permStatus = await PushNotifications.requestPermissions();
 
           if (permStatus.receive === 'granted') {
-            // Register listener for token generation
+            // Clean up old listeners to prevent duplicates on hot-reloads
+            await PushNotifications.removeAllListeners();
+
+            // Handle token registration
             await PushNotifications.addListener('registration', (token) => {
               setDoc(doc(db, 'users', profileId), {
                 fcmToken: token.value,
                 lastTokenSync: new Date().toISOString()
-              }, { merge: true }).catch(err => console.error("FCM Token Sync Error:", err));
+              }, { merge: true }).catch(err => console.error("FCM Native Token Sync Error:", err));
             });
 
-            // Register listener for incoming notifications while app is open
+            // Handle incoming notifications while app is in foreground
             await PushNotifications.addListener('pushNotificationReceived', (notification) => {
               toast({
-                title: notification.title || "Zapizza Update",
+                title: notification.title || "Zapizza Alert",
                 description: notification.body,
               });
             });
 
-            await PushNotifications.addListener(
-              'pushNotificationActionPerformed',
-              (notification) => {
-                const url = notification.notification.data?.url;
-                if (url) {
-                  window.location.href = url;
-                }
+            // Handle clicks on notifications (e.g. open the order list)
+            await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+              const url = notification.notification.data?.url;
+              if (url) {
+                window.location.href = url;
               }
-            );
+            });
 
+            // Initiate device registration with FCM
             await PushNotifications.register();
             hasInitialized.current = true;
           }
-
         } else {
           // Web/PWA Standard Flow
           if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -96,11 +95,12 @@ export function FCMHandler() {
           }
         }
       } catch (e) {
-        console.warn("FCM Handler Exception:", e);
+        console.warn("FCM System Exception:", e);
       }
     };
 
-    const timer = setTimeout(setupFCM, 3000);
+    // Execute setup with a short delay to ensure hardware bridge is ready
+    const timer = setTimeout(setupFCM, 1500);
     return () => clearTimeout(timer);
   }, [user, authLoading, db, toast]);
 
