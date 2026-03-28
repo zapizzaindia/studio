@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from "next/navigation";
 import { ZapizzaLogo } from "@/components/icons";
-import Link from 'next/link';
+import Link from 'link';
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -93,6 +93,16 @@ export default function AdminDashboardLayout({
     router.push('/admin/login');
   }
 
+  /**
+   * 📡 HOW THIS BUTTON WORKS:
+   * 1. Opt-In: Browsers block notifications unless triggered by a click. This button is that click.
+   * 2. Permission: It calls the native Android or Browser permission dialog.
+   * 3. Token Sync: Once allowed, it gets a unique FCM Token from Google.
+   * 4. Persistence: It saves this token to the Admin's profile in Firestore.
+   * 5. Background Alerts: When a new order arrives, the server uses this saved token to "wake up" the device and play the alarm sound.
+   * 
+   * STATUS CHECK: If it shows "Linked", the token is safely in the cloud and background alerts are active.
+   */
   const handleSyncTerminal = async () => {
     if (!user || !db || !profileId) return;
     setIsSyncing(true);
@@ -100,6 +110,7 @@ export default function AdminDashboardLayout({
       const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
       
       if (isNative) {
+        // Native Android Flow
         const { PushNotifications } = await import('@capacitor/push-notifications');
         const permStatus = await PushNotifications.requestPermissions();
         if (permStatus.receive === 'granted') {
@@ -109,6 +120,7 @@ export default function AdminDashboardLayout({
           throw new Error("Permission Denied");
         }
       } else {
+        // Web PWA Flow
         const token = await requestForToken();
         if (token) {
           await updateDoc(doc(db, 'users', profileId), {
