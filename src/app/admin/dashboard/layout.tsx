@@ -176,7 +176,7 @@ export default function AdminDashboardLayout({
   return (
     <SidebarProvider>
         <Sidebar collapsible="icon" className="border-r border-gray-100 shadow-xl bg-white">
-            <SidebarHeader className="bg-white">
+            <SidebarHeader className="bg-white pt-safe">
               <div className="flex flex-col items-start gap-2 p-4">
                 <ZapizzaLogo className="h-10 w-10 text-primary" />
                 <h1 className="font-headline text-lg font-black text-primary leading-tight uppercase italic tracking-tighter group-data-[collapsible=icon]:hidden">
@@ -210,7 +210,7 @@ export default function AdminDashboardLayout({
             </SidebarFooter>
         </Sidebar>
         <SidebarInset className="bg-[#f8f9fa] flex flex-col">
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white/95 backdrop-blur-md px-4 shadow-sm pt-safe shrink-0">
+            <header className="sticky top-0 z-30 flex h-auto min-h-[4rem] items-center justify-between border-b bg-white/95 backdrop-blur-md px-4 shadow-sm pt-safe pb-2 shrink-0">
                 <div className="flex items-center gap-3">
                     <SidebarTrigger className="h-10 w-10 rounded-xl bg-gray-50 border shadow-sm flex items-center justify-center">
                         <Menu className="h-5 w-5 text-primary" />
