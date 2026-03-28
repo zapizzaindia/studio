@@ -490,9 +490,9 @@ export default function HomePage() {
           <h2 className="text-lg font-black uppercase tracking-tighter">Explore Menu</h2>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2 font-headline">
-          {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-2xl flex-shrink-0" />) : categories?.map((cat) => (
+          {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
             <div key={cat.id} className="flex flex-col items-center gap-2 group cursor-pointer flex-shrink-0" onClick={() => router.push(`/home/menu?category=${cat.id}`)}>
-              <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
+              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
                 <Image src={getImageUrl(cat.imageId || 'cat_veg')} alt={cat.name} fill className="object-cover" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1 text-black">{cat.name}</span>
@@ -572,7 +572,7 @@ export default function HomePage() {
               onClick={() => router.push(`/home/menu?category=${cat.id}`)}
             >
               <div className="flex items-center gap-2">
-                <div className="relative h-8 w-8 rounded-lg overflow-hidden shadow-sm flex-shrink-0" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
+                <div className="relative h-8 w-8 rounded-full overflow-hidden shadow-sm flex-shrink-0" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
                   <Image src={getImageUrl(cat.imageId)} alt={cat.name} fill className="object-cover" />
                 </div>
                 <div className="flex flex-col text-left">
