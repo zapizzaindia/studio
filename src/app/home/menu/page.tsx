@@ -357,9 +357,9 @@ function MenuContent() {
                 </div>
                 <div className="px-4 space-y-4">
                   {categoryItems.map((item) => (
-                    <div key={item.id} className="bg-white px-6 py-8 flex gap-6 hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer rounded-3xl shadow-sm border border-gray-50" onClick={() => handleAddClick(item)}>
+                    <div key={item.id} className="bg-white p-4 flex gap-4 hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer rounded-3xl shadow-sm border border-gray-50" onClick={() => handleAddClick(item)}>
                       <div className="flex-1 flex flex-col text-left">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-1.5">
                           <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                             <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                           </div>
@@ -367,18 +367,18 @@ function MenuContent() {
                         <h4 className="text-[15px] font-black text-[#333] uppercase leading-tight tracking-tight mb-1 font-headline">{item.name}</h4>
                         <h4 className="text-[14px] font-black text-[#333] mb-2 font-sans tabular-nums">{getPriceDisplay(item)}</h4>
                         <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-relaxed font-body">
-                          {item.description} <span className="text-gray-400 font-bold font-headline">Read More</span>
+                          {item.description}
                         </p>
                       </div>
-                      <div className="relative flex-shrink-0 flex flex-col items-center">
-                        <div className="relative h-28 w-28 rounded-2xl overflow-hidden shadow-md border border-gray-100">
+                      <div className="relative flex-shrink-0 w-28 flex flex-col items-center">
+                        <div className="relative h-28 w-28 rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50">
                           <Image src={getImageUrl(item.imageId)} alt={item.name} fill className="object-cover" />
                         </div>
-                        <div className="absolute -bottom-2 w-20">
-                          <Button className="w-full bg-white hover:bg-gray-50 text-[#333] border border-gray-200 h-8 rounded-lg font-black text-[10px] uppercase shadow-lg flex items-center justify-center gap-1 font-headline">
-                            Add <span className="text-lg font-normal font-body" style={{ color: brandColor }}>+</span>
+                        <div className="mt-[-18px] z-10 w-24">
+                          <Button className="w-full bg-white hover:bg-gray-50 text-[#333] border border-gray-200 h-9 rounded-xl font-black text-[11px] uppercase shadow-lg flex items-center justify-center gap-1 font-headline transition-transform active:scale-95">
+                            Add <span className="text-xl font-normal" style={{ color: brandColor }}>+</span>
                           </Button>
-                          <p className="text-center text-[8px] font-black text-muted-foreground uppercase mt-3 font-headline">Customisable</p>
+                          <p className="text-center text-[7px] font-black text-muted-foreground uppercase mt-2 font-headline tracking-tighter">Customisable</p>
                         </div>
                       </div>
                     </div>
