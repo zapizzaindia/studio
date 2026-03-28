@@ -16,12 +16,16 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { ShoppingCart, List, BarChart, Store, LogOut, Menu } from "lucide-react";
+import { ShoppingCart, List, BarChart, Store, LogOut, Menu, Wifi, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth, useUser, useDoc } from '@/firebase';
+import { useAuth, useUser, useDoc, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import type { UserProfile, Outlet } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { requestForToken } from '@/firebase/messaging';
+import { doc, updateDoc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: "/admin/dashboard/orders", label: "Orders", icon: ShoppingCart },
@@ -38,6 +42,8 @@ export default function AdminDashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
+  const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
   
   const profileId = user?.email?.toLowerCase().trim() || null;
@@ -47,6 +53,7 @@ export default function AdminDashboardLayout({
   const { data: outlet } = useDoc<Outlet>('outlets', effectiveOutletId);
 
   const [isVerifying, setIsVerifying] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (userLoading || profileLoading) return;
@@ -85,6 +92,40 @@ export default function AdminDashboardLayout({
     }
     router.push('/admin/login');
   }
+
+  const handleSyncTerminal = async () => {
+    if (!user || !db || !profileId) return;
+    setIsSyncing(true);
+    try {
+      const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
+      
+      if (isNative) {
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        const permStatus = await PushNotifications.requestPermissions();
+        if (permStatus.receive === 'granted') {
+          await PushNotifications.register();
+          toast({ title: "Terminal Linked", description: "Native signal established." });
+        } else {
+          throw new Error("Permission Denied");
+        }
+      } else {
+        const token = await requestForToken();
+        if (token) {
+          await updateDoc(doc(db, 'users', profileId), {
+            fcmToken: token,
+            lastTokenSync: new Date().toISOString()
+          });
+          toast({ title: "Terminal Linked", description: "Cloud signal established." });
+        } else {
+          throw new Error("Could not initialize secure token.");
+        }
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: "Sync Failed", description: e.message || "Unknown error." });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   if (userLoading || isVerifying) {
     return (
@@ -148,10 +189,31 @@ export default function AdminDashboardLayout({
                         {outlet && <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1 truncate">{outlet.name}</p>}
                     </div>
                 </div>
-                <Avatar className="h-9 w-9 border-2 border-primary/10 shadow-sm shrink-0">
-                  <AvatarImage src={user?.photoURL || undefined} />
-                  <AvatarFallback className="bg-primary text-white font-black">{(userProfile?.displayName || 'A').charAt(0)}</AvatarFallback>
-                </Avatar>
+
+                <div className="flex items-center gap-3">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleSyncTerminal}
+                        disabled={isSyncing}
+                        className={cn(
+                            "h-10 rounded-xl font-black text-[9px] uppercase gap-2 border-primary/10 shadow-sm transition-all active:scale-95",
+                            userProfile?.fcmToken ? "bg-green-50 text-green-700 border-green-100" : "bg-white text-primary"
+                        )}
+                    >
+                        {isSyncing ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                            <Wifi className={cn("h-3 w-3", userProfile?.fcmToken ? "fill-current" : "")} />
+                        )}
+                        <span className="hidden min-[400px]:inline">{userProfile?.fcmToken ? "Linked" : "Sync Terminal"}</span>
+                    </Button>
+
+                    <Avatar className="h-9 w-9 border-2 border-primary/10 shadow-sm shrink-0">
+                      <AvatarImage src={user?.photoURL || undefined} />
+                      <AvatarFallback className="bg-primary text-white font-black">{(userProfile?.displayName || 'A').charAt(0)}</AvatarFallback>
+                    </Avatar>
+                </div>
             </header>
             <main className="flex-1 p-2 bg-[#f8f9fa] pb-32 overflow-x-hidden">
                 {children}
