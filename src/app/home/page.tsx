@@ -96,35 +96,33 @@ const BoxedItemCard = ({ item, brandColor, onAdd }: { item: MenuItem, brandColor
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent flex flex-col justify-end p-4 text-left">
-          <div className="flex items-center gap-1.5 mb-1">
-            <div className={cn("h-2.5 w-2.5 border flex items-center justify-center rounded-sm bg-white", item.isVeg ? 'border-green-600' : 'border-red-600')}>
-              <div className={cn("h-1.5 w-1.5 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
-            </div>
-            <h3 className="text-white text-sm font-black uppercase italic leading-tight font-headline line-clamp-1">{item.name}</h3>
-          </div>
-          
-          <p className="text-white/70 text-[8px] font-medium leading-tight line-clamp-2 mb-3 font-body">
-            {item.description}
-          </p>
-
-          <div className="bg-black/60 backdrop-blur-md -mx-4 -mb-4 p-4 flex items-center justify-between border-t border-white/10">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-white text-sm font-black font-sans tabular-nums">₹{displayPrice}</span>
-                <span className="text-white/40 text-[10px] line-through font-sans tabular-nums">₹{Math.round(originalPrice)}</span>
+        <div className="absolute inset-0 flex flex-col justify-end text-left">
+          <div className="bg-black/75 backdrop-blur-md p-4 flex flex-col gap-2 border-t border-white/10">
+            <div className="flex items-center gap-1.5">
+              <div className={cn("h-2.5 w-2.5 border flex items-center justify-center rounded-sm bg-white", item.isVeg ? 'border-green-600' : 'border-red-600')}>
+                <div className={cn("h-1.5 w-1.5 rounded-full", item.isVeg ? 'bg-green-600' : 'border-red-600')} />
               </div>
-              <p className="text-white/60 text-[7px] font-black uppercase tracking-widest mt-0.5 font-headline">
-                Customizable
-              </p>
+              <h3 className="text-white text-[13px] font-black uppercase italic leading-tight font-headline line-clamp-1">{item.name}</h3>
             </div>
 
-            <Button 
-              className="bg-[#e31837] hover:bg-[#c4152e] text-white rounded-lg h-8 px-3 font-black uppercase text-[10px] shadow-xl active:scale-90 transition-all font-headline"
-              onClick={(e) => { e.stopPropagation(); onAdd(item); }}
-            >
-              Add +
-            </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-white text-sm font-black font-sans tabular-nums">₹{displayPrice}</span>
+                  <span className="text-white/40 text-[10px] line-through font-sans tabular-nums">₹{Math.round(originalPrice)}</span>
+                </div>
+                <p className="text-white/60 text-[7px] font-black uppercase tracking-widest font-headline">
+                  Customizable
+                </p>
+              </div>
+
+              <Button 
+                className="bg-[#e31837] hover:bg-[#c4152e] text-white rounded-lg h-8 px-3 font-black uppercase text-[10px] shadow-xl active:scale-90 transition-all font-headline"
+                onClick={(e) => { e.stopPropagation(); onAdd(item); }}
+              >
+                Add +
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -492,9 +490,9 @@ export default function HomePage() {
           <h2 className="text-lg font-black uppercase tracking-tighter">Explore Menu</h2>
         </div>
         <div className="flex overflow-x-auto px-6 space-x-6 scrollbar-hide pb-2 font-headline">
-          {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-full flex-shrink-0" />) : categories?.map((cat) => (
+          {categoriesLoading ? Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-20 w-20 rounded-2xl flex-shrink-0" />) : categories?.map((cat) => (
             <div key={cat.id} className="flex flex-col items-center gap-2 group cursor-pointer flex-shrink-0" onClick={() => router.push(`/home/menu?category=${cat.id}`)}>
-              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
+              <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-current transition-all shadow-md active:scale-95 bg-white">
                 <Image src={getImageUrl(cat.imageId || 'cat_veg')} alt={cat.name} fill className="object-cover" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-tighter text-center max-w-[80px] line-clamp-1 text-black">{cat.name}</span>
@@ -574,8 +572,8 @@ export default function HomePage() {
               onClick={() => router.push(`/home/menu?category=${cat.id}`)}
             >
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg shadow-sm" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
-                  <Image src={getImageUrl(cat.imageId)} alt={cat.name} width={16} height={16} className="object-contain invert brightness-0" />
+                <div className="relative h-8 w-8 rounded-lg overflow-hidden shadow-sm flex-shrink-0" style={{ backgroundColor: cat.accentColor || "#8b5cf6" }}>
+                  <Image src={getImageUrl(cat.imageId)} alt={cat.name} fill className="object-cover" />
                 </div>
                 <div className="flex flex-col text-left">
                   <h2 className="text-lg font-black uppercase tracking-tighter italic leading-none">{cat.name}</h2>
