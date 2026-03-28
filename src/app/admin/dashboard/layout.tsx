@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { ShoppingCart, List, BarChart, Store, LogOut, Menu, Wifi, Loader2 } from "lucide-react";
+import { ShoppingCart, List, BarChart, Store, LogOut, Menu, Wifi, Loader2, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth, useUser, useDoc, useFirestore } from '@/firebase';
@@ -46,6 +46,7 @@ export default function AdminDashboardLayout({
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
   
+  // Admins use their email as the Document ID in Firestore for easier lookup
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -94,47 +95,67 @@ export default function AdminDashboardLayout({
   }
 
   /**
-   * 📡 HOW THIS BUTTON WORKS:
-   * 1. Opt-In: Browsers block notifications unless triggered by a click. This button is that click.
-   * 2. Permission: It calls the native Android or Browser permission dialog.
-   * 3. Token Sync: Once allowed, it gets a unique FCM Token from Google.
-   * 4. Persistence: It saves this token to the Admin's profile in Firestore.
-   * 5. Background Alerts: When a new order arrives, the server uses this saved token to "wake up" the device and play the alarm sound.
-   * 
-   * STATUS CHECK: If it shows "Linked", the token is safely in the cloud and background alerts are active.
+   * 📡 TERMINAL SYNCHRONIZATION:
+   * This logic handles the hardware-to-cloud bridge for order alerts.
    */
   const handleSyncTerminal = async () => {
     if (!user || !db || !profileId) return;
     setIsSyncing(true);
+    
     try {
       const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
       
       if (isNative) {
-        // Native Android Flow
+        // --- NATIVE ANDROID/IOS FLOW ---
         const { PushNotifications } = await import('@capacitor/push-notifications');
+        
+        // 1. Ensure listeners are attached BEFORE we trigger registration
+        await PushNotifications.removeAllListeners();
+        
+        await PushNotifications.addListener('registration', async (token) => {
+          console.log("Device Token Received:", token.value);
+          
+          // 2. Save the hardware token to the Admin's Firestore profile
+          await updateDoc(doc(db, 'users', profileId), {
+            fcmToken: token.value,
+            lastTokenSync: new Date().toISOString()
+          });
+          
+          toast({ title: "Signal Established", description: "This terminal is now linked to the cloud." });
+          setIsSyncing(false);
+        });
+
+        await PushNotifications.addListener('registrationError', (err) => {
+          console.error("Hardware Registration Error:", err);
+          toast({ variant: 'destructive', title: "Hardware Error", description: "Could not initialize device bridge." });
+          setIsSyncing(false);
+        });
+
+        // 3. Request permissions and register
         const permStatus = await PushNotifications.requestPermissions();
         if (permStatus.receive === 'granted') {
           await PushNotifications.register();
-          toast({ title: "Terminal Linked", description: "Native signal established." });
         } else {
-          throw new Error("Permission Denied");
+          throw new Error("Notification permission denied by device.");
         }
+
       } else {
-        // Web PWA Flow
+        // --- WEB / PWA FLOW ---
         const token = await requestForToken();
         if (token) {
           await updateDoc(doc(db, 'users', profileId), {
             fcmToken: token,
             lastTokenSync: new Date().toISOString()
           });
-          toast({ title: "Terminal Linked", description: "Cloud signal established." });
+          toast({ title: "Browser Linked", description: "Signal synchronized successfully." });
         } else {
-          throw new Error("Could not initialize secure token.");
+          throw new Error("Could not capture secure token. Check site permissions.");
         }
+        setIsSyncing(false);
       }
     } catch (e: any) {
-      toast({ variant: 'destructive', title: "Sync Failed", description: e.message || "Unknown error." });
-    } finally {
+      console.error("Sync Error:", e);
+      toast({ variant: 'destructive', title: "Sync Failed", description: e.message || "Please check your network." });
       setIsSyncing(false);
     }
   };
@@ -218,7 +239,9 @@ export default function AdminDashboardLayout({
                         ) : (
                             <Wifi className={cn("h-3 w-3", userProfile?.fcmToken ? "fill-current" : "")} />
                         )}
-                        <span className="hidden min-[400px]:inline">{userProfile?.fcmToken ? "Linked" : "Sync Terminal"}</span>
+                        <span className="hidden min-[400px]:inline">
+                          {userProfile?.fcmToken ? "Linked" : "Sync Terminal"}
+                        </span>
                     </Button>
 
                     <Avatar className="h-9 w-9 border-2 border-primary/10 shadow-sm shrink-0">

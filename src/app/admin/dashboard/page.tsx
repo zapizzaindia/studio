@@ -8,6 +8,7 @@ import { useCollection, useUser, useDoc } from "@/firebase";
 import type { Order, UserProfile, OutletMenuAvailability, Outlet } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import { Button } from '@/components/ui/button';
 
 export default function AdminDashboardPage() {
     const router = useRouter();
