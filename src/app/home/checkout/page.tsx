@@ -369,21 +369,21 @@ export default function CheckoutPage() {
         <h1 className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Review Order</h1>
       </div>
 
-      <div className="container mx-auto p-4 space-y-4 max-w-lg text-left">
+      <div className="container mx-auto p-4 space-y-6 max-w-lg text-left">
         {calculations.bogoNudge && (
-            <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-center justify-between gap-3 animate-pulse">
+            <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-[24px] flex items-center justify-between gap-3 animate-pulse shadow-sm">
                 <div className="flex items-center gap-3">
                     <Sparkles className="h-5 w-5 text-indigo-600" />
                     <p className="text-[10px] font-black text-indigo-950 uppercase leading-tight">
                         {calculations.bogoNudge}
                     </p>
                 </div>
-                <Button onClick={() => router.push('/home/menu')} className="h-8 px-3 bg-indigo-600 text-white rounded-lg text-[8px] font-black uppercase">ADD MORE</Button>
+                <Button onClick={() => router.push('/home/menu')} className="h-8 px-3 bg-indigo-600 text-white rounded-xl text-[8px] font-black uppercase">ADD MORE</Button>
             </div>
         )}
 
         {isActuallyClosed && (
-          <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
+          <div className="bg-red-50 border border-red-100 p-4 rounded-[24px] flex items-start gap-3 shadow-sm">
             <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
             <div className="flex flex-col gap-1">
               <p className="text-[10px] font-black text-red-900 uppercase">Outlet is Currently Closed</p>
@@ -393,19 +393,19 @@ export default function CheckoutPage() {
         )}
 
         {/* Address Card */}
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4 flex flex-row items-center justify-between">
+        <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="bg-gray-50/50 border-b py-4 flex flex-row items-center justify-between px-6">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2" style={{ color: brandColor }}>
               <MapPinned className="h-4 w-4" /> Delivery Destination
             </CardTitle>
             <Button variant="link" size="sm" onClick={() => router.push('/home/addresses')} className="h-auto p-0 text-[10px] font-black uppercase" style={{ color: brandColor }}>CHANGE</Button>
           </CardHeader>
-          <CardContent className="p-4 bg-white">
+          <CardContent className="p-6">
             {selectedAddress ? (
               <div className="flex justify-between items-start">
                 <div>
                     <Badge variant="secondary" className="text-[8px] font-black uppercase mb-2" style={{ backgroundColor: brandColor + '10', color: brandColor }}>{selectedAddress.label}</Badge>
-                    <p className="text-xs font-bold text-[#333333] leading-snug">{selectedAddress.flatNo}, {selectedAddress.area}</p>
+                    <p className="text-sm font-bold text-[#333333] leading-snug">{selectedAddress.flatNo}, {selectedAddress.area}</p>
                     <p className="text-[10px] text-muted-foreground uppercase font-bold mt-1">{selectedAddress.city}</p>
                 </div>
                 {selectedAddress.latitude && (
@@ -416,37 +416,39 @@ export default function CheckoutPage() {
                 )}
               </div>
             ) : (
-              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed font-black uppercase text-xs h-12" style={{ borderColor: brandColor, color: brandColor }}>+ Add Delivery Address</Button>
+              <Button onClick={() => router.push('/home/addresses')} variant="outline" className="w-full border-dashed rounded-xl font-black uppercase text-xs h-14" style={{ borderColor: brandColor, color: brandColor }}>+ Add Delivery Address</Button>
             )}
           </CardContent>
         </Card>
 
         {/* Item Summary Card */}
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4"><CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Order Summary</CardTitle></CardHeader>
-          <CardContent className="p-0 bg-white">
+        <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="bg-gray-50/50 border-b py-4 px-6">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Order Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             {items.map((item) => (
-              <div key={item.cartId} className="p-4 border-b last:border-0 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`h-3 w-3 border flex items-center justify-center ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+              <div key={item.cartId} className="p-6 border-b last:border-0 flex items-center justify-between hover:bg-gray-50/30 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
                     <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
                   </div>
                   <div>
-                    <h4 className="text-[13px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                        {item.selectedVariation && <Badge variant="outline" className="text-[7px] font-black uppercase h-3.5 px-1 border-gray-200">{item.selectedVariation.name}</Badge>}
-                        {item.selectedAddons?.map(a => <Badge key={a.name} variant="outline" className="text-[7px] font-black uppercase h-3.5 px-1 border-dashed text-muted-foreground">+ {a.name}</Badge>)}
+                    <h4 className="text-[14px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {item.selectedVariation && <Badge variant="outline" className="text-[7px] font-black uppercase h-4 px-2 border-gray-200 bg-white">Size: {item.selectedVariation.name}</Badge>}
+                        {item.selectedAddons?.map(a => <Badge key={a.name} variant="outline" className="text-[7px] font-black uppercase h-4 px-2 border-dashed text-muted-foreground bg-white">+ {a.name}</Badge>)}
                     </div>
-                    <span className="text-[11px] font-black mt-1.5 block font-sans tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
+                    <span className="text-[12px] font-black mt-2 block font-sans tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-lg px-2 py-1">
-                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1"><Minus className="h-3 w-3" /></button>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-xl px-3 py-1.5 shadow-inner">
+                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1 hover:text-red-600 transition-colors"><Minus className="h-3.5 w-3.5" /></button>
                     <span className="text-sm font-black min-w-[20px] text-center font-sans tabular-nums">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1"><Plus className="h-3 w-3" /></button>
+                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1 hover:text-green-600 transition-colors"><Plus className="h-3.5 w-3.5" /></button>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => removeItem(item.cartId)}><Trash2 className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => removeItem(item.cartId)}><Trash2 className="h-4.5 w-4.5" /></Button>
                 </div>
               </div>
             ))}
@@ -454,9 +456,9 @@ export default function CheckoutPage() {
         </Card>
 
         {/* Special Instructions Card */}
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardContent className="p-4 bg-white">
-            <div className="flex items-center gap-2 mb-3">
+        <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
                 <MessageSquareText className="h-4 w-4 text-muted-foreground" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Kitchen Instructions</span>
             </div>
@@ -464,35 +466,45 @@ export default function CheckoutPage() {
                 placeholder="e.g. Please avoid onions / Leave at the gate" 
                 value={specialNote}
                 onChange={e => setSpecialNote(e.target.value)}
-                className="h-20 rounded-xl font-medium text-xs border-gray-100 bg-gray-50/50"
+                className="h-24 rounded-2xl font-medium text-sm border-gray-100 bg-gray-50/50 p-4 focus:ring-primary/20"
             />
           </CardContent>
         </Card>
 
         {/* Coupon Card */}
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardContent className="p-4 bg-white">
-            <div className="flex items-center gap-2 mb-3"><Ticket className="h-4 w-4" style={{ color: brandColor }} /><span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Promos & Coupons</span></div>
+        <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Ticket className="h-4 w-4" style={{ color: brandColor }} />
+              <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Promos & Coupons</span>
+            </div>
             {appliedCoupon ? (
-              <div className="flex items-center justify-between p-3 rounded-lg border border-dashed" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '30' }}>
-                <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-xs font-black uppercase" style={{ color: brandColor }}>{appliedCoupon.code} applied!</span>
+              <div className="flex items-center justify-between p-4 rounded-2xl border-2 border-dashed" style={{ backgroundColor: brandColor + '05', borderColor: brandColor + '30' }}>
+                <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 shadow-sm">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm font-black uppercase italic tracking-tight" style={{ color: brandColor }}>{appliedCoupon.code} APPLIED!</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-7 text-[9px] font-black text-red-600 hover:bg-red-50">REMOVE</Button>
+                <Button variant="ghost" size="sm" onClick={() => setAppliedCoupon(null)} className="h-8 text-[9px] font-black text-red-600 hover:bg-red-50 rounded-xl">REMOVE</Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex gap-2">
-                  <Input placeholder="ENTER VOUCHER CODE" value={couponInput} onChange={e => setCouponInput(e.target.value)} className="h-10 text-xs font-black uppercase" />
-                  <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px] h-10 px-6" style={{ backgroundColor: brandColor }}>APPLY</Button>
+                  <Input 
+                    placeholder="ENTER VOUCHER CODE" 
+                    value={couponInput} 
+                    onChange={e => setCouponInput(e.target.value)} 
+                    className="h-12 text-xs font-black uppercase rounded-xl border-gray-100 bg-gray-50/50 tracking-widest px-4" 
+                  />
+                  <Button onClick={() => handleApplyCoupon(couponInput)} className="text-white font-black text-[10px] h-12 px-8 rounded-xl shadow-lg border-none active:scale-95" style={{ backgroundColor: brandColor }}>APPLY</Button>
                 </div>
                 {brandCoupons.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {brandCoupons.map((coupon) => (
-                      <button key={coupon.id} onClick={() => handleApplyCoupon(coupon)} className="flex-shrink-0 text-left p-2.5 rounded-xl border border-dashed bg-gray-50 hover:bg-white transition-colors" style={{ borderColor: brandColor + '30' }}>
-                        <span className="text-[10px] font-black text-[#333] uppercase">{coupon.code}</span>
-                        <p className="text-[8px] font-bold text-muted-foreground uppercase">{coupon.type === 'bogo' ? 'BUY 1 GET 1' : `${coupon.discountValue}% OFF`}</p>
+                      <button key={coupon.id} onClick={() => handleApplyCoupon(coupon)} className="flex-shrink-0 text-left p-3.5 rounded-2xl border-2 border-dashed bg-gray-50 hover:bg-white transition-all active:scale-95 group" style={{ borderColor: brandColor + '20' }}>
+                        <span className="text-[11px] font-black text-[#333] uppercase tracking-tight group-hover:text-primary">{coupon.code}</span>
+                        <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">{coupon.type === 'bogo' ? 'BUY 1 GET 1' : `${coupon.discountValue}% OFF`}</p>
                       </button>
                     ))}
                   </div>
@@ -504,23 +516,23 @@ export default function CheckoutPage() {
 
         {/* Loyalty Points Card */}
         {userProfile?.loyaltyPoints ? (
-            <Card className="border-none shadow-sm overflow-hidden">
-                <CardContent className="p-4 bg-white flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-                            <Crown className="h-5 w-5" />
+            <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
+                <CardContent className="p-6 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-sm">
+                            <Crown className="h-6 w-6" />
                         </div>
                         <div className="text-left">
                             <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Redeem LP Coins</span>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Balance: {userProfile.loyaltyPoints} Coins</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase">Available: {userProfile.loyaltyPoints} Coins</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase text-green-600">-₹{calculations.loyaltyDiscount.toFixed(0)}</span>
+                    <div className="flex items-center gap-4">
+                        {useLoyaltyPoints && <span className="text-[11px] font-black uppercase text-green-600 animate-pulse">-₹{calculations.loyaltyDiscount.toFixed(0)}</span>}
                         <Switch 
                             checked={useLoyaltyPoints} 
                             onCheckedChange={setUseLoyaltyPoints} 
-                            className="data-[state=checked]:bg-amber-500"
+                            className="data-[state=checked]:bg-amber-500 scale-110"
                         />
                     </div>
                 </CardContent>
@@ -528,83 +540,78 @@ export default function CheckoutPage() {
         ) : null}
 
         {/* Enhanced Bill Details Card */}
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b py-4"><CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle></CardHeader>
-          <CardContent className="p-4 space-y-3 bg-white">
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
+        <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="bg-gray-50/50 border-b py-4 px-6">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase tracking-tight">
                 <span>Item Total</span>
-                <span className="font-sans tabular-nums">₹{calculations.subtotal.toFixed(2)}</span>
+                <span className="font-sans tabular-nums text-[#333]">₹{calculations.subtotal.toFixed(2)}</span>
             </div>
             
             {calculations.discount > 0 && (
-                <div className="flex justify-between text-xs font-black text-green-600 uppercase">
+                <div className="flex justify-between text-xs font-black text-green-600 uppercase tracking-tight">
                     <span>Promo Discount</span>
                     <span className="font-sans tabular-nums">-₹{calculations.discount.toFixed(2)}</span>
                 </div>
             )}
 
             {calculations.loyaltyDiscount > 0 && (
-                <div className="flex justify-between text-xs font-black text-amber-600 uppercase">
+                <div className="flex justify-between text-xs font-black text-amber-600 uppercase tracking-tight">
                     <span>LP Coins Redeemed</span>
                     <span className="font-sans tabular-nums">-₹{calculations.loyaltyDiscount.toFixed(2)}</span>
                 </div>
             )}
 
-            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase">
+            <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase tracking-tight">
                 <span>Delivery Logistics</span>
-                <span className={cn("font-sans tabular-nums", calculations.deliveryFee === 0 ? "text-green-600" : "")}>
+                <span className={cn("font-sans tabular-nums", calculations.deliveryFee === 0 ? "text-green-600 font-black" : "text-[#333]")}>
                     {calculations.deliveryFee === 0 ? "FREE" : `₹${calculations.deliveryFee.toFixed(2)}`}
                 </span>
             </div>
 
-            {userProfile?.loyaltyPoints && userProfile.loyaltyPoints > 0 ? (
-                <div className="flex justify-between text-[10px] font-bold text-amber-600 uppercase">
-                    <span>Loyalty Balance</span>
-                    <span className="font-sans tabular-nums">{userProfile.loyaltyPoints} Coins</span>
-                </div>
-            ) : null}
-
-            <div className="pt-1 space-y-1">
-                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+            <div className="pt-2 space-y-1.5 border-t border-gray-50">
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase tracking-widest">
                     <span>CGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
                     <span className="font-sans tabular-nums">₹{calculations.cgst.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase">
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground/60 uppercase tracking-widest">
                     <span>SGST ({(calculations.gstRate / 2).toFixed(1)}%)</span>
                     <span className="font-sans tabular-nums">₹{calculations.sgst.toFixed(2)}</span>
                 </div>
             </div>
 
-            <div className="border-t border-dashed pt-3 flex justify-between items-center">
+            <div className="border-t border-dashed pt-5 flex justify-between items-center">
                 <div className="flex flex-col text-left">
-                    <span className="text-lg font-black text-[#333333] uppercase italic leading-none">GRAND TOTAL</span>
-                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-1">Inclusive of all taxes</span>
+                    <span className="text-xl font-black text-[#333333] uppercase italic leading-none tracking-tighter">GRAND TOTAL</span>
+                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">Inclusive of all taxes</span>
                 </div>
-                <span className="text-2xl font-black font-sans tabular-nums" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
+                <span className="text-3xl font-black font-sans tabular-nums tracking-tighter" style={{ color: brandColor }}>₹{Math.round(calculations.finalTotal)}</span>
             </div>
 
-            <div className="mt-2 pt-2 border-t flex items-center justify-between">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase">LP Coins to Earn</span>
-                <div className="flex items-center gap-1.5">
-                    <Crown className="h-3 w-3 text-amber-500" />
-                    <span className="text-xs font-black text-amber-600 font-sans tabular-nums">+{calculations.pointsEarned}</span>
+            <div className="mt-4 pt-4 border-t flex items-center justify-between bg-amber-50/30 -mx-6 px-6 -mb-6 pb-6">
+                <span className="text-[9px] font-black text-[#333] uppercase tracking-widest">Rewards to Earn</span>
+                <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-amber-500 fill-current" />
+                    <span className="text-sm font-black text-amber-600 font-sans tabular-nums">+{calculations.pointsEarned} LP Coins</span>
                 </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Gateway Security Badge */}
-        <div className="flex items-center justify-center gap-2 py-4 opacity-40">
+        <div className="flex items-center justify-center gap-2 py-6 opacity-40">
             <ShieldCheck className="h-4 w-4" />
-            <span className="text-[9px] font-black uppercase tracking-[0.2em]">100% Secure PCI-DSS Gateway</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.25em]">100% Secure PCI-DSS Gateway</span>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_40px_rgba(0,0,0,0.12)]">
         <Button 
             onClick={handlePlaceOrder} 
             disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isActuallyClosed} 
-            className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 border-none" 
+            className="w-full h-16 text-white text-lg font-black uppercase tracking-[0.1em] rounded-2xl shadow-xl transition-all active:scale-95 border-none" 
             style={{ backgroundColor: brandColor }}
         >
           {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (isActuallyClosed ? "OUTLET CLOSED" : (calculations.isOutOfRange ? "OUT OF RANGE" : `PAY ₹${Math.round(calculations.finalTotal)}`))}
