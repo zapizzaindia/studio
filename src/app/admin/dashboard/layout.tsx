@@ -15,8 +15,9 @@ import {
   SidebarInset,
   SidebarTrigger,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { ShoppingCart, List, BarChart, Store, LogOut, Menu, Wifi, Loader2, Link as LinkIcon } from "lucide-react";
+import { ShoppingCart, List, BarChart, Store, LogOut, Menu, Wifi, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth, useUser, useDoc, useFirestore } from '@/firebase';
@@ -34,6 +35,70 @@ const navItems = [
   { href: "/admin/dashboard/outlet", label: "Profile", icon: Store },
 ];
 
+/**
+ * 📱 Mobile-Aware Navigation Component
+ * This component handles the auto-close behavior for the sidebar on mobile.
+ */
+function AdminSidebarNav({ 
+  navItems, 
+  pathname, 
+  brandColor, 
+  handleLogout 
+}: { 
+  navItems: any[], 
+  pathname: string, 
+  brandColor: string,
+  handleLogout: () => void
+}) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  return (
+    <>
+      <SidebarContent className="bg-white">
+        <SidebarMenu>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.label}>
+              <SidebarMenuButton 
+                asChild 
+                isActive={pathname.startsWith(item.href)} 
+                tooltip={item.label}
+                onClick={handleNavClick}
+              >
+                <Link href={item.href} className="flex items-center gap-3">
+                  <item.icon className="h-5 w-5" style={{ color: pathname.startsWith(item.href) ? brandColor : undefined }} />
+                  <span className="font-black text-xs uppercase tracking-widest">{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="bg-white border-t">
+          <SidebarMenu>
+              <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={() => {
+                      if (isMobile) setOpenMobile(false);
+                      handleLogout();
+                    }} 
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                      <LogOut className="h-5 w-5" />
+                      <span className="font-black text-xs uppercase tracking-widest">Logout</span>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
+          </SidebarMenu>
+      </SidebarFooter>
+    </>
+  );
+}
+
 export default function AdminDashboardLayout({
   children,
 }: Readonly<{
@@ -46,7 +111,6 @@ export default function AdminDashboardLayout({
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
   
-  // Admins use their email as the Document ID in Firestore for easier lookup
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -59,26 +123,21 @@ export default function AdminDashboardLayout({
   useEffect(() => {
     if (userLoading || profileLoading) return;
   
-    // 🔒 Not logged in
     if (!user) {
       const timer = setTimeout(() => {
         if (!auth?.currentUser) {
           router.replace('/admin/login');
         }
       }, 2000);
-  
       return () => clearTimeout(timer);
     }
   
-    // 🚫 No profile OR wrong role
     if (!userProfile || userProfile.role !== 'outlet-admin') {
       router.replace('/admin/login');
       return;
     }
   
-    // ✅ All good
     setIsVerifying(false);
-  
   }, [user, userLoading, profileLoading, userProfile, auth, router]);
 
   useEffect(() => {
@@ -94,10 +153,6 @@ export default function AdminDashboardLayout({
     router.push('/admin/login');
   }
 
-  /**
-   * 📡 TERMINAL SYNCHRONIZATION:
-   * This logic handles the hardware-to-cloud bridge for order alerts.
-   */
   const handleSyncTerminal = async () => {
     if (!user || !db || !profileId) return;
     setIsSyncing(true);
@@ -106,41 +161,30 @@ export default function AdminDashboardLayout({
       const isNative = typeof window !== "undefined" && (window as any).Capacitor?.isNative;
       
       if (isNative) {
-        // --- NATIVE ANDROID/IOS FLOW ---
         const { PushNotifications } = await import('@capacitor/push-notifications');
-        
-        // 1. Ensure listeners are attached BEFORE we trigger registration
         await PushNotifications.removeAllListeners();
         
         await PushNotifications.addListener('registration', async (token) => {
-          console.log("Device Token Received:", token.value);
-          
-          // 2. Save the hardware token to the Admin's Firestore profile
           await updateDoc(doc(db, 'users', profileId), {
             fcmToken: token.value,
             lastTokenSync: new Date().toISOString()
           });
-          
           toast({ title: "Signal Established", description: "This terminal is now linked to the cloud." });
           setIsSyncing(false);
         });
 
         await PushNotifications.addListener('registrationError', (err) => {
-          console.error("Hardware Registration Error:", err);
           toast({ variant: 'destructive', title: "Hardware Error", description: "Could not initialize device bridge." });
           setIsSyncing(false);
         });
 
-        // 3. Request permissions and register
         const permStatus = await PushNotifications.requestPermissions();
         if (permStatus.receive === 'granted') {
           await PushNotifications.register();
         } else {
           throw new Error("Notification permission denied by device.");
         }
-
       } else {
-        // --- WEB / PWA FLOW ---
         const token = await requestForToken();
         if (token) {
           await updateDoc(doc(db, 'users', profileId), {
@@ -154,7 +198,6 @@ export default function AdminDashboardLayout({
         setIsSyncing(false);
       }
     } catch (e: any) {
-      console.error("Sync Error:", e);
       toast({ variant: 'destructive', title: "Sync Failed", description: e.message || "Please check your network." });
       setIsSyncing(false);
     }
@@ -184,30 +227,12 @@ export default function AdminDashboardLayout({
                 </h1>
               </div>
             </SidebarHeader>
-            <SidebarContent className="bg-white">
-              <SidebarMenu>
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)} tooltip={item.label}>
-                      <Link href={item.href} className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5" style={{ color: pathname.startsWith(item.href) ? brandColor : undefined }} />
-                        <span className="font-black text-xs uppercase tracking-widest">{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarContent>
-            <SidebarFooter className="bg-white border-t">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton onClick={handleLogout} className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                            <LogOut className="h-5 w-5" />
-                            <span className="font-black text-xs uppercase tracking-widest">Logout</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
+            <AdminSidebarNav 
+              navItems={navItems} 
+              pathname={pathname} 
+              brandColor={brandColor} 
+              handleLogout={handleLogout} 
+            />
         </Sidebar>
         <SidebarInset className="bg-[#f8f9fa] flex flex-col">
             <header className="sticky top-0 z-30 flex h-auto min-h-[4rem] items-center justify-between border-b bg-white/95 backdrop-blur-md px-4 shadow-sm pt-safe pb-2 shrink-0">

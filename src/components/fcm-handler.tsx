@@ -88,7 +88,7 @@ export function FCMHandler() {
     };
 
     // Delay slightly to ensure browser/capacitor bridges are ready
-    const timer = setTimeout(setupFCM, 2000);
+    const timer = setTimeout(setupFCM, 3000);
     return () => clearTimeout(timer);
   }, [user, authLoading, db, toast]);
 
