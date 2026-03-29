@@ -361,10 +361,10 @@ export default function CheckoutPage() {
   const brandCoupons = allCoupons?.filter(c => c.brand === selectedOutlet?.brand) || [];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-64 font-headline">
+    <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-64 font-headline pt-[calc(56px+env(safe-area-inset-top))]">
       <Script id="razorpay-checkout" src="https://checkout.razorpay.com/v1/checkout.js" />
 
-      <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-4 pt-safe">
+      <div className="sticky top-[calc(56px+env(safe-area-inset-top))] z-30 bg-white border-b px-4 py-4 flex items-center gap-4 shadow-sm">
         <Button variant="ghost" size="icon" onClick={() => router.back()}><ArrowLeft className="h-6 w-6" /></Button>
         <h1 className="text-xl font-black uppercase tracking-widest" style={{ color: brandColor }}>Review Order</h1>
       </div>
@@ -502,7 +502,7 @@ export default function CheckoutPage() {
                 {brandCoupons.length > 0 && (
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {brandCoupons.map((coupon) => (
-                      <button key={coupon.id} onClick={() => handleApplyCoupon(coupon)} className="flex-shrink-0 text-left p-3.5 rounded-2xl border-2 border-dashed bg-gray-50 hover:bg-white transition-all active:scale-95 group" style={{ borderColor: brandColor + '20' }}>
+                      <button key={coupon.id} onClick={() => handleApplyCoupon(coupon)} className="flex-shrink-0 text-left p-3.5 rounded-2xl border-2 border-dashed bg-gray-50 hover:bg-white transition-all active:scale-[0.98] group" style={{ borderColor: brandColor + '20' }}>
                         <span className="text-[11px] font-black text-[#333] uppercase tracking-tight group-hover:text-primary">{coupon.code}</span>
                         <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">{coupon.type === 'bogo' ? 'BUY 1 GET 1' : `${coupon.discountValue}% OFF`}</p>
                       </button>
