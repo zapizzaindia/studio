@@ -859,7 +859,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center gap-6">
             <div className="relative h-48 w-48">
               <Image 
-                src="https://picsum.photos/seed/closed-shop/400/400" 
+                src={getImageUrl('closed_sign')} 
                 alt="Outlet Closed" 
                 fill 
                 className="object-contain"
