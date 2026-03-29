@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from 'react';
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { 
@@ -62,6 +62,29 @@ function MenuContent() {
   }, []);
 
   const { data: selectedOutlet, loading: outletLoading } = useDoc<Outlet>('outlets', savedOutletId || 'dummy');
+
+  const checkIfOpen = useCallback((outlet: Outlet | null) => {
+    if (!outlet) return false;
+    if (!outlet.isOpen) return false;
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    const [openH, openM] = (outlet.openingTime || "00:00").split(':').map(Number);
+    const [closeH, closeM] = (outlet.closingTime || "23:59").split(':').map(Number);
+
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    if (closeTime < openTime) {
+      // Overnight operation
+      return currentTime >= openTime || currentTime < closeTime;
+    }
+
+    return currentTime >= openTime && currentTime < closeTime;
+  }, []);
+
+  const isActuallyOpen = useMemo(() => checkIfOpen(selectedOutlet), [selectedOutlet, checkIfOpen]);
 
   const { data: categories, loading: categoriesLoading } = useCollection<Category>('categories', {
     where: selectedOutlet ? ['brand', '==', selectedOutlet.brand] : undefined
@@ -201,10 +224,10 @@ function MenuContent() {
               <Badge 
                 className={cn(
                   "border-none font-black text-[8px] uppercase px-1.5 h-4 font-headline",
-                  selectedOutlet?.isOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  isActuallyOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                 )}
               >
-                {selectedOutlet?.isOpen ? "OPEN" : "CLOSED"}
+                {isActuallyOpen ? "OPEN" : "CLOSED"}
               </Badge>
             </div>
             <div className="flex flex-col gap-1.5 text-muted-foreground">

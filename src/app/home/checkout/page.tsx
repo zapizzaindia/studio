@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2, ShoppingCart, Sparkles, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -71,7 +70,29 @@ export default function CheckoutPage() {
 
   const { data: realTimeOutlet } = useDoc<Outlet>('outlets', selectedOutlet?.id || 'dummy');
   const outlet = realTimeOutlet || selectedOutlet;
-  const isOutletClosed = outlet?.isOpen === false;
+
+  const checkIfOpen = useCallback((outlet: Outlet | null) => {
+    if (!outlet) return false;
+    if (!outlet.isOpen) return false;
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    const [openH, openM] = (outlet.openingTime || "00:00").split(':').map(Number);
+    const [closeH, closeM] = (outlet.closingTime || "23:59").split(':').map(Number);
+
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    if (closeTime < openTime) {
+      // Overnight operation (e.g., 18:00 to 04:00)
+      return currentTime >= openTime || currentTime < closeTime;
+    }
+
+    return currentTime >= openTime && currentTime < closeTime;
+  }, []);
+
+  const isActuallyClosed = useMemo(() => !checkIfOpen(outlet), [outlet, checkIfOpen]);
 
   useEffect(() => {
     if (!user || !db) return;
@@ -277,7 +298,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!user) { router.push('/login'); return; }
-    if (isOutletClosed) {
+    if (isActuallyClosed) {
       toast({ variant: 'destructive', title: "Outlet Closed", description: "This kitchen is currently not accepting orders." });
       return;
     }
@@ -361,10 +382,13 @@ export default function CheckoutPage() {
             </div>
         )}
 
-        {isOutletClosed && (
+        {isActuallyClosed && (
           <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
-            <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase mt-1">This kitchen is currently closed and not accepting orders.</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-black text-red-900 uppercase">Outlet is Currently Closed</p>
+              <p className="text-[9px] font-bold text-red-700 leading-relaxed uppercase">HOURS: {outlet?.openingTime} - {outlet?.closingTime}</p>
+            </div>
           </div>
         )}
 
@@ -579,11 +603,11 @@ export default function CheckoutPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <Button 
             onClick={handlePlaceOrder} 
-            disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isOutletClosed} 
+            disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isActuallyClosed} 
             className="w-full h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 border-none" 
             style={{ backgroundColor: brandColor }}
         >
-          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (isOutletClosed ? "OUTLET CLOSED" : (calculations.isOutOfRange ? "OUT OF RANGE" : `PAY ₹${Math.round(calculations.finalTotal)}`))}
+          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (isActuallyClosed ? "OUTLET CLOSED" : (calculations.isOutOfRange ? "OUT OF RANGE" : `PAY ₹${Math.round(calculations.finalTotal)}`))}
         </Button>
       </div>
     </div>

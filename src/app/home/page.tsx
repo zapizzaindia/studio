@@ -281,11 +281,35 @@ export default function HomePage() {
     return () => clearInterval(intervalId);
   }, [api]);
 
-  useEffect(() => {
-    if (selectedOutlet && selectedOutlet.isOpen === false && !hasDismissedClosedModal) {
-      setShowClosedModal(true);
+  const checkIfOpen = useCallback((outlet: Outlet | null) => {
+    if (!outlet) return false;
+    if (!outlet.isOpen) return false;
+
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    const [openH, openM] = (outlet.openingTime || "00:00").split(':').map(Number);
+    const [closeH, closeM] = (outlet.closingTime || "23:59").split(':').map(Number);
+
+    const openTime = openH * 60 + openM;
+    const closeTime = closeH * 60 + closeM;
+
+    if (closeTime < openTime) {
+      // Overnight operation (e.g., 18:00 to 04:00)
+      return currentTime >= openTime || currentTime < closeTime;
     }
-  }, [selectedOutlet?.isOpen, hasDismissedClosedModal]);
+
+    return currentTime >= openTime && currentTime < closeTime;
+  }, []);
+
+  useEffect(() => {
+    if (selectedOutlet && !hasDismissedClosedModal) {
+      const isOpen = checkIfOpen(selectedOutlet);
+      if (!isOpen) {
+        setShowClosedModal(true);
+      }
+    }
+  }, [selectedOutlet, hasDismissedClosedModal, checkIfOpen]);
 
   const handleCitySelect = (city: City, outlet?: Outlet) => {
     setSelectedCity(city);
@@ -849,6 +873,9 @@ export default function HomePage() {
               </div>
               <h2 className="text-xl font-bold text-muted-foreground uppercase tracking-widest">Outlet is Currently</h2>
               <h3 className="text-5xl font-black text-destructive italic tracking-tighter uppercase">CLOSED</h3>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-2">
+                HOURS: {selectedOutlet?.openingTime} - {selectedOutlet?.closingTime}
+              </p>
             </div>
 
             <div className="w-full space-y-4 pt-4">
