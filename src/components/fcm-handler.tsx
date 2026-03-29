@@ -57,7 +57,7 @@ export function FCMHandler() {
           });
 
           // 2. Request permission if not already checked
-          const permStatus = await PushNotifications.checkPermissions();
+          const permStatus = await PushNotifications.requestPermissions();
           if (permStatus.receive === 'granted') {
             await PushNotifications.register();
             hasInitialized.current = true;
