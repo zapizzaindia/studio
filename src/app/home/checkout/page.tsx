@@ -136,6 +136,7 @@ export default function CheckoutPage() {
     
     let discount = 0;
     let bogoNudge: string | null = null;
+    let eligibleItemsCount = 0;
 
     if (appliedCoupon) {
       // Logic for item/category restriction
@@ -145,6 +146,7 @@ export default function CheckoutPage() {
         return isItemEligible && isCategoryEligible;
       });
 
+      eligibleItemsCount = eligibleItems.reduce((sum, i) => sum + i.quantity, 0);
       const eligibleSubtotal = eligibleItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
       if (appliedCoupon.type === 'bogo') {
@@ -193,7 +195,8 @@ export default function CheckoutPage() {
       distanceKm, 
       isOutOfRange, 
       bogoNudge,
-      pointsEarned
+      pointsEarned,
+      eligibleItemsCount
     };
   }, [totalPrice, items, settings, appliedCoupon, selectedAddress, selectedOutlet, useLoyaltyPoints, userProfile]);
 
@@ -427,31 +430,50 @@ export default function CheckoutPage() {
             <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Order Summary</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {items.map((item) => (
-              <div key={item.cartId} className="p-6 border-b last:border-0 flex items-center justify-between hover:bg-gray-50/30 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
-                    <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
-                  </div>
-                  <div>
-                    <h4 className="text-[14px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {item.selectedVariation && <Badge variant="outline" className="text-[7px] font-black uppercase h-4 px-2 border-gray-200 bg-white">Size: {item.selectedVariation.name}</Badge>}
-                        {item.selectedAddons?.map(a => <Badge key={a.name} variant="outline" className="text-[7px] font-black uppercase h-4 px-2 border-dashed text-muted-foreground bg-white">+ {a.name}</Badge>)}
+            {items.map((item) => {
+              const isEligibleForBogo = appliedCoupon?.type === 'bogo' && (
+                (!appliedCoupon.eligibleItemIds || appliedCoupon.eligibleItemIds.includes(item.id)) &&
+                (!appliedCoupon.eligibleCategoryIds || appliedCoupon.eligibleCategoryIds.includes(item.category))
+              );
+              const showItemBogoNudge = isEligibleForBogo && (calculations.eligibleItemsCount % 2 !== 0);
+
+              return (
+                <div key={item.cartId} className="p-6 border-b last:border-0 flex flex-col hover:bg-gray-50/30 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`h-3.5 w-3.5 border-2 flex items-center justify-center rounded-sm ${item.isVeg ? 'border-green-600' : 'border-red-600'}`}>
+                        <div className={`h-1.5 w-1.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'border-red-600'}`} />
+                      </div>
+                      <div>
+                        <h4 className="text-[14px] font-black text-[#333333] uppercase leading-tight">{item.name}</h4>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {item.selectedVariation && <Badge variant="outline" className="text-[7px] font-black uppercase h-4 px-2 border-gray-200 bg-white">Size: {item.selectedVariation.name}</Badge>}
+                            {item.selectedAddons?.map(a => <Badge key={a.name} variant="outline" className="text-[7px] font-black uppercase h-4 px-2 border-dashed text-muted-foreground bg-white">+ {a.name}</Badge>)}
+                        </div>
+                        <span className="text-[12px] font-black mt-2 block font-sans tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
+                      </div>
                     </div>
-                    <span className="text-[12px] font-black mt-2 block font-sans tabular-nums" style={{ color: brandColor }}>₹{item.price * item.quantity}</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-xl px-3 py-1.5 shadow-inner">
+                        <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1 hover:text-red-600 transition-colors"><Minus className="h-3.5 w-3.5" /></button>
+                        <span className="text-sm font-black min-w-[20px] text-center font-sans tabular-nums">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1 hover:text-green-600 transition-colors"><Plus className="h-3.5 w-3.5" /></button>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => removeItem(item.cartId)}><Trash2 className="h-4.5 w-4.5" /></Button>
+                    </div>
                   </div>
+                  
+                  {showItemBogoNudge && (
+                    <div className="mt-4 bg-indigo-50/50 border border-dashed border-indigo-200 p-2.5 rounded-xl flex items-center gap-2">
+                      <Sparkles className="h-3 w-3 text-indigo-600" />
+                      <p className="text-[9px] font-black uppercase text-indigo-900 tracking-tight">
+                        Add 1 more item to avail Buy 1 Get 1 offer!
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 bg-[#f1f2f6] rounded-xl px-3 py-1.5 shadow-inner">
-                    <button onClick={() => updateQuantity(item.cartId, -1)} className="p-1 hover:text-red-600 transition-colors"><Minus className="h-3.5 w-3.5" /></button>
-                    <span className="text-sm font-black min-w-[20px] text-center font-sans tabular-nums">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.cartId, 1)} className="p-1 hover:text-green-600 transition-colors"><Plus className="h-3.5 w-3.5" /></button>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => removeItem(item.cartId)}><Trash2 className="h-4.5 w-4.5" /></Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 
