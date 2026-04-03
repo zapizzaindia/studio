@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -21,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { createRazorpayOrder } from "./actions";
 import { notifyAdminsOfOrder } from "@/app/actions/notifications";
+import { format } from "date-fns";
 
 declare global {
   interface Window {
@@ -217,6 +219,29 @@ export default function CheckoutPage() {
       toast({ variant: 'destructive', title: "Invalid Code", description: `This coupon is not valid for ${selectedOutlet.brand.toUpperCase()}.` });
       return;
     }
+
+    // Scheduling Validation
+    const now = new Date();
+    const todayStr = format(now, 'yyyy-MM-dd');
+    const currentTimeStr = format(now, 'HH:mm');
+
+    if (found.startDate && todayStr < found.startDate) {
+      toast({ variant: 'destructive', title: "Coupon Not Active", description: `This offer starts on ${found.startDate}` });
+      return;
+    }
+    if (found.endDate && todayStr > found.endDate) {
+      toast({ variant: 'destructive', title: "Coupon Expired", description: "This offer is no longer valid." });
+      return;
+    }
+    if (found.startTime && currentTimeStr < found.startTime) {
+      toast({ variant: 'destructive', title: "Early for this Offer", description: `Valid daily from ${found.startTime}` });
+      return;
+    }
+    if (found.endTime && currentTimeStr > found.endTime) {
+      toast({ variant: 'destructive', title: "Offer Ended for Today", description: `Valid daily until ${found.endTime}` });
+      return;
+    }
+
     if (totalPrice < found.minOrderAmount) {
       toast({ variant: 'destructive', title: "Below Min Order", description: `Add ₹${found.minOrderAmount - totalPrice} more to use this.` });
       return;

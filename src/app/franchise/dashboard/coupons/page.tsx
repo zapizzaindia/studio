@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Pizza, Flame, IndianRupee, ShieldAlert, Tag, Layers, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Pizza, Flame, IndianRupee, ShieldAlert, Tag, Layers, CheckCircle2, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { useCollection, useFirestore } from "@/firebase";
 import { doc, addDoc, collection, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +41,12 @@ export default function FranchiseCouponsPage() {
     const [newDescription, setNewDescription] = useState("");
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    
+    // Scheduling State
+    const [newStartDate, setNewStartDate] = useState("");
+    const [newEndDate, setNewEndDate] = useState("");
+    const [newStartTime, setNewStartTime] = useState("");
+    const [newEndTime, setNewEndTime] = useState("");
 
     const coupons = useMemo(() => allCoupons?.filter(c => c.brand === activeBrand) || [], [allCoupons, activeBrand]);
     const brandColor = activeBrand === 'zfry' ? '#e31837' : '#14532d';
@@ -62,7 +68,11 @@ export default function FranchiseCouponsPage() {
             description: newDescription,
             brand: activeBrand,
             eligibleItemIds: selectedItems.length > 0 ? selectedItems : null,
-            eligibleCategoryIds: selectedCategories.length > 0 ? selectedCategories : null
+            eligibleCategoryIds: selectedCategories.length > 0 ? selectedCategories : null,
+            startDate: newStartDate || null,
+            endDate: newEndDate || null,
+            startTime: newStartTime || null,
+            endTime: newEndTime || null
         };
 
         try {
@@ -85,6 +95,10 @@ export default function FranchiseCouponsPage() {
         setNewDescription("");
         setSelectedItems([]);
         setSelectedCategories([]);
+        setNewStartDate("");
+        setNewEndDate("");
+        setNewStartTime("");
+        setNewEndTime("");
     }
 
     const handleDelete = async (id: string) => {
@@ -221,6 +235,39 @@ export default function FranchiseCouponsPage() {
                             <div className="grid grid-cols-2 gap-6 p-4 bg-muted/20 rounded-2xl border border-dashed">
                                 <div className="space-y-3">
                                     <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                        <CalendarIcon className="h-3 w-3" /> Date Validity
+                                    </Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <span className="text-[7px] font-black uppercase text-muted-foreground">Start</span>
+                                            <Input type="date" value={newStartDate} onChange={e => setNewStartDate(e.target.value)} className="h-10 text-[10px] font-bold" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[7px] font-black uppercase text-muted-foreground">End</span>
+                                            <Input type="date" value={newEndDate} onChange={e => setNewEndDate(e.target.value)} className="h-10 text-[10px] font-bold" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                        <Clock className="h-3 w-3" /> Daily Time Slot
+                                    </Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <span className="text-[7px] font-black uppercase text-muted-foreground">From</span>
+                                            <Input type="time" value={newStartTime} onChange={e => setNewStartTime(e.target.value)} className="h-10 text-[10px] font-bold" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[7px] font-black uppercase text-muted-foreground">To</span>
+                                            <Input type="time" value={newEndTime} onChange={e => setNewEndTime(e.target.value)} className="h-10 text-[10px] font-bold" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6 p-4 bg-muted/20 rounded-2xl border border-dashed">
+                                <div className="space-y-3">
+                                    <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
                                         <Layers className="h-3 w-3" /> Target Categories
                                     </Label>
                                     <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
@@ -308,6 +355,16 @@ export default function FranchiseCouponsPage() {
                                             <p className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
                                                 {coupon.eligibleCategoryIds ? `${coupon.eligibleCategoryIds.length} Categories` : (coupon.eligibleItemIds ? `${coupon.eligibleItemIds.length} Items` : 'Global Storewide')}
                                             </p>
+                                            {(coupon.startDate || coupon.endDate) && (
+                                                <p className="text-[7px] font-bold text-orange-600 uppercase">
+                                                    Dates: {coupon.startDate || 'Any'} to {coupon.endDate || 'Any'}
+                                                </p>
+                                            )}
+                                            {(coupon.startTime || coupon.endTime) && (
+                                                <p className="text-[7px] font-bold text-blue-600 uppercase">
+                                                    Slot: {coupon.startTime || '00:00'} - {coupon.endTime || '23:59'}
+                                                </p>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell>

@@ -76,8 +76,12 @@ export type Coupon = {
   active: boolean;
   description?: string;
   brand: Brand;
-  eligibleItemIds?: string[];
-  eligibleCategoryIds?: string[];
+  eligibleItemIds?: string[] | null;
+  eligibleCategoryIds?: string[] | null;
+  startDate?: string | null; // YYYY-MM-DD
+  endDate?: string | null;   // YYYY-MM-DD
+  startTime?: string | null; // HH:mm
+  endTime?: string | null;   // HH:mm
 };
 
 export type OrderStatus = 'New' | 'Preparing' | 'Out for Delivery' | 'Completed' | 'Cancelled';
