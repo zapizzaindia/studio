@@ -190,6 +190,40 @@ export default function ProfilePage() {
       });
   };
 
+  const handleCallOutlet = () => {
+    if (!outlet) return;
+    const phone = outlet.phone;
+    if (phone) {
+      window.open(`tel:${phone}`, '_self');
+    } else {
+      toast({
+        title: "Contact Unavailable",
+        description: "This outlet hasn't listed an official phone number yet.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGetDirections = () => {
+    if (!outlet) return;
+    let url = "";
+    if (outlet.latitude && outlet.longitude) {
+      url = `https://www.google.com/maps/search/?api=1&query=${outlet.latitude},${outlet.longitude}`;
+    } else if (outlet.address) {
+      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(outlet.address)}`;
+    }
+
+    if (url) {
+      window.open(url, '_blank');
+    } else {
+      toast({
+        title: "Location Unknown",
+        description: "Exact coordinates for this outlet are not available.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (!isHydrated || userLoading || profileLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#f8f9fa] items-center justify-center p-6">
@@ -398,10 +432,10 @@ export default function ProfilePage() {
             </div>
             
             <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-50">
-              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2 font-headline">
+              <Button onClick={handleCallOutlet} variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2 font-headline">
                 <Phone className="h-3.5 w-3.5" /> Call Outlet
               </Button>
-              <Button variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2 font-headline">
+              <Button onClick={handleGetDirections} variant="outline" className="h-12 rounded-2xl border-green-50 bg-green-50/30 text-[#14532d] font-black uppercase text-[10px] tracking-widest gap-2 font-headline">
                 <Navigation className="h-3.5 w-3.5" /> Get Directions
               </Button>
             </div>

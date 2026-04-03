@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Clock, MapPin, Power, Loader2, Save } from 'lucide-react';
+import { Clock, MapPin, Power, Loader2, Save, Phone } from 'lucide-react';
 import { useDoc, useUser, useFirestore } from '@/firebase';
 import type { UserProfile, Outlet } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,6 +27,7 @@ export default function AdminOutletPage() {
     const [outletName, setOutletName] = useState("");
     const [openingTime, setOpeningTime] = useState("");
     const [closingTime, setClosingTime] = useState("");
+    const [outletPhone, setOutletPhone] = useState("");
     const [isOutletOpen, setIsOutletOpen] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -37,6 +39,7 @@ export default function AdminOutletPage() {
             setOutletName(outlet.name);
             setOpeningTime(outlet.openingTime || "11:00");
             setClosingTime(outlet.closingTime || "23:00");
+            setOutletPhone(outlet.phone || "");
             setIsOutletOpen(outlet.isOpen);
         }
     }, [outlet]);
@@ -55,6 +58,7 @@ export default function AdminOutletPage() {
             isOpen: isOutletOpen,
             openingTime,
             closingTime,
+            phone: outletPhone,
         };
 
         updateDoc(outletRef, updatedData)
@@ -147,6 +151,18 @@ export default function AdminOutletPage() {
                         />
                     </div>
 
+                    <div className="space-y-2">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
+                            <Phone className="h-2.5 w-2.5" /> Contact Number
+                        </Label>
+                        <Input 
+                            value={outletPhone} 
+                            onChange={(e) => setOutletPhone(e.target.value)} 
+                            placeholder="+91 XXXX XXX XXX"
+                            className="h-11 rounded-xl font-bold text-sm"
+                        />
+                    </div>
+
                     <div className="space-y-3">
                         <Label className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Operating Window</Label>
                         <div className="grid grid-cols-2 gap-4">
@@ -165,7 +181,7 @@ export default function AdminOutletPage() {
                         <Button 
                             onClick={handleSaveChanges} 
                             disabled={isSaving}
-                            className="w-full sm:w-auto h-12 px-8 rounded-xl text-white font-black uppercase text-[10px] tracking-widest shadow-lg"
+                            className="w-full h-12 px-8 rounded-xl text-white font-black uppercase text-[10px] tracking-widest shadow-lg"
                             style={{ backgroundColor: brandColor }}
                         >
                             {isSaving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}

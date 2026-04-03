@@ -138,6 +138,7 @@ export type Outlet = {
     closingTime: string;
     brand: Brand;
     address?: string;
+    phone?: string;
     deliveryTime?: string;
     rating?: number;
     reviewCount?: number;
