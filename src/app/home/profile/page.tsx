@@ -246,7 +246,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f1f2f6] pb-12">
-      <div className="bg-[#14532d] text-white px-6 pt-[calc(64px+env(safe-area-inset-top,0px))] pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
+      <div className="bg-[#14532d] text-white px-6 pt-[calc(64px+env(safe-area-inset-top))] pb-10 rounded-b-[40px] shadow-lg relative overflow-hidden font-headline">
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button 
@@ -444,7 +444,7 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-1 opacity-40">
             <span className="text-[9px] font-bold text-[#333333] uppercase tracking-widest">Powered by</span>
             <div className="flex items-center gap-1 text-[#14532d] font-black italic text-sm">
-              <ShoppingBag className="h-4 w-4" /> Zapizza Mesh
+              <ShoppingBag className="h-4 w-4" /> Digitrix Media
             </div>
           </div>
           <button 
