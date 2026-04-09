@@ -440,7 +440,7 @@ export default function ProfilePage() {
         </Card>
 
         <div className="py-10 text-center space-y-4 font-headline">
-          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] font-roboto tabular-nums">v2.8.5 (Gold Edition)</p>
+          <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] font-roboto tabular-nums">v1.1.0 (Gold Edition)</p>
           <div className="flex flex-col items-center gap-1 opacity-40">
             <span className="text-[9px] font-bold text-[#333333] uppercase tracking-widest">Powered by</span>
             <div className="flex items-center gap-1 text-[#14532d] font-black italic text-sm">
