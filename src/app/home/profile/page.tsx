@@ -126,11 +126,8 @@ export default function ProfilePage() {
 
       if (isNative) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
-        let permStatus = await PushNotifications.checkPermissions();
-        
-        if (permStatus.receive !== 'granted') {
-          permStatus = await PushNotifications.requestPermissions();
-        }
+        let permStatus = await PushNotifications.requestPermissions();
+        console.log("Permission:", permStatus);
 
         if (permStatus.receive === 'granted') {
           await PushNotifications.register();
