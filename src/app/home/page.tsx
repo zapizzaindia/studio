@@ -464,13 +464,8 @@ export default function HomePage() {
       </div>
 
       {heroBanner && (
-        <div className="relative w-full aspect-[1080/1320] overflow-hidden group">
-          <motion.div 
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-            className="w-full h-full"
-          >
+        <div className="relative w-full aspect-[1080/1320] overflow-hidden md:hidden">
+          <div className="w-full h-full">
             {heroBanner.mediaType === "video" ? (
               <video
                 src={heroBanner.imageId}
@@ -489,33 +484,6 @@ export default function HomePage() {
                 className="object-cover"
               />
             )}
-          </motion.div>
-          
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-8 text-left">
-            {heroBanner.subtitle && (
-              <Badge className="w-fit mb-3 bg-yellow-400 text-black font-black uppercase text-[10px] tracking-widest rounded-md px-3 py-1 shadow-lg font-headline">
-                {heroBanner.subtitle}
-              </Badge>
-            )}
-            {heroBanner.title && (
-              <h2 className="text-white text-4xl font-black uppercase italic leading-none mb-3 drop-shadow-2xl font-headline tracking-tighter">
-                {heroBanner.title}
-              </h2>
-            )}
-            <div className="flex items-center justify-between">
-              {heroBanner.price && (
-                <div className="flex flex-col">
-                  <span className="text-white/60 text-[10px] font-black uppercase tracking-widest font-headline">Starting from</span>
-                  <span className="text-white font-black text-3xl drop-shadow-lg font-sans tabular-nums tracking-tighter">₹{heroBanner.price}</span>
-                </div>
-              )}
-              <Button 
-                onClick={() => router.push('/home/menu')}
-                className="bg-white text-black hover:bg-gray-100 h-14 px-8 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl transition-all active:scale-95 font-headline"
-              >
-                Order Now <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
       )}
