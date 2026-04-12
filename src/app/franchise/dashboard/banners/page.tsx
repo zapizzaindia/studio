@@ -236,7 +236,7 @@ export default function FranchiseBannersPage() {
               <div className="flex items-center justify-between bg-muted/30 p-4 rounded-2xl border">
                 <div className="flex flex-col">
                     <span className="text-xs font-black uppercase tracking-tight">Set as Header Hero</span>
-                    <span className="text-[8px] font-bold text-muted-foreground uppercase">Background for Homepage Header</span>
+                    <span className="text-[8px] font-bold text-muted-foreground uppercase">Large vertical 1080x1320 visual for homepage top.</span>
                 </div>
                 <Switch checked={isHero} onCheckedChange={setIsHero} />
               </div>
@@ -290,7 +290,10 @@ export default function FranchiseBannersPage() {
                         />
                     </div>
                 </div>
-                <div className="relative aspect-[21/9] rounded-[24px] overflow-hidden border-2 bg-muted/20 mt-2 shadow-inner">
+                <div className={cn(
+                  "relative rounded-[24px] overflow-hidden border-2 bg-muted/20 mt-2 shadow-inner",
+                  isHero ? "aspect-[1080/1320] max-h-[400px] w-fit mx-auto" : "aspect-[21/9] w-full"
+                )}>
                     {mediaType === 'video' ? (
                         <video src={getImageUrl(newImageId)} className="w-full h-full object-cover" autoPlay muted loop />
                     ) : (
@@ -302,6 +305,7 @@ export default function FranchiseBannersPage() {
                         />
                     )}
                 </div>
+                {isHero && <p className="text-[8px] font-bold text-center text-orange-600 uppercase tracking-widest animate-pulse">Portrait (9:11) Aspect Ratio Recommended for Hero</p>}
                 <Select onValueChange={setNewImageId} value={newImageId.startsWith('http') || newImageId.startsWith('data:') ? 'custom' : newImageId}>
                     <SelectTrigger className="h-10 rounded-xl font-bold uppercase text-[9px]">
                         <SelectValue placeholder="Or select from library" />
@@ -343,7 +347,10 @@ export default function FranchiseBannersPage() {
               )) : banners.length > 0 ? banners.map(banner => (
                 <TableRow key={banner.id} className="border-b-gray-50 hover:bg-gray-50/30 transition-colors">
                   <TableCell className="pl-8 py-6">
-                    <div className="relative h-20 w-32 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5">
+                    <div className={cn(
+                      "relative rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-1 ring-black/5",
+                      banner.isHero ? "h-24 w-20" : "h-20 w-32"
+                    )}>
                       {banner.mediaType === 'video' ? (
                         <video src={getImageUrl(banner.imageId)} className="w-full h-full object-cover" muted />
                       ) : (
