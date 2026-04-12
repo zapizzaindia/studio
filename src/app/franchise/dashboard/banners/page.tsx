@@ -236,7 +236,7 @@ export default function FranchiseBannersPage() {
               <div className="flex items-center justify-between bg-muted/30 p-4 rounded-2xl border">
                 <div className="flex flex-col">
                     <span className="text-xs font-black uppercase tracking-tight">Set as Header Hero</span>
-                    <span className="text-[8px] font-bold text-muted-foreground uppercase">Large vertical 1080x1320 visual for homepage top.</span>
+                    <span className="text-[8px] font-bold text-muted-foreground uppercase">Large vertical 1080x1080 visual for homepage top.</span>
                 </div>
                 <Switch checked={isHero} onCheckedChange={setIsHero} />
               </div>
@@ -292,7 +292,7 @@ export default function FranchiseBannersPage() {
                 </div>
                 <div className={cn(
                   "relative rounded-[24px] overflow-hidden border-2 bg-muted/20 mt-2 shadow-inner",
-                  isHero ? "aspect-[1080/1320] max-h-[400px] w-fit mx-auto" : "aspect-[21/9] w-full"
+                  isHero ? "aspect-[1080/1080] max-h-[400px] w-fit mx-auto" : "aspect-[21/9] w-full"
                 )}>
                     {mediaType === 'video' ? (
                         <video src={getImageUrl(newImageId)} className="w-full h-full object-cover" autoPlay muted loop />
