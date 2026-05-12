@@ -83,13 +83,12 @@ export default function CheckoutPage() {
     const currentTime = now.getHours() * 60 + now.getMinutes();
 
     const [openH, openM] = (outlet.openingTime || "00:00").split(':').map(Number);
-    const [closeH, closeM] = (outlet.closingTime || "23:59").split(':').map(Number);
+    const [closeH, closeM] = (outlet.closingTime || "23:00").split(':').map(Number);
 
     const openTime = openH * 60 + openM;
     const closeTime = closeH * 60 + closeM;
 
     if (closeTime < openTime) {
-      // Overnight operation (e.g., 18:00 to 04:00)
       return currentTime >= openTime || currentTime < closeTime;
     }
 
@@ -143,7 +142,6 @@ export default function CheckoutPage() {
     let eligibleItemsCount = 0;
 
     if (appliedCoupon) {
-      // Logic for item/category restriction
       const eligibleItems = items.filter(item => {
         const isItemEligible = !appliedCoupon.eligibleItemIds || appliedCoupon.eligibleItemIds.includes(item.id);
         const isCategoryEligible = !appliedCoupon.eligibleCategoryIds || appliedCoupon.eligibleCategoryIds.includes(item.category);
@@ -179,7 +177,7 @@ export default function CheckoutPage() {
 
     let loyaltyDiscount = 0;
     if (useLoyaltyPoints && userProfile?.loyaltyPoints) {
-        const maxRedeemable = (subtotal - discount) * 0.1; // Max 10% redemption
+        const maxRedeemable = (subtotal - discount) * 0.1;
         loyaltyDiscount = Math.min(userProfile.loyaltyPoints, maxRedeemable);
     }
 
@@ -222,7 +220,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Scheduling Validation
     const now = new Date();
     const todayStr = format(now, 'yyyy-MM-dd');
     const currentTimeStr = format(now, 'HH:mm');
@@ -305,7 +302,6 @@ export default function CheckoutPage() {
     try {
       const orderRef = await addDoc(collection(db, 'orders'), orderData);
       
-      // Wake up outlet admins
       notifyAdminsOfOrder({
         orderId: orderRef.id,
         outletId: outletObj.id,
@@ -313,7 +309,6 @@ export default function CheckoutPage() {
         total: orderData.total
       });
 
-      // Update Loyalty Balance
       const netPointsUpdate = pointsEarned - (calculations.loyaltyDiscount || 0);
       if (netPointsUpdate !== 0) {
         await updateDoc(doc(db, 'users', user.uid), { loyaltyPoints: increment(netPointsUpdate) });
@@ -639,7 +634,7 @@ export default function CheckoutPage() {
             </Card>
         ) : null}
 
-        {/* Enhanced Bill Details Card */}
+        {/* Bill Details Card */}
         <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
           <CardHeader className="bg-gray-50/50 border-b py-4 px-6">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Bill Details</CardTitle>
@@ -700,7 +695,6 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Gateway Security Badge */}
         <div className="flex items-center justify-center gap-2 py-6 opacity-40">
             <ShieldCheck className="h-4 w-4" />
             <span className="text-[9px] font-black uppercase tracking-[0.25em]">100% Secure PCI-DSS Gateway</span>

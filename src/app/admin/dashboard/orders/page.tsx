@@ -245,7 +245,6 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                {/* Items Summary with Variations and Addons */}
                 <div className="flex flex-col gap-1 md:min-w-[200px] md:items-end">
                   {order.items.map((item, idx) => (
                     <div key={idx} className="flex flex-col items-start md:items-end bg-gray-50/50 p-1.5 rounded-lg border border-gray-100">
