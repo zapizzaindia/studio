@@ -8,7 +8,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import type { Order, Outlet } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, MapPin, Phone, Package, Navigation, Loader2, IndianRupee, ShieldCheck, RefreshCcw, AlertTriangle } from "lucide-react";
+import { CheckCircle2, MapPin, Phone, Package, Navigation, Loader2, IndianRupee, ShieldCheck, RefreshCcw, AlertTriangle, Banknote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,7 +32,7 @@ export default function RiderTerminalPage({ params }: { params: Promise<{ orderI
     setIsUpdating(true);
 
     const orderRef = doc(db, 'orders', orderId);
-    updateDoc(orderRef, { status: 'Completed' })
+    updateDoc(orderRef, { status: 'Completed', paymentStatus: order?.paymentMethod === 'COD' ? 'Success' : order?.paymentStatus })
       .then(() => {
         setSuccess(true);
         toast({ title: "Order Completed", description: "Kitchen updated successfully." });
@@ -131,24 +131,27 @@ export default function RiderTerminalPage({ params }: { params: Promise<{ orderI
 
                 <div className={cn(
                     "p-6 rounded-2xl flex items-center justify-between border",
-                    isPaid ? "bg-green-50 border-green-100" : "bg-amber-50 border-amber-100"
+                    isPaid ? "bg-green-50 border-green-100" : "bg-orange-50 border-orange-100"
                 )}>
                   <div className="flex items-center gap-3">
                     <div className={cn(
                         "h-10 w-10 rounded-full flex items-center justify-center",
-                        isPaid ? "bg-green-100 text-green-600" : "bg-amber-100 text-amber-600"
+                        isPaid ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
                     )}>
-                      <IndianRupee className="h-5 w-5" />
+                      {isPaid ? <IndianRupee className="h-5 w-5" /> : <Banknote className="h-5 w-5" />}
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: isPaid ? '#14532d' : '#92400e' }}>
-                        {isPaid ? 'Verification' : 'Amount to Collect'}
+                      <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: isPaid ? '#14532d' : '#ea580c' }}>
+                        {isPaid ? 'Verification' : 'Collect from Customer'}
                       </p>
-                      <p className="text-xl font-black" style={{ color: isPaid ? '#14532d' : '#451a03' }}>
+                      <p className="text-xl font-black" style={{ color: isPaid ? '#14532d' : '#c2410c' }}>
                         ₹{isPaid ? '0.00' : order.total.toFixed(2)}
                       </p>
                     </div>
                   </div>
+                  {!isPaid && (
+                    <Badge className="bg-orange-600 text-white text-[8px] font-black uppercase border-none animate-pulse">COLLECT CASH</Badge>
+                  )}
                   {isPaid && (
                     <Badge className="bg-green-600 text-white text-[8px] font-black uppercase border-none">PRE-PAID</Badge>
                   )}

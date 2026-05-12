@@ -21,7 +21,9 @@ import {
   MessageSquareText, 
   UserCheck, 
   ClipboardList,
-  Calendar
+  Calendar,
+  Banknote,
+  CreditCard
 } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -178,7 +180,7 @@ export default function AdminOrdersPage() {
     const addr = order.deliveryAddress;
     const mapLink = addr?.latitude ? `\n📍 *Map:* https://www.google.com/maps/search/?api=1&query=${addr.latitude},${addr.longitude}` : '';
     const note = order.specialNote ? `\n\n📝 *KITCHEN NOTE:* ${order.specialNote.toUpperCase()}` : '';
-    const payNote = `\n\n✅ *PRE-PAID ORDER*`;
+    const payNote = order.paymentMethod === 'COD' ? `\n\n💰 *COLLECT CASH: ₹${order.total.toFixed(0)}*` : `\n\n✅ *PRE-PAID ORDER*`;
     
     const host = window.location.origin.replace(/\/$/, "");
     const magicLink = `\n\n🚀 *MARK DELIVERED:* ${host}/delivery/${order.id}`;
@@ -230,7 +232,15 @@ export default function AdminOrdersPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-black text-sm md:text-lg font-sans tabular-nums text-[#111]">₹{order.total.toFixed(0)}</p>
-                      <span className="text-[7px] font-black uppercase text-green-600 bg-green-50 px-1 py-0.5 rounded border border-green-100">Pre-Paid</span>
+                      {order.paymentMethod === 'COD' ? (
+                        <span className="text-[7px] font-black uppercase text-orange-600 bg-orange-50 px-1 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                          <Banknote className="h-2 w-2" /> COD
+                        </span>
+                      ) : (
+                        <span className="text-[7px] font-black uppercase text-green-600 bg-green-50 px-1 py-0.5 rounded border border-green-100 flex items-center gap-1">
+                          <CreditCard className="h-2 w-2" /> Pre-Paid
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -455,6 +465,13 @@ export default function AdminOrdersPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-black uppercase text-[#111] italic">Settlement</span>
                     <span className="text-lg font-black tracking-tighter italic font-sans tabular-nums" style={{ color: brandColor }}>₹{selectedOrder.total.toFixed(0)}</span>
+                  </div>
+                  <div className="pt-1 flex justify-end">
+                    {selectedOrder.paymentMethod === 'COD' ? (
+                       <Badge className="bg-orange-50 text-orange-700 border-orange-200 text-[7px] font-black uppercase px-2 h-4">Collect Cash at Door</Badge>
+                    ) : (
+                       <Badge className="bg-green-50 text-green-700 border-green-200 text-[7px] font-black uppercase px-2 h-4">Settled Online</Badge>
+                    )}
                   </div>
                 </div>
               </div>
