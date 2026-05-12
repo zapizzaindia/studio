@@ -23,7 +23,7 @@ if (!admin.apps.length && serviceAccountKey) {
 
 /**
  * Specifically notifies admins of an outlet when a new order arrives.
- * This is designed to wake up minimized/closed devices and show visual alerts.
+ * Optimized for Android System Tray visibility and high-priority wake-up.
  */
 export async function notifyAdminsOfOrder(payload: {
   orderId: string
@@ -58,6 +58,8 @@ export async function notifyAdminsOfOrder(payload: {
 
     console.log(`Sending high-priority visual alert to ${tokens.length} admin devices...`);
 
+    // IMPORTANT: root 'notification' is required for the OS to show a banner while minimized.
+    // 'data' is required for our internal app logic.
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
       notification: {
@@ -71,14 +73,18 @@ export async function notifyAdminsOfOrder(payload: {
       },
       android: {
         priority: 'high',
+        ttl: 3600 * 1000, // 1 hour
         notification: {
           sound: 'order_alarm', // Matches android/app/src/main/res/raw/order_alarm.mp3
-          channelId: 'orders', // Matches high-priority notification channel created in layout.tsx
+          channelId: 'orders', // Matches 'orders' channel created in layout.tsx
           icon: 'stock_ticker_update',
           color: '#14532d',
           tag: 'new_order_alert',
           clickAction: 'OPEN_ACTIVITY',
-          visibility: 'public' // Forces display in the tray/panel
+          visibility: 'public',
+          priority: 'max', // Force heads-up
+          sticky: false,
+          defaultVibrateTimings: true,
         }
       },
       apns: {
@@ -86,7 +92,8 @@ export async function notifyAdminsOfOrder(payload: {
           aps: {
             sound: 'order_alarm.wav',
             badge: 1,
-            contentAvailable: true
+            contentAvailable: true,
+            critical: true
           }
         }
       }
@@ -138,7 +145,8 @@ export async function broadcastPushNotification(payload: {
         notification: {
           icon: 'stock_ticker_update',
           color: '#14532d',
-          visibility: 'public'
+          visibility: 'public',
+          priority: 'high'
         }
       },
       apns: {

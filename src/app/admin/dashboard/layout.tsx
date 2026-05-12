@@ -38,7 +38,6 @@ const navItems = [
 
 /**
  * 📱 Mobile-Aware Navigation Component
- * This component handles the auto-close behavior for the sidebar on mobile.
  */
 function AdminSidebarNav({ 
   navItems, 
@@ -112,7 +111,6 @@ export default function AdminDashboardLayout({
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
   
-  // Use email as ID, ensuring we only fetch if user is loaded
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -123,16 +121,13 @@ export default function AdminDashboardLayout({
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    // DO NOT process logic until Auth has finished its initial hardware check
     if (userLoading) return;
   
     if (!user) {
-      // Session definitely does not exist
       router.replace('/admin/login');
       return;
     }
   
-    // Wait for the Profile to be fetched to ensure correct role
     if (profileLoading) return;
 
     if (!userProfile || userProfile.role !== 'outlet-admin') {
@@ -140,7 +135,6 @@ export default function AdminDashboardLayout({
       return;
     }
   
-    // User is confirmed and authorized
     setIsVerifying(false);
   }, [user, userLoading, profileLoading, userProfile, router]);
 
@@ -167,36 +161,39 @@ export default function AdminDashboardLayout({
       if (isNative) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
         
-        // Create hardware channel
+        // 1. Create native high-priority hardware channel
         await PushNotifications.createChannel({
           id: 'orders',
           name: 'Kitchen Orders',
-          description: 'Critical alerts for new incoming orders',
+          description: 'Critical visual alerts for new incoming orders',
           sound: 'order_alarm',
-          importance: 5,
-          visibility: 1,
+          importance: 5, // MAX importance for heads-up and tray visibility
+          visibility: 1, // Public - show on lockscreen
           vibration: true,
         });
 
         await PushNotifications.removeAllListeners();
         
+        // 2. Setup registration listener
         await PushNotifications.addListener('registration', async (token) => {
           await updateDoc(doc(db, 'users', profileId), {
             fcmToken: token.value,
             lastTokenSync: new Date().toISOString()
           });
-          toast({ title: "Terminal Linked", description: "Hardware channel established." });
+          toast({ title: "Terminal Linked", description: "High-Priority Uplink Established." });
           setIsSyncing(false);
         });
 
+        // 3. Request permissions explicitly
         const permStatus = await PushNotifications.requestPermissions();
         if (permStatus.receive === 'granted') {
           await PushNotifications.register();
         } else {
           setIsSyncing(false);
-          throw new Error("Notification permission denied.");
+          toast({ variant: 'destructive', title: "Permission Denied", description: "Enable notifications in settings." });
         }
       } else {
+        // Web PWA Fallback
         const token = await requestForToken();
         if (token) {
           await updateDoc(doc(db, 'users', profileId), {
@@ -218,7 +215,7 @@ export default function AdminDashboardLayout({
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Establishing Secure Uplink...</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Restoring Admin Uplink...</p>
             </div>
         </div>
     )
