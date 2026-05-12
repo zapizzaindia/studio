@@ -23,7 +23,7 @@ if (!admin.apps.length && serviceAccountKey) {
 
 /**
  * Specifically notifies admins of an outlet when a new order arrives.
- * This is designed to wake up minimized/closed devices.
+ * This is designed to wake up minimized/closed devices and show visual alerts.
  */
 export async function notifyAdminsOfOrder(payload: {
   orderId: string
@@ -56,7 +56,7 @@ export async function notifyAdminsOfOrder(payload: {
       return { success: false, message: "No admins found with active device tokens." }
     }
 
-    console.log(`Sending new order alert to ${tokens.length} admin devices...`);
+    console.log(`Sending high-priority visual alert to ${tokens.length} admin devices...`);
 
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
@@ -73,11 +73,12 @@ export async function notifyAdminsOfOrder(payload: {
         priority: 'high',
         notification: {
           sound: 'order_alarm', // Matches android/app/src/main/res/raw/order_alarm.mp3
-          channelId: 'orders', // Matches high-priority notification channel
+          channelId: 'orders', // Matches high-priority notification channel created in layout.tsx
           icon: 'stock_ticker_update',
           color: '#14532d',
           tag: 'new_order_alert',
-          clickAction: 'OPEN_ACTIVITY'
+          clickAction: 'OPEN_ACTIVITY',
+          visibility: 'public' // Forces display in the tray/panel
         }
       },
       apns: {
@@ -136,7 +137,8 @@ export async function broadcastPushNotification(payload: {
       android: {
         notification: {
           icon: 'stock_ticker_update',
-          color: '#14532d'
+          color: '#14532d',
+          visibility: 'public'
         }
       },
       apns: {

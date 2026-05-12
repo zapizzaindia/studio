@@ -164,17 +164,28 @@ export default function AdminDashboardLayout({
       if (isNative) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
         
-        // Remove old listeners to prevent memory leaks
+        // 1. Create the hardware-level notification channel (Fixes "No UI" bug)
+        await PushNotifications.createChannel({
+          id: 'orders',
+          name: 'Kitchen Orders',
+          description: 'Critical alerts for new incoming orders',
+          sound: 'order_alarm', // Matches android/app/src/main/res/raw/order_alarm.mp3
+          importance: 5, // High importance = Banner + Sound
+          visibility: 1, // Public visibility
+          vibration: true,
+        });
+
+        // 2. Remove old listeners to prevent memory leaks
         await PushNotifications.removeAllListeners();
         
-        // Listen for new registration
+        // 3. Listen for new registration
         await PushNotifications.addListener('registration', async (token) => {
           console.log("Syncing Hardware Token:", token.value);
           await updateDoc(doc(db, 'users', profileId), {
             fcmToken: token.value,
             lastTokenSync: new Date().toISOString()
           });
-          toast({ title: "Terminal Linked", description: "This hardware is now registered to receive alerts." });
+          toast({ title: "Terminal Linked", description: "Hardware channel 'orders' established." });
           setIsSyncing(false);
         });
 
