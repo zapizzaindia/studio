@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -17,7 +18,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { ShoppingCart, List, BarChart, Store, LogOut, Menu, Wifi, Loader2 } from "lucide-react";
+import { ShoppingCart, List, BarChart, Store, LogOut, Menu, Wifi, Loader2, Signal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth, useUser, useDoc, useFirestore } from '@/firebase';
@@ -162,19 +163,24 @@ export default function AdminDashboardLayout({
       
       if (isNative) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
+        
+        // Remove old listeners to prevent memory leaks
         await PushNotifications.removeAllListeners();
         
+        // Listen for new registration
         await PushNotifications.addListener('registration', async (token) => {
+          console.log("Syncing Hardware Token:", token.value);
           await updateDoc(doc(db, 'users', profileId), {
             fcmToken: token.value,
             lastTokenSync: new Date().toISOString()
           });
-          toast({ title: "Signal Established", description: "This terminal is now linked to the cloud." });
+          toast({ title: "Terminal Linked", description: "This hardware is now registered to receive alerts." });
           setIsSyncing(false);
         });
 
         await PushNotifications.addListener('registrationError', (err) => {
-          toast({ variant: 'destructive', title: "Hardware Error", description: "Could not initialize device bridge." });
+          console.error("Hardware Sync Error:", err);
+          toast({ variant: 'destructive', title: "Hardware Error", description: "Check Google Play Services connection." });
           setIsSyncing(false);
         });
 
@@ -182,7 +188,8 @@ export default function AdminDashboardLayout({
         if (permStatus.receive === 'granted') {
           await PushNotifications.register();
         } else {
-          throw new Error("Notification permission denied by device.");
+          setIsSyncing(false);
+          throw new Error("Notification permission denied by device OS.");
         }
       } else {
         const token = await requestForToken();
@@ -191,9 +198,9 @@ export default function AdminDashboardLayout({
             fcmToken: token,
             lastTokenSync: new Date().toISOString()
           });
-          toast({ title: "Browser Linked", description: "Signal synchronized successfully." });
+          toast({ title: "Browser Linked", description: "Desktop alerts established successfully." });
         } else {
-          throw new Error("Could not capture secure token. Check site permissions.");
+          throw new Error("Could not capture secure token. Check browser permissions.");
         }
         setIsSyncing(false);
       }
@@ -262,10 +269,10 @@ export default function AdminDashboardLayout({
                         {isSyncing ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                            <Wifi className={cn("h-3 w-3", userProfile?.fcmToken ? "fill-current" : "")} />
+                            <Signal className={cn("h-3 w-3", userProfile?.fcmToken ? "text-green-600 fill-current" : "")} />
                         )}
                         <span className="hidden min-[400px]:inline">
-                          {userProfile?.fcmToken ? "Linked" : "Sync Terminal"}
+                          {userProfile?.fcmToken ? "Uplink Active" : "Link Terminal"}
                         </span>
                     </Button>
 

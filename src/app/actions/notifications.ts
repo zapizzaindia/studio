@@ -15,6 +15,7 @@ if (!admin.apps.length && serviceAccountKey) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
+    console.log("FCM Admin initialized successfully.");
   } catch (err) {
     console.error("FCM Admin Init Error:", err);
   }
@@ -31,6 +32,7 @@ export async function notifyAdminsOfOrder(payload: {
   total: number
 }) {
   if (!admin.apps.length) {
+    console.warn("FCM SEND BLOCKED: Admin SDK not initialized.");
     return { success: false, message: "Firebase Admin not initialized." }
   }
 
@@ -50,10 +52,11 @@ export async function notifyAdminsOfOrder(payload: {
     });
 
     if (tokens.length === 0) {
+      console.log(`No active device tokens found for outlet: ${payload.outletId}`);
       return { success: false, message: "No admins found with active device tokens." }
     }
 
-    console.log(`Sending new order alert to ${tokens.length} admins...`);
+    console.log(`Sending new order alert to ${tokens.length} admin devices...`);
 
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
@@ -64,17 +67,17 @@ export async function notifyAdminsOfOrder(payload: {
       data: {
         orderId: payload.orderId,
         url: "/admin/dashboard/orders",
-        
+        type: "NEW_ORDER_ALERT"
       },
       android: {
         priority: 'high',
         notification: {
-          sound: 'order_alarm', // Matches res/raw/order_alarm.mp3
+          sound: 'order_alarm', // Matches android/app/src/main/res/raw/order_alarm.mp3
           channelId: 'orders', // Matches high-priority notification channel
           icon: 'stock_ticker_update',
           color: '#14532d',
-          tag: 'new_order',
-        
+          tag: 'new_order_alert',
+          clickAction: 'OPEN_ACTIVITY'
         }
       },
       apns: {
@@ -88,6 +91,7 @@ export async function notifyAdminsOfOrder(payload: {
       }
     });
 
+    console.log(`FCM Success: ${response.successCount}, Failed: ${response.failureCount}`);
     return { 
       success: true, 
       sent: response.successCount, 
@@ -95,7 +99,7 @@ export async function notifyAdminsOfOrder(payload: {
     };
 
   } catch (err: any) {
-    console.error("ADMIN NOTIFY ERROR:", err);
+    console.error("ADMIN NOTIFY CRITICAL ERROR:", err);
     return { success: false, message: err.message };
   }
 }
