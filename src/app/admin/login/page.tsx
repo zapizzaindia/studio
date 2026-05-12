@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ZapizzaLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -32,7 +32,15 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const { user, loading: userLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
+
+  // If user is already logged in, redirect them back to dashboard automatically
+  useEffect(() => {
+    if (!userLoading && user) {
+        router.replace('/admin/dashboard/orders');
+    }
+  }, [user, userLoading, router]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -45,8 +53,7 @@ export default function AdminLoginPage() {
     try {
       if (auth) {
         const email = values.email.toLowerCase().trim();
-
-await signInWithEmailAndPassword(auth, email, values.password);
+        await signInWithEmailAndPassword(auth, email, values.password);
       }
       
       toast({
@@ -69,6 +76,14 @@ await signInWithEmailAndPassword(auth, email, values.password);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (userLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-white">
+            <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
+        </div>
+    )
   }
 
   return (

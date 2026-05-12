@@ -112,6 +112,7 @@ export default function AdminDashboardLayout({
   const { toast } = useToast();
   const { user, loading: userLoading } = useUser();
   
+  // Use email as ID, ensuring we only fetch if user is loaded
   const profileId = user?.email?.toLowerCase().trim() || null;
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>('users', profileId || 'dummy');
   
@@ -122,24 +123,26 @@ export default function AdminDashboardLayout({
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    if (userLoading || profileLoading) return;
+    // DO NOT process logic until Auth has finished its initial hardware check
+    if (userLoading) return;
   
     if (!user) {
-      const timer = setTimeout(() => {
-        if (!auth?.currentUser) {
-          router.replace('/admin/login');
-        }
-      }, 2000);
-      return () => clearTimeout(timer);
+      // Session definitely does not exist
+      router.replace('/admin/login');
+      return;
     }
   
+    // Wait for the Profile to be fetched to ensure correct role
+    if (profileLoading) return;
+
     if (!userProfile || userProfile.role !== 'outlet-admin') {
       router.replace('/admin/login');
       return;
     }
   
+    // User is confirmed and authorized
     setIsVerifying(false);
-  }, [user, userLoading, profileLoading, userProfile, auth, router]);
+  }, [user, userLoading, profileLoading, userProfile, router]);
 
   useEffect(() => {
     if (pathname === '/admin/dashboard' && !isVerifying) {
@@ -164,34 +167,25 @@ export default function AdminDashboardLayout({
       if (isNative) {
         const { PushNotifications } = await import('@capacitor/push-notifications');
         
-        // 1. Create the hardware-level notification channel (Fixes "No UI" bug)
+        // Create hardware channel
         await PushNotifications.createChannel({
           id: 'orders',
           name: 'Kitchen Orders',
           description: 'Critical alerts for new incoming orders',
-          sound: 'order_alarm', // Matches android/app/src/main/res/raw/order_alarm.mp3
-          importance: 5, // High importance = Banner + Sound
-          visibility: 1, // Public visibility
+          sound: 'order_alarm',
+          importance: 5,
+          visibility: 1,
           vibration: true,
         });
 
-        // 2. Remove old listeners to prevent memory leaks
         await PushNotifications.removeAllListeners();
         
-        // 3. Listen for new registration
         await PushNotifications.addListener('registration', async (token) => {
-          console.log("Syncing Hardware Token:", token.value);
           await updateDoc(doc(db, 'users', profileId), {
             fcmToken: token.value,
             lastTokenSync: new Date().toISOString()
           });
-          toast({ title: "Terminal Linked", description: "Hardware channel 'orders' established." });
-          setIsSyncing(false);
-        });
-
-        await PushNotifications.addListener('registrationError', (err) => {
-          console.error("Hardware Sync Error:", err);
-          toast({ variant: 'destructive', title: "Hardware Error", description: "Check Google Play Services connection." });
+          toast({ title: "Terminal Linked", description: "Hardware channel established." });
           setIsSyncing(false);
         });
 
@@ -200,7 +194,7 @@ export default function AdminDashboardLayout({
           await PushNotifications.register();
         } else {
           setIsSyncing(false);
-          throw new Error("Notification permission denied by device OS.");
+          throw new Error("Notification permission denied.");
         }
       } else {
         const token = await requestForToken();
@@ -209,14 +203,12 @@ export default function AdminDashboardLayout({
             fcmToken: token,
             lastTokenSync: new Date().toISOString()
           });
-          toast({ title: "Browser Linked", description: "Desktop alerts established successfully." });
-        } else {
-          throw new Error("Could not capture secure token. Check browser permissions.");
+          toast({ title: "Browser Linked" });
         }
         setIsSyncing(false);
       }
     } catch (e: any) {
-      toast({ variant: 'destructive', title: "Sync Failed", description: e.message || "Please check your network." });
+      toast({ variant: 'destructive', title: "Sync Failed", description: e.message });
       setIsSyncing(false);
     }
   };
@@ -226,7 +218,7 @@ export default function AdminDashboardLayout({
         <div className="flex h-screen w-full items-center justify-center bg-white">
             <div className="flex flex-col items-center gap-4">
                 <ZapizzaLogo className="h-12 w-12 text-primary animate-pulse" />
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Authenticating Terminal...</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Establishing Secure Uplink...</p>
             </div>
         </div>
     )
