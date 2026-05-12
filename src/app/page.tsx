@@ -9,10 +9,10 @@ import type { AppBanner } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ZapizzaLogo } from "@/components/icons";
-import { Loader2 } from "lucide-react";
 
 /**
  * SplashPage - The animated entry point of the PWA.
+ * Optimized to skip animations on desktop for a faster professional experience.
  */
 export default function SplashPage() {
   const router = useRouter();
@@ -22,11 +22,24 @@ export default function SplashPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [promoBanner, setPromoBanner] = useState<AppBanner | null>(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
 
-    // Instant Caching Logic
+    const checkDevice = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // If it's desktop, we don't need to wait for durations
+      if (!mobile) {
+        setIsDataLoaded(true);
+      }
+    };
+
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+
+    // Instant Caching Logic for Mobile
     if (typeof window !== "undefined") {
       const cached = localStorage.getItem("zapizza-splash-cache");
       if (cached) {
@@ -38,11 +51,13 @@ export default function SplashPage() {
         }
       }
     }
+
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
-  // Fetch latest promo banner and update cache
+  // Fetch latest promo banner and update cache (Mobile Only)
   useEffect(() => {
-    if (!isMounted || !db) return;
+    if (!isMounted || !db || !isMobile) return;
 
     const checkPromo = async () => {
       try {
@@ -79,7 +94,7 @@ export default function SplashPage() {
     };
 
     checkPromo();
-  }, [isMounted, db]);
+  }, [isMounted, db, isMobile]);
 
   // Main Redirection Logic
   useEffect(() => {
@@ -94,6 +109,16 @@ export default function SplashPage() {
 
   if (!isMounted) return null;
 
+  // Desktop View: Minimalist loading state while redirecting
+  if (!isMobile) {
+    return (
+      <main className="fixed inset-0 bg-white flex flex-col items-center justify-center">
+        <ZapizzaLogo className="h-16 w-16 text-primary animate-pulse" />
+      </main>
+    );
+  }
+
+  // Mobile View: Full Cinematic Splash Sequence
   return (
     <main className="fixed inset-0 bg-white overflow-hidden flex flex-col items-center justify-center">
       {/* 1. Cinematic Fallback Layer */}
