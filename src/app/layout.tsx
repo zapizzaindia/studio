@@ -7,6 +7,7 @@ import { CartProvider } from '@/hooks/use-cart';
 import { FCMHandler } from '@/components/fcm-handler';
 import { OfflineDetector } from '@/components/offline-detector';
 import { GlobalPullRefresh } from '@/components/global-pull-refresh';
+import { StatusBarHandler } from '@/components/statusbar-handler';
 
 /**
  * Root Layout - Pure static shell for the PWA.
