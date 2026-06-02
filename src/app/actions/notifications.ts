@@ -6,6 +6,7 @@ import admin from "firebase-admin"
 /**
  * Server Action to broadcast push notifications via FCM.
  * Requires FIREBASE_ADMIN_KEY environment variable.
+ * The key should be the raw string content of the Service Account JSON file.
  */
 const serviceAccountKey = process.env.FIREBASE_ADMIN_KEY;
 
@@ -17,7 +18,7 @@ if (!admin.apps.length && serviceAccountKey) {
     });
     console.log("FCM Admin initialized successfully.");
   } catch (err) {
-    console.error("FCM Admin Init Error:", err);
+    console.error("FCM Admin Init Error (Check your JSON formatting):", err);
   }
 }
 
@@ -32,7 +33,7 @@ export async function notifyAdminsOfOrder(payload: {
   total: number
 }) {
   if (!admin.apps.length) {
-    console.warn("FCM SEND BLOCKED: Admin SDK not initialized.");
+    console.warn("FCM SEND BLOCKED: Admin SDK not initialized. Set FIREBASE_ADMIN_KEY env variable.");
     return { success: false, message: "Firebase Admin not initialized." }
   }
 
@@ -59,7 +60,7 @@ export async function notifyAdminsOfOrder(payload: {
     console.log(`Sending high-priority visual alert to ${tokens.length} admin devices...`);
 
     // IMPORTANT: root 'notification' is required for the OS to show a banner while minimized.
-    // 'data' is required for our internal app logic.
+    // 'data' is required for our internal app logic and sound playback.
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
       notification: {
@@ -112,6 +113,9 @@ export async function notifyAdminsOfOrder(payload: {
   }
 }
 
+/**
+ * Generic broadcast for marketing purposes.
+ */
 export async function broadcastPushNotification(payload: {
   title: string
   body: string
@@ -124,6 +128,7 @@ export async function broadcastPushNotification(payload: {
   }
 
   if (!admin.apps.length) {
+    console.warn("FCM BROADCAST BLOCKED: Admin SDK not initialized.");
     return { success: false, message: "Firebase Admin not initialized. Check server environment." }
   }
 
@@ -135,6 +140,7 @@ export async function broadcastPushNotification(payload: {
       notification: {
         title: payload.title,
         body: payload.body,
+        // Correct field name for images in FCM root notification is 'image'
         ...(payload.imageUrl ? { image: payload.imageUrl } : {})
       },
       data: {
