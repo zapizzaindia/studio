@@ -128,32 +128,36 @@ export async function broadcastPushNotification(payload: {
   }
 
   try {
-    console.log(`Broadcasting push to ${payload.tokens.length} devices...`);
+    console.log(`Broadcasting high-priority marketing push to ${payload.tokens.length} devices...`);
   
     const response = await admin.messaging().sendEachForMulticast({
       tokens: payload.tokens,
       notification: {
         title: payload.title,
         body: payload.body,
-        ...(payload.imageUrl ? { imageUrl: payload.imageUrl } : {})
+        ...(payload.imageUrl ? { image: payload.imageUrl } : {})
       },
       data: {
         url: payload.deepLink || "/home",
         clickAction: 'OPEN_ACTIVITY' 
       },
       android: {
+        priority: 'high',
+        ttl: 3600 * 1000, // 1 hour time-to-live
         notification: {
           icon: 'stock_ticker_update',
           color: '#14532d',
           visibility: 'public',
-          priority: 'high'
+          priority: 'high',
+          clickAction: 'OPEN_ACTIVITY'
         }
       },
       apns: {
         payload: {
           aps: {
             badge: 1,
-            sound: 'default'
+            sound: 'default',
+            contentAvailable: true
           }
         }
       }
@@ -167,7 +171,7 @@ export async function broadcastPushNotification(payload: {
     }
   
   } catch (err: any) {
-    console.error("FCM SERVER ERROR:", err);
+    console.error("FCM MARKETING BROADCAST ERROR:", err);
     return { success: false, message: err.message || "Unknown error occurred during broadcast." }
   }
 }
