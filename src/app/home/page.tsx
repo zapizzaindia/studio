@@ -464,7 +464,7 @@ export default function HomePage() {
       </div>
 
       {heroBanner && (
-        <div className="relative w-full aspect-[1080/1080] overflow-hidden md:hidden">
+        <div className="relative w-full aspect-[1080/1320] overflow-hidden md:hidden">
           <div className="w-full h-full">
             {heroBanner.mediaType === "video" ? (
               <video
