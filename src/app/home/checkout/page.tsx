@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2, ShoppingCart, Sparkles, MessageSquareText, Wallet, Banknote } from "lucide-react";
+import { ArrowLeft, CreditCard, Plus, Minus, Trash2, Ticket, Loader2, Crown, ShieldCheck, MapPinned, AlertTriangle, IndianRupee as RupeeIcon, Navigation, CheckCircle2, ShoppingCart, Sparkles, MessageSquareText, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,6 @@ import { Label } from "@/components/ui/label";
 import { createRazorpayOrder } from "./actions";
 import { notifyAdminsOfOrder } from "@/app/actions/notifications";
 import { format } from "date-fns";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 declare global {
   interface Window {
@@ -63,7 +62,6 @@ export default function CheckoutPage() {
   const [selectedOutlet, setSelectedOutlet] = useState<Outlet | null>(null);
   const [specialNote, setSpecialNote] = useState("");
   const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"Online" | "COD">("Online");
 
   useEffect(() => {
     const savedOutlet = localStorage.getItem("zapizza-outlet");
@@ -251,7 +249,7 @@ export default function CheckoutPage() {
     toast({ title: "Coupon Applied!" });
   };
 
-  const saveOrderToFirestore = async (paymentId: string | null, status: string = "Success", method: "Online" | "COD" = "Online") => {
+  const saveOrderToFirestore = async (paymentId: string | null, status: string = "Success") => {
     if (!db || !user) return;
 
     const pointsEarned = calculations.pointsEarned;
@@ -292,7 +290,7 @@ export default function CheckoutPage() {
         latitude: selectedAddress?.latitude || null,
         longitude: selectedAddress?.longitude || null
       },
-      paymentMethod: method,
+      paymentMethod: "Online",
       paymentStatus: status,
       paymentId: paymentId,
       loyaltyPointsEarned: pointsEarned,
@@ -338,11 +336,6 @@ export default function CheckoutPage() {
 
     setIsPlacing(true);
 
-    if (paymentMethod === 'COD') {
-      await saveOrderToFirestore(null, "Pending", "COD");
-      return;
-    }
-
     try {
       const order = await createRazorpayOrder(calculations.finalTotal);
       const options = {
@@ -353,7 +346,7 @@ export default function CheckoutPage() {
         description: `Order Payment #${order.id.slice(-6)}`,
         order_id: order.id,
         handler: async function (response: any) { 
-          await saveOrderToFirestore(response.razorpay_payment_id, "Success", "Online"); 
+          await saveOrderToFirestore(response.razorpay_payment_id, "Success"); 
         },
         prefill: { 
           name: userProfile?.displayName || user.displayName, 
@@ -502,51 +495,6 @@ export default function CheckoutPage() {
                 </div>
               );
             })}
-          </CardContent>
-        </Card>
-
-        {/* Payment Method Selector */}
-        <Card className="border-none shadow-md rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="bg-gray-50/50 border-b py-4 px-6">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest" style={{ color: brandColor }}>Payment Method</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <RadioGroup value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val)} className="grid grid-cols-2 gap-3">
-               <div 
-                 onClick={() => setPaymentMethod("Online")}
-                 className={cn(
-                    "relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                    paymentMethod === "Online" ? "border-primary bg-primary/5" : "border-gray-100 bg-white"
-                 )}
-               >
-                 <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", paymentMethod === "Online" ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>
-                    <CreditCard className="h-5 w-5" />
-                 </div>
-                 <span className="text-[10px] font-black uppercase">Pay Online</span>
-                 <RadioGroupItem value="Online" className="sr-only" />
-               </div>
-
-               <div 
-                 onClick={() => setPaymentMethod("COD")}
-                 className={cn(
-                    "relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                    paymentMethod === "COD" ? "border-orange-500 bg-orange-50" : "border-gray-100 bg-white"
-                 )}
-               >
-                 <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", paymentMethod === "COD" ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-400")}>
-                    <Banknote className="h-5 w-5" />
-                 </div>
-                 <span className="text-[10px] font-black uppercase text-center">Cash On Delivery</span>
-                 <RadioGroupItem value="COD" className="sr-only" />
-               </div>
-            </RadioGroup>
-            
-            <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-dashed flex items-start gap-2">
-                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-                <p className="text-[9px] font-medium text-muted-foreground leading-relaxed uppercase">
-                    {paymentMethod === "Online" ? "Secure digital settlement via encrypted gateway." : "Please keep exact change ready for the delivery partner."}
-                </p>
-            </div>
           </CardContent>
         </Card>
 
@@ -706,9 +654,9 @@ export default function CheckoutPage() {
             onClick={handlePlaceOrder} 
             disabled={isPlacing || !selectedAddress || calculations.isOutOfRange || isActuallyClosed} 
             className="w-full h-16 text-white text-lg font-black uppercase tracking-[0.1em] rounded-2xl shadow-xl transition-all active:scale-95 border-none" 
-            style={{ backgroundColor: paymentMethod === 'COD' ? '#f97316' : brandColor }}
+            style={{ backgroundColor: brandColor }}
         >
-          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (isActuallyClosed ? "OUTLET CLOSED" : (calculations.isOutOfRange ? "OUT OF RANGE" : (paymentMethod === 'COD' ? `PLACE ORDER (COD) ₹${Math.round(calculations.finalTotal)}` : `PAY ONLINE ₹${Math.round(calculations.finalTotal)}`)))}
+          {isPlacing ? <Loader2 className="animate-spin h-6 w-6" /> : (isActuallyClosed ? "OUTLET CLOSED" : (calculations.isOutOfRange ? "OUT OF RANGE" : `PAY ONLINE ₹${Math.round(calculations.finalTotal)}`))}
         </Button>
       </div>
     </div>

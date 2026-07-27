@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useEffect } from "react";
@@ -76,7 +77,6 @@ function RiderTerminalContent() {
   }
 
   const brandColor = outlet?.brand === 'zfry' ? '#e31837' : '#14532d';
-  const isPaid = order.paymentMethod === 'Online' || order.paymentStatus === 'Success';
 
   return (
     <div className="min-h-screen bg-[#f1f2f6] pb-12 flex flex-col items-center justify-start p-4">
@@ -102,8 +102,8 @@ function RiderTerminalContent() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Delivery Destination</h4>
-                    <Badge className={cn("text-[8px] font-black uppercase border-none", isPaid ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700")}>
-                        {isPaid ? 'PAID ONLINE' : 'CASH ON DELIVERY'}
+                    <Badge className="text-[8px] font-black uppercase border-none bg-green-100 text-green-700">
+                        PAID ONLINE
                     </Badge>
                   </div>
                   <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-3">
@@ -128,29 +128,21 @@ function RiderTerminalContent() {
                   </div>
                 </div>
 
-                <div className={cn(
-                    "p-6 rounded-2xl flex items-center justify-between border",
-                    isPaid ? "bg-green-50 border-green-100" : "bg-amber-50 border-amber-100"
-                )}>
+                <div className="p-6 rounded-2xl flex items-center justify-between border bg-green-50 border-green-100">
                   <div className="flex items-center gap-3">
-                    <div className={cn(
-                        "h-10 w-10 rounded-full flex items-center justify-center",
-                        isPaid ? "bg-green-100 text-green-600" : "bg-amber-100 text-amber-600"
-                    )}>
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
                       <IndianRupee className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: isPaid ? '#14532d' : '#92400e' }}>
-                        {isPaid ? 'Verification' : 'Amount to Collect'}
+                      <p className="text-[9px] font-black uppercase tracking-widest text-[#14532d]">
+                        Verification
                       </p>
-                      <p className="text-xl font-black" style={{ color: isPaid ? '#14532d' : '#451a03' }}>
-                        ₹{isPaid ? '0.00' : order.total.toFixed(2)}
+                      <p className="text-xl font-black text-[#14532d]">
+                        ₹0.00
                       </p>
                     </div>
                   </div>
-                  {isPaid && (
-                    <Badge className="bg-green-600 text-white text-[8px] font-black uppercase border-none">PRE-PAID</Badge>
-                  )}
+                  <Badge className="bg-green-600 text-white text-[8px] font-black uppercase border-none">PRE-PAID</Badge>
                 </div>
 
                 <div className="space-y-4">
